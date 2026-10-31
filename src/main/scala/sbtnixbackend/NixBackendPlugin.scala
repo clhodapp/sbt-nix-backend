@@ -100,17 +100,31 @@ object NixBackendPlugin extends AutoPlugin {
     )
     val nixLockedProject = taskKey[Option[LockedProject]]("How the lock names this project, if it is packaged.")
 
-    /** The module a flake repository publishes as its primary module, read
-      * from the repository's `sbt-nix-repository.json`.
+    /** The module a flake repository was built for, read from the
+      * repository's `sbt-nix-repository.json`. A repository of a cross-built
+      * project holds a module per Scala version; this takes the one whose
+      * name ends in this project's Scala binary version.
       */
     def nixFlakeModule(name: String): Def.Initialize[ModuleID] = Def.setting {
       val paths = (ThisBuild / nixFlakeRepositoryPaths).value
+      val binary = scalaBinaryVersion.value
       val dir = paths.getOrElse(
         name,
         sys.error(s"sbt-nix-backend: no flake repository named $name in ThisBuild / nixFlakeRepositories")
       )
       val meta = Json.parse(new String(Files.readAllBytes(new File(dir, RepositoryMetadata).toPath), StandardCharsets.UTF_8)).asObject
-      ModuleID(meta("organization").asString, meta("name").asString, meta("version").asString)
+      val modules = meta("modules").asArray.map(_.asObject)
+      val module = modules match {
+        case Vector(only) => only
+        case several =>
+          several.find(_("name").asString.endsWith("_" + binary)).getOrElse(
+            sys.error(
+              s"sbt-nix-backend: flake repository $name holds ${several.map(_("name").asString).mkString(", ")}, " +
+                s"none for Scala $binary"
+            )
+          )
+      }
+      ModuleID(module("organization").asString, module("name").asString, module("version").asString)
     }
 
     /** Where a declared network dependency is in the coursier cache, as a
@@ -262,7 +276,7 @@ object NixBackendPlugin extends AutoPlugin {
       val v = sbtVersion.value
       s"https://repo1.maven.org/maven2/org/scala-sbt/sbt-launch/$v/sbt-launch-$v.jar"
     },
-    nixCoursierCache := coursierCacheTask.value,
+    nixCoursierCache := Compat.uncached(coursierCacheTask.value),
     nixNixpkgs := sys.props.get("sbt.nix.backend.nixpkgs").filter(_.nonEmpty).getOrElse("flake:nixpkgs"),
     // The sbt wrapper boots sbt with COURSIER_CACHE set to the read-only
     // tree of locked downloads, and names the user's own cache in
@@ -274,21 +288,25 @@ object NixBackendPlugin extends AutoPlugin {
       case Some(_)                   => defaultUserCoursierCache
       case None                      => csrCacheDirectory.value
     }),
-    nixLock := lockTask(force = false, updateFlakes = false).value,
-    nixRelock := lockTask(force = true, updateFlakes = false).value,
-    nixLockUpdate := lockTask(force = true, updateFlakes = true).value
+    nixLock := Compat.uncached(lockTask(force = false, updateFlakes = false).value),
+    nixRelock := Compat.uncached(lockTask(force = true, updateFlakes = false).value),
+    nixLockUpdate := Compat.uncached(lockTask(force = true, updateFlakes = true).value)
   )
 
   override def projectSettings: Seq[Setting[_]] = Seq(
     nixPackaged := !(publish / skip).value,
-    nixLockedProject := {
+    nixLockedProject := Compat.uncached {
       if (!nixPackaged.value) None
       else {
         val id = projectID.value
         val cross = CrossVersion(id.crossVersion, scalaVersion.value, scalaBinaryVersion.value)
         val crossed = cross.fold(id.name)(f => f(id.name))
-        // An sbt plugin publishes Maven-style as <name>_<scala>_<sbt>.
-        val name = if (sbtPlugin.value) s"${crossed}_${scalaBinaryVersion.value}_${sbtBinaryVersion.value}" else crossed
+        // An sbt 1 plugin publishes Maven-style as <name>_<scala>_<sbt>, an
+        // sbt 2 plugin as <name>_sbt2_<scala>.
+        val name =
+          if (!sbtPlugin.value) crossed
+          else if (sbtBinaryVersion.value.startsWith("1.")) s"${crossed}_${scalaBinaryVersion.value}_${sbtBinaryVersion.value}"
+          else s"${id.name}_sbt${sbtBinaryVersion.value}_${scalaBinaryVersion.value}"
         Some(LockedProject(thisProject.value.id, id.organization, name, id.revision))
       }
     },
@@ -304,7 +322,7 @@ object NixBackendPlugin extends AutoPlugin {
         case _ => Seq(MavenCache(NixOutputResolver, Mode.output / thisProject.value.id / "artifacts"))
       }
     },
-    nixPublishArtifacts / publishConfiguration := {
+    nixPublishArtifacts / publishConfiguration := Compat.uncached {
       if (!publishMavenStyle.value)
         sys.error(
           s"sbt-nix-backend: ${thisProject.value.id} sets publishMavenStyle := false; " +
@@ -317,7 +335,7 @@ object NixBackendPlugin extends AutoPlugin {
         Classpaths.deliverPattern(crossTarget.value),
         if (isSnapshot.value) "integration" else "release",
         ivyConfigurations.value.map(c => ConfigRef(c.name)).toVector,
-        (publish / packagedArtifacts).value.toVector,
+        Compat.publishedArtifacts.value,
         (publish / checksums).value.toVector,
         NixOutputResolver,
         ivyLoggingLevel.value,
@@ -327,12 +345,12 @@ object NixBackendPlugin extends AutoPlugin {
     // The sandbox publishes every packaged project and its internal
     // dependencies, whatever `publish / skip` says.
     nixPublishArtifacts / skip := false,
-    nixPublishArtifacts := {
+    nixPublishArtifacts := Compat.uncached {
       Classpaths.publishOrSkip(nixPublishArtifacts / publishConfiguration, nixPublishArtifacts / skip).value
       Mode.output / thisProject.value.id / "artifacts"
     },
-    nixPublishRepository := publishRepositoryTask.value,
-    nixPackagedArtifacts := {
+    nixPublishRepository := Compat.uncached(publishRepositoryTask.value),
+    nixPackagedArtifacts := Compat.uncached {
       val out = nixBuildPackage("out").value
       val log = streams.value.log
       val version = projectID.value.revision
@@ -353,16 +371,17 @@ object NixBackendPlugin extends AutoPlugin {
         a -> file
       }.toMap
     },
-    nixRuntimeRepository := nixBuildPackage("repository").value,
+    nixRuntimeRepository := Compat.uncached(nixBuildPackage("repository").value),
     // Feature 3: interactive resolution reads the locked downloads, offline.
-    csrConfiguration := withLockedCache(csrConfiguration).value,
-    scalaCompilerBridgeScope / csrConfiguration := withLockedCache(scalaCompilerBridgeScope / csrConfiguration).value,
-    update := {
+    csrConfiguration := Compat.uncached(withLockedCache(csrConfiguration).value),
+    scalaCompilerBridgeScope / csrConfiguration :=
+      Compat.uncached(withLockedCache(scalaCompilerBridgeScope / csrConfiguration).value),
+    update := Compat.uncached {
       val result = update.result.value
       val log = streams.value.log
-      result match {
-        case Value(report) => report
-        case Inc(cause) =>
+      Compat.toEither(result) match {
+        case Right(report) => report
+        case Left(cause) =>
           if ((ThisBuild / nixBackend).value)
             log.error(
               s"[sbt-nix-backend] resolution reads only the downloads ${(ThisBuild / nixLockFile).value.getName} locks. " +
@@ -590,10 +609,13 @@ object NixBackendPlugin extends AutoPlugin {
     val log = streams.value.log
     val id = thisProject.value.id
     val repository = Mode.output / id / "repository"
-    // The coordinates come from the POM sbt published, which already
+    // The coordinates come from the POM sbt made for this variant, which
     // carries every naming convention (cross versions, the sbt plugin
     // suffix) applied.
-    val coordinates = RuntimeRepository.publishedCoordinates(Mode.output / id / "artifacts")
+    val pom = Compat.publishedArtifacts.value
+      .collectFirst { case (a, f) if a.`type` == "pom" => f }
+      .getOrElse(sys.error(s"sbt-nix-backend: $id packages no POM"))
+    val coordinates = RuntimeRepository.pomCoordinates(pom)
     val conf = csrConfiguration.value
     val copied = RuntimeRepository.complete(
       repository,
@@ -603,13 +625,21 @@ object NixBackendPlugin extends AutoPlugin {
       log
     )
     val mainClassName = (Compile / mainClass).?.value.flatten
-    val meta = Json.obj(
+    val module = Json.obj(
       "organization" -> Json.str(coordinates.organization),
       "name" -> Json.str(coordinates.name),
       "version" -> Json.str(coordinates.version),
       "mainClass" -> mainClassName.fold[Json](Json.Null)(Json.str)
     )
-    Files.write((repository / RepositoryMetadata).toPath, (meta.render + "\n").getBytes(StandardCharsets.UTF_8))
+    // A cross-built project publishes one module per Scala version into
+    // the same repository; the metadata lists each.
+    val metaFile = repository / RepositoryMetadata
+    val earlier =
+      if (metaFile.isFile)
+        Json.parse(new String(Files.readAllBytes(metaFile.toPath), StandardCharsets.UTF_8)).asObject("modules").asArray
+      else Vector.empty
+    val modules = (earlier.filterNot(_.asObject("name") == module("name")) :+ module).sortBy(_.asObject("name").asString)
+    Files.write(metaFile.toPath, (Json.obj("modules" -> Json.Arr(modules)).render + "\n").getBytes(StandardCharsets.UTF_8))
     log.info(s"[sbt-nix-backend] $id: repository holds ${copied.size} files besides the build's own artifacts")
     repository
   }
@@ -638,33 +668,54 @@ object NixBackendPlugin extends AutoPlugin {
     * build runs (and the lock run, with --test-compile). For each project
     * it publishes the packaged artifacts to `$$SBT_NIX_OUTPUT/<id>/artifacts`
     * and writes `$$SBT_NIX_OUTPUT/<id>/repository`.
+    *
+    * A project with several `crossScalaVersions` is built for each of them,
+    * as sbt's `+` prefix does: the command queues `++<version>` and itself
+    * (with `--scala-version <version>`) for every version, so the outputs
+    * hold every published variant.
     */
   lazy val sandboxBuildCommand: Command =
     Command.args("nixSandboxBuild", "[--test] [--test-compile] <project>...") { (state0, args) =>
       if (Mode.current == Mode.Interactive)
         sys.error("sbt-nix-backend: nixSandboxBuild runs inside Nix builds and nixLock; set SBT_NIX_MODE")
-      val (flags, ids) = args.partition(_.startsWith("--"))
+      val pinned = args.sliding(2).collectFirst { case Seq("--scala-version", v) => v }
+      val rest = pinned.fold(args)(v => args.filterNot(a => a == "--scala-version" || a == v))
+      val (flags, ids) = rest.partition(_.startsWith("--"))
       flags.filterNot(Set("--test", "--test-compile")).foreach(f => sys.error(s"nixSandboxBuild: unknown flag $f"))
       val extracted = Project.extract(state0)
       val structure = extracted.structure
       val known = structure.allProjectRefs.map(_.project).toSet
       ids.filterNot(known).foreach(id => sys.error(s"nixSandboxBuild: no project $id"))
-      var state = state0
-      def run[T](key: TaskKey[T]): T = {
-        val (s, v) = extracted.runTask(key, state)
-        state = s
-        v
-      }
-      ids.foreach { id =>
-        val ref = ProjectRef(structure.root, id)
-        if (flags.contains("--test")) run(ref / Test / test)
-        if (flags.contains("--test-compile")) run(ref / Test / compile)
-        val closure = runtimeProjectClosure(structure, ref)
-        closure.foreach(r => run(r / nixPublishArtifacts))
-        val repository = Mode.output / id / "repository"
-        closure.foreach(r => IO.copyDirectory(Mode.output / r.project / "artifacts", repository, overwrite = true))
-        run(ref / nixPublishRepository)
-      }
-      state
+      def crossVersions(id: String): Seq[String] =
+        extracted.getOpt(ProjectRef(structure.root, id) / crossScalaVersions).getOrElse(Nil)
+      val versions = ids.flatMap(crossVersions).distinct
+      if (pinned.isEmpty && versions.size > 1)
+        versions.foldRight(state0) { (v, s) =>
+          val forVersion = ids.filter(id => crossVersions(id).contains(v))
+          if (forVersion.isEmpty) s
+          else s"++$v" :: (Seq("nixSandboxBuild", "--scala-version", v) ++ flags ++ forVersion).mkString(" ") :: s
+        }
+      else sandboxBuild(state0, extracted, flags, ids)
     }
+
+  private def sandboxBuild(state0: State, extracted: Extracted, flags: Seq[String], ids: Seq[String]): State = {
+    val structure = extracted.structure
+    var state = state0
+    def run[T](key: TaskKey[T]): T = {
+      val (s, v) = extracted.runTask(key, state)
+      state = s
+      v
+    }
+    ids.foreach { id =>
+      val ref = ProjectRef(structure.root, id)
+      if (flags.contains("--test")) state = Compat.runTests(extracted, ref, state)
+      if (flags.contains("--test-compile")) run(ref / Test / compile)
+      val closure = runtimeProjectClosure(structure, ref)
+      closure.foreach(r => run(r / nixPublishArtifacts))
+      val repository = Mode.output / id / "repository"
+      closure.foreach(r => IO.copyDirectory(Mode.output / r.project / "artifacts", repository, overwrite = true))
+      run(ref / nixPublishRepository)
+    }
+    state
+  }
 }

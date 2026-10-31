@@ -139,7 +139,13 @@ cache.
 
 ## Scope and limits
 
-- sbt 1.11 and later in the 1.x line. sbt 2 is not supported yet.
+- sbt 1.11 and later in the 1.x line, and sbt 2.0. The plugin is
+  cross-built (`sbt-nix-backend_2.12_1.0` and `sbt-nix-backend_sbt2_3`),
+  and the wrapper injects the variant the build's sbt loads. For an sbt 2
+  build the runner starts a client by default; the wrapper passes its
+  settings in `SBT_OPTS`, which the server it starts receives too.
+- A cross-built project (`crossScalaVersions`) is built for each of its
+  Scala versions, as `+` does, and its outputs hold every variant.
 - Nix outputs are Maven repositories, so a project with
   `publishMavenStyle := false` is refused, and a runtime dependency that
   comes from an Ivy-layout repository cannot go into a repository output.

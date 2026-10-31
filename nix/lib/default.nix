@@ -133,6 +133,8 @@ let
   runSbt = command: ''
     export HOME="$TMPDIR/home"
     export XDG_RUNTIME_DIR="$TMPDIR/run"
+    export XDG_CACHE_HOME="$HOME/.cache" XDG_CONFIG_HOME="$HOME/.config"
+    export XDG_DATA_HOME="$HOME/.local/share" XDG_STATE_HOME="$HOME/.local/state"
     export SBT_NIX_MODE=sandbox
     export SBT_NIX_OUTPUT="$TMPDIR/sbt-nix-output"
     export SBT_NIX_FLAKE_REPOSITORIES=${lib.escapeShellArg (builtins.toJSON flakeRepositoryPaths)}

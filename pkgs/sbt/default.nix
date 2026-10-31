@@ -91,11 +91,10 @@ writeTextFile {
         fi
       fi
     fi
-    exec ${lib.getExe pkgs.sbt} \
-      -Dsbt.global.plugins="$dir" \
-      -Dsbt.nix.backend.inject=${inject} \
-      -Dsbt.nix.backend.repository=${pluginRepository} \
-      -Dsbt.nix.backend.nixpkgs=${pkgs.path} \
-      "$@"
+    # The properties go in SBT_OPTS rather than on the command line: for an
+    # sbt 2 build the runner starts a client, and the server it starts in
+    # the background gets SBT_OPTS too.
+    export SBT_OPTS="-Dsbt.global.plugins=$dir -Dsbt.nix.backend.inject=${inject} -Dsbt.nix.backend.repository=${pluginRepository} -Dsbt.nix.backend.nixpkgs=${pkgs.path} ''${SBT_OPTS:-}"
+    exec ${lib.getExe pkgs.sbt} "$@"
   '';
 }

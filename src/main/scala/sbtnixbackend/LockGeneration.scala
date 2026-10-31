@@ -108,6 +108,12 @@ object LockGeneration {
     val env: Map[String, Option[String]] = Map(
       "HOME" -> Some(home.getAbsolutePath),
       "XDG_RUNTIME_DIR" -> Some(runtime.getAbsolutePath),
+      // sbt 2 keeps a disk cache of task outputs under XDG_CACHE_HOME; a
+      // hit there would skip work, and the downloads that work needs.
+      "XDG_CACHE_HOME" -> Some(new File(home, ".cache").getAbsolutePath),
+      "XDG_CONFIG_HOME" -> Some(new File(home, ".config").getAbsolutePath),
+      "XDG_DATA_HOME" -> Some(new File(home, ".local/share").getAbsolutePath),
+      "XDG_STATE_HOME" -> Some(new File(home, ".local/state").getAbsolutePath),
       "COURSIER_CACHE" -> Some(cache.getAbsolutePath),
       "COURSIER_MODE" -> None,
       "COURSIER_REPOSITORIES" -> None,

@@ -17,11 +17,14 @@ The tests come in three layers, fastest first.
      downloads, and a test suite that runs in the build. The checks show
      that each package holds only its own artifacts, and that the app's
      repository alone resolves and runs the app.
+   - The `sbt2-*` checks do the same for `tests/fixtures/sbt2`, an sbt 2
+     build with the plugin's sbt 2 variant injected, and `plugin-variants`
+     checks that the plugin repository holds both variants.
    - `consumer-repository` builds `tests/fixtures/consumer`, which takes the
      multi app through a flake repository, and resolves and runs it from
      the consumer's own repository.
 3. **Interactive tests** (`tests/interactive.sh`) run outside the sandbox
-   with sbt's network cut off. On a copy of multi, compile, test and run
+   with sbt's network cut off. On copies of multi and sbt2, compile, test and run
    must work from the locked downloads at every level, the user's coursier
    cache must stay empty, `nixPackagedArtifacts` must return the Nix
    build's files, and a stale lockfile must fall back with a warning.

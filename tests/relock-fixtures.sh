@@ -27,7 +27,9 @@ if [[ ${1:-} == --relock ]]; then task=nixRelock; fi
 
 sbt_wrapper=$(nix build --no-link --print-out-paths "$root#sbt")
 
-(cd "$root/tests/fixtures/multi" && "$sbt_wrapper/bin/sbt" -batch "$task")
+for fixture in multi sbt2; do
+  (cd "$root/tests/fixtures/$fixture" && "$sbt_wrapper/bin/sbt" --server -batch "$task")
+done
 
 # The producer flake for the consumer fixture: a copy of multi with a
 # flake.nix that exports its repositories as sbtRepositories.
@@ -51,4 +53,4 @@ cat > "$producer/flake.nix" <<EOF
 EOF
 
 (cd "$root/tests/fixtures/consumer" &&
-  SBT_NIX_BACKEND_TEST_PRODUCER="path:$producer" "$sbt_wrapper/bin/sbt" -batch "$task")
+  SBT_NIX_BACKEND_TEST_PRODUCER="path:$producer" "$sbt_wrapper/bin/sbt" --server -batch "$task")
