@@ -155,6 +155,28 @@ output=$(run_sbt 'reload plugins' 'show nixBackend' 'show nixBuildRoot' 'reload 
   fail "metameta: sbt did not load the meta-build"
 expect "metameta: the meta-build reads the lockfile" has 'info\] true'
 expect "metameta: the meta-build takes the build root for its own" has "info\] $build\$"
+
+# The same build, which installs the plugin itself, run through the
+# wrapper, which injects it too. Relocking needs the network.
+echo "== metameta through the wrapper"
+runner=wrapper
+use_fixture metameta
+unset SBT_NIX_BACKEND_REPOSITORY
+wrapper_repository=$(sed -n 's/^export SBT_NIX_BACKEND_REPOSITORY=//p' "$sbt_wrapper/bin/sbt")
+output=$(run_sbt nixRelock 'app/runMain metameta.Main' 'show app/nixPackagedArtifacts') ||
+  fail "metameta through the wrapper: the build failed"
+expect "metameta through the wrapper: the app runs" has '\{"installed":"project/project"\}'
+expect "metameta through the wrapper: the lockfile records the injected plugin" \
+  grep -q '"via": "global-plugin"' "$build/sbt-nix-backend.lock.json"
+expect "metameta through the wrapper: the Nix build of that lockfile succeeds" \
+  has '/nix/store/[a-z0-9]+-app_3-3\.0\.0/example/app_3/3\.0\.0/app_3-3\.0\.0\.jar'
+# project/project resolves the plugin from the repository the wrapper
+# injects it from, so one plugin build runs at every level.
+output=$(run_sbt 'reload plugins' 'reload plugins' 'export Runtime/fullClasspath' 'reload return' 'reload return') ||
+  fail "metameta through the wrapper: sbt did not load the meta-meta-build"
+plugin_jars=$(tr ':' '\n' <<<"$output" | grep 'sbt-nix-backend_2\.12_1\.0-.*\.jar' | sort -u || true)
+expect "metameta through the wrapper: the meta-meta-build has one plugin jar, from the wrapper's repository (found: $plugin_jars)" \
+  test "$(wc -l <<<"$plugin_jars")" -eq 1 -a "${plugin_jars#"$wrapper_repository"/}" != "$plugin_jars"
 runner=wrapper
 network=off
 

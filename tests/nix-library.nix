@@ -142,12 +142,16 @@ let
           }).packages.core.drvPath;
       expected = true;
     };
+    # A lock made with the wrapper gets the global plugin and the variable,
+    # which a build that installs the plugin in its own
+    # project/project/plugins.sbt resolves it through.
     testGlobalPluginGoesInAsAGlobalPlugin = {
       expr =
         let
           phase = (buildWithPlugin "global-plugin").packages.core.buildPhase;
         in
-        lib.hasInfix "-Dsbt.global.plugins=" phase && !(lib.hasInfix "SBT_NIX_BACKEND_REPOSITORY" phase);
+        lib.hasInfix "-Dsbt.global.plugins=" phase
+        && lib.hasInfix "export SBT_NIX_BACKEND_REPOSITORY=/nix/store/" phase;
       expected = true;
     };
     testEnvironmentPluginIsNamedByTheVariable = {

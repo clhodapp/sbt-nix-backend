@@ -112,7 +112,9 @@ and it governs the resolution of both, `project/plugins.sbt` included.
 `nix develop github:clhodapp/sbt-nix-backend` gives plain nixpkgs sbt with
 `SBT_NIX_BACKEND_REPOSITORY` naming the plugin repository. The lockfile
 records that the build takes the plugin from that variable, and
-`buildSbtProject` sets it in the sandbox. Without the wrapper, sbt itself
+`buildSbtProject` sets it in the sandbox. The wrapper sets it too, to the
+repository it injects the plugin from, so such a build also runs through
+the wrapper, with one plugin build at every level. Without the wrapper, sbt itself
 and the meta-most build (which resolves the plugin) download the usual
 way; every level above resolves from the lockfile.
 `tests/fixtures/metameta` is such a build.

@@ -158,9 +158,11 @@ let
       mkdir -p "$TMPDIR/global-plugins"
       cp ${plugin.file} "$TMPDIR/global-plugins/sbt-nix-backend.sbt"
     ''}
-    ${lib.optionalString (plugin != null && plugin.via == "environment") ''
-      # The build installs the plugin in its project/project/plugins.sbt,
-      # from the repository this variable names.
+    ${lib.optionalString (plugin != null) ''
+      # A build that installs the plugin in its project/project/plugins.sbt
+      # resolves it from the repository this variable names; the sbt
+      # wrapper sets it too, so a lock made with the wrapper and such a
+      # build needs it as well as the global plugin.
       export SBT_NIX_BACKEND_REPOSITORY=${plugin.repo}
     ''}
     mkdir -p "$HOME" "$XDG_RUNTIME_DIR" "$TMPDIR/java-tmp" "$COURSIER_CACHE"
