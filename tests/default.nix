@@ -140,10 +140,16 @@ in
         "version 2.0.0"
       ];
 
-  # The plugin repository holds the plugin for sbt 1 and for sbt 2.
-  plugin-variants = pkgs.runCommand "plugin-variants" { } ''
+  # The plugin repository holds the plugin for sbt 1 and for sbt 2, each
+  # with its API documentation.
+  plugin-variants = pkgs.runCommand "plugin-variants" { nativeBuildInputs = [ multi.jdk ]; } ''
     for variant in sbt-nix-backend_2.12_1.0 sbt-nix-backend_sbt2_3; do
       ls ${plugin-repository}/io/github/clhodapp/$variant/*/*.jar
+      pages=$(jar tf ${plugin-repository}/io/github/clhodapp/$variant/*/*-javadoc.jar | grep -c 'NixBackendPlugin.*\.html$' || true)
+      if [ "$pages" -eq 0 ]; then
+        echo "the $variant documentation jar has no page for NixBackendPlugin" >&2
+        exit 1
+      fi
     done
     touch $out
   '';

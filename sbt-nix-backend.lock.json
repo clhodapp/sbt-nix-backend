@@ -17,8 +17,8 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-7LuoTYUEb58gAjk6UcANMHdF/4J6ETBy8C1VZVa2PZI=",
-  "definitionHash": "sha256-AjvY2foXb/uXVIPuYUX3KThyX6UkQTJdgvBYKeszhF4=",
+  "inputsHash": "sha256-Ta40W6sWhvAFx+dVj9stoGkPvv533aOjQi7jTpCm35g=",
+  "definitionHash": "sha256-LNnJSTdyymp+agT0keZIvdM++lU4JD+czW8ArzDA+w8=",
   "artifacts": [
     {
       "path": "https/repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_2.12/0.9.3/gigahorse-apache-http_2.12-0.9.3.jar",
@@ -654,6 +654,16 @@
       "path": "https/repo1.maven.org/maven2/io/get-coursier/lm-coursier-shaded_2.12/2.1.10/lm-coursier-shaded_2.12-2.1.10.pom",
       "url": "https://repo1.maven.org/maven2/io/get-coursier/lm-coursier-shaded_2.12/2.1.10/lm-coursier-shaded_2.12-2.1.10.pom",
       "hash": "sha256-b1ic5Nx5vp1hYoqXL6Xs5kzW31h+cxbAeVeRO0aEaK8="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/io/github/alexarchambault/data-class_3/0.2.8/data-class_3-0.2.8.jar",
+      "url": "https://repo1.maven.org/maven2/io/github/alexarchambault/data-class_3/0.2.8/data-class_3-0.2.8.jar",
+      "hash": "sha256-7e8oVkjtdhxJaGrT6I2jbGxM4zpXwSN3Bi+lzpMzaCA="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/io/github/alexarchambault/data-class_3/0.2.8/data-class_3-0.2.8.pom",
+      "url": "https://repo1.maven.org/maven2/io/github/alexarchambault/data-class_3/0.2.8/data-class_3-0.2.8.pom",
+      "hash": "sha256-33LCRit2EeBydz3VJMamGyXaHgu/bkK1NfueRlLGXeU="
     },
     {
       "path": "https/repo1.maven.org/maven2/jline/jline/2.14.6/jline-2.14.6.jar",
