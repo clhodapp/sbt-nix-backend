@@ -7,10 +7,11 @@
     "-Xss4m",
     "-Xmx2g"
   ],
-  "injectedPlugin": {
+  "plugin": {
     "organization": "io.github.clhodapp",
     "name": "sbt-nix-backend",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "via": "global-plugin"
   },
   "projects": [
     {
@@ -23,12 +24,12 @@
   "flakeRepositories": [
     {
       "name": "multi",
-      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.oeXKcdVquf#app",
-      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.oeXKcdVquf?lastModified=1793482396&narHash=sha256-n1Y%2B8viL%2BLZUCtS%2BZDQXg9zdQbNelyYENZSMRwEqI/k%3D",
+      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.FJbU7EdZs5#app",
+      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.FJbU7EdZs5?lastModified=1793486119&narHash=sha256-g/hKmzSBuO45l5HgnZB/tsvEQZG21T4hNJlC%2B8DBW%2B0%3D",
       "attribute": "app"
     }
   ],
-  "inputsHash": "sha256-2HYp9p2Z3DfTHY4rXnARnTl9dm50eU/ZetyixKD5xYg=",
+  "inputsHash": "sha256-NrZtFJAFt+RC2/ITwSmrjrdJBwp+gaPKlqFLU/GdR6o=",
   "definitionHash": "sha256-XKDqqOS36DEwE+90vU7tOcn20fxG85ldNnIElG366Qw=",
   "artifacts": [
     {

@@ -24,10 +24,15 @@ The tests come in three layers, fastest first.
      multi app through a flake repository, and resolves and runs it from
      the consumer's own repository.
 3. **Interactive tests** (`tests/interactive.sh`) run outside the sandbox
-   with sbt's network cut off. On copies of multi and sbt2, compile, test and run
+   with sbt's network cut off. On copies of multi and sbt2, run through the
+   wrapper, compile, test and run
    must work from the locked downloads at every level, the user's coursier
    cache must stay empty, `nixPackagedArtifacts` must return the Nix
-   build's files, and a stale lockfile must fall back with a warning.
+   build's files, and a stale lockfile must fall back with a warning. The
+   metameta fixture runs the same checks under plain sbt from the dev shell,
+   with the plugin installed only in project/project/plugins.sbt: the
+   meta-build and the build both use its keys, and their dependencies must
+   come from the lockfile rather than the user's cache.
 
 The lockfiles of the fixtures are test data. `tests/relock-fixtures.sh`
 renews them, and the lockfile of the root build too; it needs the network.

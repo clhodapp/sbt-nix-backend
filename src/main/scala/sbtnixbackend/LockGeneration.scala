@@ -31,7 +31,7 @@ object LockGeneration {
       flakeRepositories: Vector[LockedFlakeRepository],
       flakeRepositoryPaths: Map[String, File],
       injectedPluginFile: Option[File],
-      injectedPlugin: Option[InjectedPlugin],
+      plugin: Option[LockedPlugin],
       inputsHash: String
   )
 
@@ -41,7 +41,7 @@ object LockGeneration {
     * build fills the same way. Anything else written under the home was
     * fetched behind coursier's back and is reported.
     */
-  private val expectedHomeEntries = Set(".sbt", ".ivy2", ".cache/sbt")
+  private val expectedHomeEntries = Set(".sbt", ".ivy2", ".cache/sbt", ".cache/JNA")
 
   def run(in: Inputs, info: String => Unit, warn: String => Unit): Lock = {
     val work = in.workDir
@@ -156,7 +156,7 @@ object LockGeneration {
       javaVersion = System.getProperty("java.version"),
       launcher = launcherPath,
       javaOptions = in.javaOptions,
-      injectedPlugin = in.injectedPlugin,
+      plugin = in.plugin,
       projects = in.projects,
       flakeRepositories = in.flakeRepositories,
       artifacts = artifacts,

@@ -91,6 +91,11 @@ writeTextFile {
         fi
       fi
     fi
+    # A build that also installs the plugin itself, in its
+    # project/project/plugins.sbt, resolves it from the repository this
+    # variable names; naming the wrapper's own repository there gives that
+    # build the jar the wrapper injects, so one plugin build runs.
+    export SBT_NIX_BACKEND_REPOSITORY=${pluginRepository}
     # The properties go in SBT_OPTS rather than on the command line: for an
     # sbt 2 build the runner starts a client, and the server it starts in
     # the background gets SBT_OPTS too.

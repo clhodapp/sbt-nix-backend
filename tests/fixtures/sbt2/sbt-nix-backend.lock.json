@@ -7,10 +7,11 @@
     "-Xss4m",
     "-Xmx2g"
   ],
-  "injectedPlugin": {
+  "plugin": {
     "organization": "io.github.clhodapp",
     "name": "sbt-nix-backend",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "via": "global-plugin"
   },
   "projects": [
     {
@@ -27,7 +28,7 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-mQRRmIgEIHpdGi4p2atyu5BAS8rBbu8c3RJr/WaadBQ=",
+  "inputsHash": "sha256-qI39o1jP6r9LW+Ke9PLUrIDNg4laEv2Oal71xPxAKzA=",
   "definitionHash": "sha256-1463D+4mDNm9VU34/4D7x2hOU5xS0GfI0pH0MyEkOlI=",
   "artifacts": [
     {

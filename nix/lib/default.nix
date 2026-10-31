@@ -26,10 +26,12 @@
   jdk ? null,
   # Replaces the built-in fetcher; see fetch.nix.
   fetchurl ? null,
-  # The repository the sbt-nix-backend plugin is injected from, when the
-  # lock was made with the plugin injected (`injectedPlugin` in the lock).
-  # The default builds it from the source this library came with, which
-  # is the plugin version of the same sbt-nix-backend revision.
+  # The repository the build takes the sbt-nix-backend plugin from, when the
+  # lock says the Nix build supplies it (`plugin` in the lock): as a global
+  # plugin, or through SBT_NIX_BACKEND_REPOSITORY for a build that installs
+  # the plugin in its project/project/plugins.sbt. The default builds it
+  # from the source this library came with, which is the plugin version of
+  # the same sbt-nix-backend revision.
   pluginRepository ? null,
   # Repository paths that replace flake repositories of the lock, by
   # resolver name. A flake that has the producing flake as an input can
@@ -93,14 +95,13 @@ let
     }) lock.flakeRepositories
   );
 
-  injectedPlugin =
-    if lock.injectedPlugin == null then
+  plugin =
+    if lock.plugin == null then
       null
     else
       let
-        p = lock.injectedPlugin;
-        # The plugin's own lock has no injected plugin, so this does not
-        # recurse.
+        p = lock.plugin;
+        # The plugin's own lock names no plugin, so this does not recurse.
         repo =
           if pluginRepository != null then
             pluginRepository
@@ -108,7 +109,15 @@ let
             (import ./plugin.nix { inherit pkgs; }).repository;
         orgPath = lib.replaceStrings [ "." ] [ "/" ] p.organization;
       in
+      assert
+        lib.elem p.via [
+          "global-plugin"
+          "environment"
+        ]
+        || throw "sbt-nix-backend: the lock reaches the plugin via '${p.via}', which this library does not know";
       {
+        inherit (p) via;
+        inherit repo;
         file = pkgs.writeText "sbt-nix-backend-plugin.sbt" ''
           resolvers += MavenRepository("sbt-nix-backend-plugin", "file://${repo}")
           addSbtPlugin("${p.organization}" % "${p.name}" % "${p.version}")
@@ -140,14 +149,21 @@ let
     export SBT_NIX_FLAKE_REPOSITORIES=${lib.escapeShellArg (builtins.toJSON flakeRepositoryPaths)}
     export COURSIER_CACHE="$TMPDIR/coursier-cache"
     export COURSIER_MODE=offline
-    ${lib.optionalString (injectedPlugin != null) ''
-      ${injectedPlugin.check}
+    ${lib.optionalString (plugin != null) plugin.check}
+    ${lib.optionalString (plugin != null && plugin.via == "global-plugin") ''
       # The plugin is the build's only global plugin, which sbt loads below
       # every level of the build (project/project, project/, the build), so
       # the plugin governs the resolution of each. sbt writes target/
       # directories into a global plugins directory, so it is a copy.
       mkdir -p "$TMPDIR/global-plugins"
-      cp ${injectedPlugin.file} "$TMPDIR/global-plugins/sbt-nix-backend.sbt"
+      cp ${plugin.file} "$TMPDIR/global-plugins/sbt-nix-backend.sbt"
+    ''}
+    ${lib.optionalString (plugin != null) ''
+      # A build that installs the plugin in its project/project/plugins.sbt
+      # resolves it from the repository this variable names; the sbt
+      # wrapper sets it too, so a lock made with the wrapper and such a
+      # build needs it as well as the global plugin.
+      export SBT_NIX_BACKEND_REPOSITORY=${plugin.repo}
     ''}
     mkdir -p "$HOME" "$XDG_RUNTIME_DIR" "$TMPDIR/java-tmp" "$COURSIER_CACHE"
     # Coursier and the launcher write lock and marker files next to what
@@ -163,8 +179,12 @@ let
       -Dsbt.server.forcestart=true \
       -Dsbt.log.noformat=true \
       -Dsbt.supershell=false \
+      ${
+        lib.optionalString (
+          plugin != null && plugin.via == "global-plugin"
+        ) ''-Dsbt.global.plugins="$TMPDIR/global-plugins"''
+      } \
       -jar "$COURSIER_CACHE/${lock.launcher}" \
-      ${lib.optionalString (injectedPlugin != null) ''-Dsbt.global.plugins="$TMPDIR/global-plugins"''} \
       ${lib.escapeShellArg command} </dev/null
   '';
 

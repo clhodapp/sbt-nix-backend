@@ -18,7 +18,7 @@ let
           javaVersion = "17.0.9";
           launcher = "https/repo.example/sbt-launch-1.11.7.jar";
           javaOptions = [ "-Xmx1g" ];
-          injectedPlugin = null;
+          plugin = null;
           projects = [
             {
               id = "core";
@@ -142,22 +142,51 @@ let
           }).packages.core.drvPath;
       expected = true;
     };
-    testInjectedPluginWithRepositoryEvaluates = {
+    # A lock made with the wrapper gets the global plugin and the variable,
+    # which a build that installs the plugin in its own
+    # project/project/plugins.sbt resolves it through.
+    testGlobalPluginGoesInAsAGlobalPlugin = {
       expr =
-        lib.hasPrefix "/nix/store/"
-          (build {
-            lockFile = lockJson {
-              injectedPlugin = {
-                organization = "io.github.clhodapp";
-                name = "sbt-nix-backend";
-                version = "0.1.0";
-              };
-            };
-            pluginRepository = src;
-          }).packages.core.drvPath;
+        let
+          phase = (buildWithPlugin "global-plugin").packages.core.buildPhase;
+        in
+        lib.hasInfix "-Dsbt.global.plugins=" phase
+        && lib.hasInfix "export SBT_NIX_BACKEND_REPOSITORY=/nix/store/" phase;
+      expected = true;
+    };
+    testEnvironmentPluginIsNamedByTheVariable = {
+      expr =
+        let
+          phase = (buildWithPlugin "environment").packages.core.buildPhase;
+        in
+        lib.hasInfix "export SBT_NIX_BACKEND_REPOSITORY=/nix/store/" phase
+        && !(lib.hasInfix "-Dsbt.global.plugins=" phase);
+      expected = true;
+    };
+    testPluginRepositoryVersionIsChecked = {
+      expr = lib.hasInfix "does not hold io.github.clhodapp:sbt-nix-backend:0.1.0" (buildWithPlugin "environment")
+      .packages.core.buildPhase;
+      expected = true;
+    };
+    testUnknownPluginRouteFails = {
+      expr = failsToEvaluate (buildWithPlugin "telepathy").packages.core.drvPath;
       expected = true;
     };
   };
+
+  buildWithPlugin =
+    via:
+    build {
+      lockFile = lockJson {
+        plugin = {
+          organization = "io.github.clhodapp";
+          name = "sbt-nix-backend";
+          version = "0.1.0";
+          inherit via;
+        };
+      };
+      pluginRepository = src;
+    };
 
   failures = lib.runTests tests;
 

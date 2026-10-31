@@ -28,10 +28,19 @@
   # `nix run github:clhodapp/sbt-nix-backend` starts sbt with the plugin
   # injected, which is how a build without the plugin in its
   # project/plugins.sbt locks and exports itself.
+  #
+  # `nix develop github:clhodapp/sbt-nix-backend` is the other way in: plain
+  # nixpkgs sbt, with SBT_NIX_BACKEND_REPOSITORY naming the plugin
+  # repository, for a build that installs the plugin in its
+  # project/project/plugins.sbt (see the README).
   perSystem =
-    { config, ... }:
+    { config, pkgs, ... }:
     {
       packages.default = config.packages.sbt;
+      devShells.default = pkgs.mkShell {
+        packages = [ pkgs.sbt ];
+        SBT_NIX_BACKEND_REPOSITORY = config.packages.plugin-repository;
+      };
     };
 
   partitionedAttrs.checks = "checks";
