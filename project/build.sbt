@@ -5,7 +5,7 @@
 // flake builds it in the sandbox without a published copy. The resource
 // generator is the one in NixLibraryResources.scala, which the meta-build
 // compiles and so cannot use itself.
-Compile / unmanagedSourceDirectories += baseDirectory.value.getParentFile / "src" / "main" / "scala"
+Compile / unmanagedSourceDirectories ++= Seq("scala", "scala-2.12").map(baseDirectory.value.getParentFile / "src" / "main" / _)
 Compile / resourceGenerators += Def.task {
   val out = (Compile / resourceManaged).value / "sbtnixbackend" / "nix"
   (baseDirectory.value.getParentFile / "nix" / "lib" * "*.nix").get.map(_.getName).map { name =>

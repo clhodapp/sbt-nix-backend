@@ -26,6 +26,14 @@ let
   # The consumer's lock pins a flake reference to the producer's
   # repository; the check passes the producer's output instead, as a flake
   # with the producer as an input would.
+  # An sbt 2 build, which injects the plugin's sbt 2 variant.
+  sbt2 = buildSbtProject {
+    inherit pkgs;
+    src = ./fixtures/sbt2;
+    pluginRepository = plugin-repository;
+    doCheck = true;
+  };
+
   consumer = buildSbtProject {
     inherit pkgs;
     src = ./fixtures/consumer;
@@ -120,4 +128,23 @@ in
     runFromRepository "consumer-repository" consumer.repositories.consumer "example:consumer_3:1.0.0"
       "consumer.Main"
       [ ''consumer: {"hello":"Nix World"}'' ];
+
+  # The same on sbt 2: the build locks and builds with the plugin's sbt 2
+  # variant injected, its test suite runs, and the app's repository alone
+  # resolves and runs the app.
+  sbt2-app-artifacts = onlyOwnArtifacts "sbt2-app-artifacts" sbt2.packages.app "example/app_3";
+  sbt2-app-repository =
+    runFromRepository "sbt2-app-repository" sbt2.repositories.app "example:app_3:2.0.0" "example2.Main"
+      [
+        ''{"sbt":2}''
+        "version 2.0.0"
+      ];
+
+  # The plugin repository holds the plugin for sbt 1 and for sbt 2.
+  plugin-variants = pkgs.runCommand "plugin-variants" { } ''
+    for variant in sbt-nix-backend_2.12_1.0 sbt-nix-backend_sbt2_3; do
+      ls ${plugin-repository}/io/github/clhodapp/$variant/*/*.jar
+    done
+    touch $out
+  '';
 }

@@ -47,24 +47,6 @@ object RuntimeRepository {
   private final case class RemoteRoot(prefix: String) extends Root
   private final case class LocalRoot(dir: java.nio.file.Path) extends Root
 
-  /** The coordinates of the one module published under `repository`, read
-    * from its POM.
-    */
-  def publishedCoordinates(repository: File): Coordinates = {
-    val poms = Vector.newBuilder[File]
-    def walk(d: File): Unit =
-      Option(d.listFiles()).getOrElse(Array.empty[File]).foreach { f =>
-        if (f.isDirectory) walk(f) else if (f.getName.endsWith(".pom")) poms += f
-      }
-    walk(repository)
-    poms.result() match {
-      case Vector(pom) => pomCoordinates(pom)
-      case Vector()    => throw new NotRepresentable(s"no POM was published under $repository")
-      case many =>
-        throw new NotRepresentable(s"more than one POM was published under $repository: ${many.mkString(", ")}")
-    }
-  }
-
   /** The groupId, artifactId and version a POM declares for itself. */
   def pomCoordinates(pom: File): Coordinates = {
     val factory = javax.xml.parsers.DocumentBuilderFactory.newInstance()

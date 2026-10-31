@@ -31,5 +31,6 @@ through the store. The README describes what it does for a user.
 
 ## Not in scope
 
-- sbt 2 (planned), Ivy-style publishing, and repositories that need
-  credentials without a caller-supplied fetcher.
+The Nix outputs are Maven repositories, so Ivy-style publishing is out of
+scope. A repository that needs credentials works only through a fetcher the
+caller supplies.

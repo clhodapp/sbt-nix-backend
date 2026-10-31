@@ -10,7 +10,18 @@ lazy val root = (project in file("."))
   .settings(
     name := "sbt-nix-backend",
     sbtPlugin := true,
-    scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked", "-Xlint:-unused,_"),
+    // The plugin builds for sbt 1 (Scala 2.12) and sbt 2 (Scala 3).
+    scalaVersion := "2.12.20",
+    crossScalaVersions := Seq("2.12.20", "3.8.4"),
+    pluginCrossBuild / sbtVersion := (scalaBinaryVersion.value match {
+      case "2.12" => "1.11.7"
+      case _      => "2.0.12"
+    }),
+    scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked") ++
+      (if (scalaBinaryVersion.value == "2.12") Seq("-Xlint:-unused,_") else Nil),
+    // Scaladoc 3.8.4 cannot read lm-coursier's TASTy (its @data classes), so
+    // the sbt 2 variant publishes an empty documentation jar.
+    Compile / packageDoc / mappings := (if (scalaBinaryVersion.value == "2.12") (Compile / packageDoc / mappings).value else Nil),
     libraryDependencies += "org.scalameta" %% "munit" % "1.0.4" % Test,
     NixLibraryResources.settings,
     // NixBackendPlugin reads its coordinates from the jar manifest to

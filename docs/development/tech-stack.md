@@ -2,10 +2,15 @@
 
 Extends the workspace `docs/development/tech-defaults.md`.
 
-- **Scala 2.12, sbt 1.11.7** for the plugin. The sources keep to the subset
-  of Scala that also compiles on Scala 3, for a later sbt 2 build, and
-  avoid sbt APIs that differ between the two (JSON and process handling
-  are the plugin's own: `Json.scala`, `Proc.scala`).
+- **The plugin is cross-built**: Scala 2.12 against sbt 1.11.7, and Scala
+  3.8.4 against sbt 2.0.12 (`crossScalaVersions` with
+  `pluginCrossBuild / sbtVersion` in `build.sbt`). `src/main/scala` keeps to
+  the Scala both compile and to sbt APIs both versions share; JSON and
+  process handling are the plugin's own (`Json.scala`, `Proc.scala`). The
+  sbt APIs that differ go through `Compat`, one per version in
+  `src/main/scala-2.12` and `src/main/scala-3`: virtual files in
+  `packagedArtifacts`, the `Result` cases, `test` as an input key, and
+  `Def.uncached` for every task sbt 2 must not cache.
 - **lm-coursier's public API** (`lmcoursier.CoursierConfiguration`,
   `CoursierDependencyResolution`, `lmcoursier.definitions.CacheLogger`) for
   resolution and recording; no shaded coursier internals.

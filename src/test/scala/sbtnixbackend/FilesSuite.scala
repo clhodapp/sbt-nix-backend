@@ -93,13 +93,10 @@ class FilesSuite extends munit.FunSuite {
     assertEquals(RuntimeRepository.pomCoordinates(inherited), RuntimeRepository.Coordinates("pg", "c", "2"))
   }
 
-  test("publishedCoordinates needs exactly one POM") {
-    val dir = tempDir()
-    intercept[RuntimeRepository.NotRepresentable](RuntimeRepository.publishedCoordinates(dir))
-    write(new File(dir, "g/a/1/a-1.pom"), "<project><groupId>g</groupId><artifactId>a</artifactId><version>1</version></project>")
-    assertEquals(RuntimeRepository.publishedCoordinates(dir).name, "a")
-    write(new File(dir, "g/b/1/b-1.pom"), "<project><groupId>g</groupId><artifactId>b</artifactId><version>1</version></project>")
-    intercept[RuntimeRepository.NotRepresentable](RuntimeRepository.publishedCoordinates(dir))
+  test("a POM without coordinates is refused") {
+    val pom = new File(tempDir(), "bad.pom")
+    write(pom, "<project><artifactId>a</artifactId></project>")
+    intercept[RuntimeRepository.NotRepresentable](RuntimeRepository.pomCoordinates(pom))
   }
 
   test("the plugin carries every file of the Nix library") {
