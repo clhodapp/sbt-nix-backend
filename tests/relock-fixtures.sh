@@ -31,13 +31,13 @@ sbt_wrapper=$(nix build --no-link --print-out-paths "$root#sbt")
 # sbt 2 keeps one in its disk cache under XDG_CACHE_HOME, while the plugin
 # version stays the same, even when the plugin changed. Fresh meta-builds
 # and a cache directory of this run's own resolve the current plugin.
-for fixture in multi sbt2 metameta consumer; do
+for fixture in multi sbt2 ivy metameta consumer; do
   rm -rf "$root/tests/fixtures/$fixture/project/target" "$root/tests/fixtures/$fixture/project/project/target"
 done
 XDG_CACHE_HOME=$(mktemp -d)
 export XDG_CACHE_HOME
 
-for fixture in multi sbt2; do
+for fixture in multi sbt2 ivy; do
   (cd "$root/tests/fixtures/$fixture" && "$sbt_wrapper/bin/sbt" --server -batch "$task")
 done
 

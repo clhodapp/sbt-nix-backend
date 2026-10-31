@@ -356,7 +356,7 @@ object NixBackendPlugin extends AutoPlugin {
     nixLockUpdate := Compat.uncached(lockTask(force = true, updateFlakes = true).value)
   )
 
-  override def projectSettings: Seq[Setting[_]] = passOnSettings ++ Seq(
+  override def projectSettings: Seq[Setting[_]] = passOnSettings ++ Compat.ivyMirrorSettings(ivyMirrorBase) ++ Seq(
     nixPackaged := !(publish / skip).value,
     nixLockedProject := Compat.uncached {
       if (!nixPackaged.value) None
@@ -544,6 +544,24 @@ object NixBackendPlugin extends AutoPlugin {
       ),
       base / "gcroots" / s"package-$id-$output"
     )
+  }
+
+  /** Where a project that resolves with Ivy reads its downloads: the
+    * coursier cache of the Nix build, the lock run's mirror server, or
+    * interactively the cache built from the lock. None for a project that
+    * resolves with coursier, or interactively without a usable lock.
+    */
+  private def ivyMirrorBase: Def.Initialize[Task[Option[String]]] = Def.taskDyn {
+    if (!Compat.usesIvyResolution.value) Def.task(Option.empty[String])
+    else
+      Mode.current match {
+        case Mode.Sandbox => Def.task(Option(Mode.coursierCacheFromEnv.toURI.toString))
+        case Mode.Lock =>
+          Def.task(Option(sys.env.getOrElse(IvyMirror.Variable, sys.error(s"sbt-nix-backend: ${IvyMirror.Variable} is not set"))))
+        case Mode.Interactive =>
+          if ((ThisBuild / nixBackend).value) Def.task(Option((ThisBuild / nixCoursierCache).value.toURI.toString))
+          else Def.task(Option.empty[String])
+      }
   }
 
   private val coursierCacheLock = new Object

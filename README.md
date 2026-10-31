@@ -161,6 +161,19 @@ interactive mode off. Source jars for an IDE are not build inputs, so
 `updateClassifiers` resolves the usual way, into the user's coursier
 cache.
 
+### Resolution with Ivy
+
+On sbt 1, a project or meta-build may resolve with Apache Ivy
+(`useCoursier := false`). The plugin rewrites every remote resolver of
+such a project onto a mirror of the coursier cache, where the file of
+`https://host/path` sits at `https/host/path`. In a Nix build and in
+interactive mode, the mirror is the coursier cache built from the lockfile,
+read as a `file:` URL, so Ivy reads only the locked files. In the lock run,
+the mirror is an HTTP server on localhost that fetches each file Ivy asks
+for from its real URL into the fork's coursier cache, so the lockfile holds
+it under that URL with everything else. `tests/fixtures/ivy` is a build
+that resolves with Ivy at both levels.
+
 ## Keys
 
 | Key | What it does |

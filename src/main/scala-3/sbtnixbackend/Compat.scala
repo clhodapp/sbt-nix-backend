@@ -28,6 +28,14 @@ object Compat {
   def runTests(extracted: Extracted, ref: ProjectRef, state: State): State =
     extracted.runInputTask(ref / Test / test, "", state)._1
 
+  /** Whether this project resolves its dependencies with Apache Ivy; sbt 2
+    * resolves with coursier only.
+    */
+  def usesIvyResolution: Def.Initialize[Boolean] = Def.setting(false)
+
+  /** sbt 2 has no Ivy configuration to rewrite. */
+  def ivyMirrorSettings(mirror: Def.Initialize[Task[Option[String]]]): Seq[Setting[?]] = Nil
+
   /** sbt 2 caches task results; a task with effects outside its result
     * (a lockfile written, a Nix build run) opts out.
     */

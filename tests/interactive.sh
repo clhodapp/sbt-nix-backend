@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MIT
 #
-# Tests of what runs outside the Nix sandbox, on copies of the multi (sbt 1)
-# and sbt2 (sbt 2) fixtures with their committed lockfiles:
+# Tests of what runs outside the Nix sandbox, on copies of the multi (sbt 1),
+# sbt2 (sbt 2) and ivy (sbt 1, resolving with Ivy) fixtures with their
+# committed lockfiles:
 #
 #  - interactive mode (feature 3): compile, test and run read every
 #    dependency from the locked downloads, at every level of the build
@@ -113,7 +114,7 @@ interactive_suite() {
   output=$(run_sbt 'show app/nixPackagedArtifacts' 'show app/nixRuntimeRepository') ||
     fail "$fixture: nixPackagedArtifacts failed"
   expect "$fixture: nixPackagedArtifacts returns the jar the Nix build made" has "$jar"
-  expect "$fixture: nixRuntimeRepository returns the repository output" has 'app_3-[0-9.]+-repository'
+  expect "$fixture: nixRuntimeRepository returns the repository output" has 'app_[0-9.]+-[0-9.]+-repository'
 
   echo "== $fixture: a lockfile made from another build definition"
   echo '// changed' >>"$build/build.sbt"
@@ -134,6 +135,14 @@ interactive_suite sbt2 \
   '/nix/store/[a-z0-9]+-app_3-2\.0\.0/example/app_3/2\.0\.0/app_3-2\.0\.0\.jar' \
   'app/runMain example2.Main' \
   '\{"sbt":2\}' 'version 2\.0\.0'
+
+# ivy resolves with Ivy (useCoursier := false) in the build and its
+# meta-build; Ivy reads the locked downloads through a file: mirror.
+interactive_suite ivy \
+  "$maven/com/eed3si9n/sbt-buildinfo_2.12_1.0/0.13.1/sbt-buildinfo_2.12_1.0-0.13.1.jar" \
+  '/nix/store/[a-z0-9]+-app_2\.13-4\.0\.0/example/app_2\.13/4\.0\.0/app_2\.13-4\.0\.0\.jar' \
+  'app/runMain ivyexample.Main' \
+  '\{"resolvedWith":"ivy"\}' 'version 4\.0\.0'
 
 # metameta installs the plugin only in project/project/plugins.sbt and runs
 # under plain sbt, without the wrapper. Without the wrapper, sbt boots

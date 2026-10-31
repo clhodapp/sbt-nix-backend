@@ -43,6 +43,15 @@ let
     doCheck = true;
   };
 
+  # A build that resolves with Ivy (useCoursier := false), in its
+  # meta-build too; in the sandbox Ivy reads the locked downloads through
+  # a file: mirror of their URLs.
+  ivy = buildSbtProject {
+    src = ./fixtures/ivy;
+    pluginRepository = plugin-repository;
+    doCheck = true;
+  };
+
   # The consumer's lock pins a flake reference to the producer's
   # repository; the check passes the producer's output instead, as a flake
   # with the producer as an input would.
@@ -161,6 +170,16 @@ in
       [
         ''{"installed":"project/project"}''
         "version 3.0.0"
+      ];
+
+  # A build that resolves with Ivy builds in the sandbox, its tests run,
+  # and the app's repository alone resolves and runs the app.
+  ivy-app-repository =
+    runFromRepository "ivy-app-repository" ivy.repositories.app "example:app_2.13:4.0.0"
+      "ivyexample.Main"
+      [
+        ''{"resolvedWith":"ivy"}''
+        "version 4.0.0"
       ];
 
   # The plugin repository holds the plugin for sbt 1 and for sbt 2, each
