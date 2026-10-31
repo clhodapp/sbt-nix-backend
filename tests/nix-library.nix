@@ -3,10 +3,15 @@
 # Unit tests of the Nix library (nix/lib) on hand-written lockfiles. The
 # fetcher is replaced by one that writes each URL into a file, so nothing
 # downloads. The check fails with the list of failed tests.
-{ pkgs }:
+{
+  pkgs,
+  # The flake's default package overlay, which adds buildSbtProject.
+  overlay,
+}:
 let
   inherit (pkgs) lib;
-  buildSbtProject = import ../nix/lib;
+  withOverlay = pkgs.extend overlay;
+  inherit (withOverlay) buildSbtProject;
 
   lockJson =
     overrides:
@@ -51,15 +56,52 @@ let
 
   src = pkgs.runCommand "empty-build" { } "mkdir $out";
 
-  build =
-    args:
-    buildSbtProject (
+  build = buildWith buildSbtProject;
+
+  buildWith =
+    builder: args:
+    builder (
       {
-        inherit pkgs src;
+        inherit src;
         fetchurl = fakeFetchurl;
       }
       // args
     );
+
+  pluginLock =
+    via:
+    lockJson {
+      plugin = {
+        organization = "io.github.clhodapp";
+        name = "sbt-nix-backend";
+        version = "0.1.0";
+        inherit via;
+      };
+    };
+
+  markerJdk = pkgs.runCommand "marker-jdk" { } "mkdir $out";
+  markerRepository = pkgs.runCommand "marker-plugin-repository" { } "mkdir $out";
+
+  # A package set with a consumer's package, written for callPackage, that
+  # takes the builder by name, as a package in an overlay does.
+  withConsumer = withOverlay.extend (
+    final: prev: {
+      example = final.callPackage (
+        { buildSbtProject }:
+        (buildWith buildSbtProject { lockFile = lockJson { }; }).packages.core
+      ) { };
+    }
+  );
+
+  # A package set whose sbt-nix-backend scope has another plugin
+  # repository, as an overlay that overrides the scope makes it.
+  withOtherPluginRepository = withOverlay.extend (
+    final: prev: {
+      sbt-nix-backend = prev.sbt-nix-backend.overrideScope (
+        _: _: { plugin-repository = markerRepository; }
+      );
+    }
+  );
 
   lockOf = overrides: import ../nix/lib/lock.nix { lockFile = lockJson overrides; };
 
@@ -168,6 +210,32 @@ let
       .packages.core.buildPhase;
       expected = true;
     };
+    testAPackageInAnOverlayTakesTheBuilderByCallPackage = {
+      expr = withConsumer.example.drvPath == (build { lockFile = lockJson { }; }).packages.core.drvPath;
+      expected = true;
+    };
+    testBuilderOverrideReplacesWhatItTakesFromThePackageSet = {
+      expr =
+        (buildWith (buildSbtProject.override { javaPackages.compiler.openjdk17.headless = markerJdk; }) {
+          lockFile = lockJson { };
+        }).jdk.outPath;
+      expected = markerJdk.outPath;
+    };
+    testTheScopePluginRepositoryIsTheDefault = {
+      expr =
+        lib.hasInfix "marker-plugin-repository"
+          (buildWith withOtherPluginRepository.buildSbtProject { lockFile = pluginLock "environment"; })
+          .packages.core.buildPhase;
+      expected = true;
+    };
+    testWithoutTheScopeAPluginLockNeedsARepository = {
+      expr =
+        failsToEvaluate
+          (buildWith (pkgs.callPackage ../nix/lib/build-sbt-project.nix { sbt-nix-backend = null; }) {
+            lockFile = pluginLock "environment";
+          }).packages.core.drvPath;
+      expected = true;
+    };
     testUnknownPluginRouteFails = {
       expr = failsToEvaluate (buildWithPlugin "telepathy").packages.core.drvPath;
       expected = true;
@@ -177,14 +245,7 @@ let
   buildWithPlugin =
     via:
     build {
-      lockFile = lockJson {
-        plugin = {
-          organization = "io.github.clhodapp";
-          name = "sbt-nix-backend";
-          version = "0.1.0";
-          inherit via;
-        };
-      };
+      lockFile = pluginLock via;
       pluginRepository = src;
     };
 

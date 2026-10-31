@@ -4,31 +4,31 @@
 # access is the fixed-output fetches of locked artifacts.
 {
   pkgs,
+  # The flake's default package overlay, which adds buildSbtProject.
+  overlay,
   plugin,
   plugin-repository,
 }:
 let
   inherit (pkgs) lib;
 
-  buildSbtProject = import ../nix/lib;
+  # Every fixture builds the way a consumer's package does: through
+  # buildSbtProject of a package set the overlay applies to.
+  withOverlay = pkgs.extend overlay;
+  inherit (withOverlay) buildSbtProject;
 
   # The fixtures were locked with the plugin injected (see
   # tests/relock-fixtures.sh), so their builds inject a plugin. multi takes
-  # the library's default, the plugin built from the library's own source.
+  # the builder's default, the plugin repository of the overlay's scope.
   multi = buildSbtProject {
-    inherit pkgs;
     src = ./fixtures/multi;
     # app's munit suite runs in the build, and it reads the license the
     # third-party plugin fetched outside coursier.
     doCheck = true;
   };
 
-  # The consumer's lock pins a flake reference to the producer's
-  # repository; the check passes the producer's output instead, as a flake
-  # with the producer as an input would.
   # An sbt 2 build, which injects the plugin's sbt 2 variant.
   sbt2 = buildSbtProject {
-    inherit pkgs;
     src = ./fixtures/sbt2;
     pluginRepository = plugin-repository;
     doCheck = true;
@@ -38,14 +38,15 @@ let
   # locked with plain sbt; its Nix build names the plugin repository in
   # SBT_NIX_BACKEND_REPOSITORY.
   metameta = buildSbtProject {
-    inherit pkgs;
     src = ./fixtures/metameta;
     pluginRepository = plugin-repository;
     doCheck = true;
   };
 
+  # The consumer's lock pins a flake reference to the producer's
+  # repository; the check passes the producer's output instead, as a flake
+  # with the producer as an input would.
   consumer = buildSbtProject {
-    inherit pkgs;
     src = ./fixtures/consumer;
     pluginRepository = plugin-repository;
     flakeRepositories.multi = multi.repositories.app;
@@ -111,7 +112,7 @@ in
   # The plugin built by itself from its lock, with its unit tests run.
   inherit plugin;
 
-  nix-library = import ./nix-library.nix { inherit pkgs; };
+  nix-library = import ./nix-library.nix { inherit pkgs overlay; };
 
   # Feature 1: the coursier cache of the multi fixture.
   multi-dependencies = multi.dependencies;

@@ -3,7 +3,12 @@
 # published copy is needed. Its unit tests run in the build. The package's
 # `repository` output holds the plugin with its runtime dependencies as a
 # Maven repository, which builds of injected locks resolve the plugin from.
-{ pkgs }:
+# It is a package for callPackage; the plugin's own lock names no plugin,
+# so its build never asks the scope for a plugin repository.
+{
+  lib,
+  buildSbtProject,
+}:
 let
   root = ../..;
   # Only what the plugin's own build reads: the test fixtures and the flake
@@ -16,15 +21,14 @@ let
     "sbt-nix-backend.lock.json"
   ];
 in
-(import ./. {
-  inherit pkgs;
+(buildSbtProject {
   src = root;
   doCheck = true;
   srcFilter =
     path: type:
     let
-      rel = pkgs.lib.removePrefix (toString root + "/") (toString path);
-      top = builtins.head (pkgs.lib.splitString "/" rel);
+      rel = lib.removePrefix (toString root + "/") (toString path);
+      top = builtins.head (lib.splitString "/" rel);
       name = baseNameOf path;
     in
     builtins.elem top parts && !(type == "directory" && name == "target");

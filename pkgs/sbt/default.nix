@@ -82,7 +82,8 @@ writeTextFile {
       wanted=$(sed -n 's/^[[:space:]]*sbt\.version[[:space:]]*=[[:space:]]*\([^[:space:]]*\).*/\1/p' project/build.properties)
       if [ -n "$locked" ] && [ "$locked" = "$wanted" ]; then
         mkdir -p target/sbt-nix-backend/gcroots
-        if tree=$(nix-build ${../../nix/lib}/dependencies.nix --arg pkgs "import ${pkgs.path} { }" \
+        if tree=$(nix-build --expr \
+          '{ lockFile }: (import ${pkgs.path} { }).callPackage ${../../nix/lib}/dependencies.nix { inherit lockFile; }' \
           --arg lockFile "$PWD/$lockfile" --out-link target/sbt-nix-backend/gcroots/boot-cache); then
           export SBT_NIX_BACKEND_USER_COURSIER_CACHE="''${COURSIER_CACHE:-}"
           export COURSIER_CACHE="$tree"

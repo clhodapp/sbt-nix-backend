@@ -44,7 +44,7 @@ object NixBackendPlugin extends AutoPlugin {
         "the meta-build defines, so every level reads the one lockfile and coursier cache."
     )
     val nixLockFile = settingKey[File](
-      "The lockfile, which the flake's lib.sbt-nix-backend.buildSbtProject builds the build from " +
+      "The lockfile, which buildSbtProject (from the flake overlay) builds the build from " +
         "(default: sbt-nix-backend.lock.json in the build root)."
     )
     val nixBackend = settingKey[Boolean](

@@ -1,6 +1,7 @@
 # What the plugin's nixPackagedArtifacts and nixRuntimeRepository build:
-# one project of a build, by buildSbtProject (default.nix), from arguments
-# that sbt passes on the command line as strings.
+# one project of a build, by buildSbtProject (build-sbt-project.nix, called
+# with the nixpkgs package set), from arguments that sbt passes on the
+# command line as strings.
 #
 #   nixpkgs           a nixpkgs source directory, or a flake reference
 #   src               the build root
@@ -20,8 +21,7 @@ let
       import nixpkgs { }
     else
       (builtins.getFlake nixpkgs).legacyPackages.${builtins.currentSystem};
-  build = import ./. {
-    inherit pkgs;
+  build = pkgs.callPackage ./build-sbt-project.nix { } {
     src = /. + src;
     # A store path passed as a string has no context; storePath gives it
     # one, so the package build may read the repository.

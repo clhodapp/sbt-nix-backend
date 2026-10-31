@@ -67,6 +67,7 @@
           {
             checks = import ../../../tests {
               inherit pkgs;
+              overlay = self.overlays.default;
               inherit (self.packages.${system}) plugin plugin-repository;
             };
             treefmt.programs.nixfmt.enable = true;
