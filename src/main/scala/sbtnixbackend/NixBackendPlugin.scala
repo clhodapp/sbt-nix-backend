@@ -58,7 +58,8 @@ object NixBackendPlugin extends AutoPlugin {
       "URLs this project's build downloads outside coursier. nixLock fetches and locks them, and sandboxed " +
         "builds find them in the coursier cache at the path coursier would use (see nixNetworkFile). " +
         "A plugin can declare them without depending on sbt-nix-backend by defining a task key of " +
-        "the same name and type."
+        "the same name and type, and read them from the cache the system property " +
+        "sbt.nix.backend.coursierCache names."
     )
     val nixFlakeRepositories = settingKey[Seq[NixFlakeRepository]](
       "Flake references to sbt-nix-backend repositories that resolution reads before the other resolvers (feature 5)."
@@ -194,8 +195,39 @@ object NixBackendPlugin extends AutoPlugin {
     commands += sandboxBuildCommand,
     // The default lives in Global only, so a project-level append from any
     // plugin survives whatever order the plugins apply in.
-    nixNetworkDependencies := Nil
+    nixNetworkDependencies := Nil,
+    onLoad := onLoad.value.andThen(publishCoursierCache)
   )
+
+  /** The system property that names the coursier cache holding the locked
+    * downloads, including every declared network dependency at the path
+    * coursier would use. A plugin that bridges itself without depending on
+    * sbt-nix-backend reads its files from there whenever the property is
+    * set, in a Nix build, in the lock run and interactively.
+    */
+  val CoursierCacheProperty = "sbt.nix.backend.coursierCache"
+
+  /** Sets [[CoursierCacheProperty]] once the build is loaded. Interactively
+    * that means realizing the lock now, so its files exist before any task
+    * reads them.
+    */
+  private def publishCoursierCache(state: State): State = {
+    Mode.current match {
+      case Mode.Interactive =>
+        val extracted = Project.extract(state)
+        if (extracted.getOpt(ThisBuild / nixBackend).getOrElse(false)) {
+          val (next, dir) = extracted.runTask(ThisBuild / nixCoursierCache, state)
+          System.setProperty(CoursierCacheProperty, dir.getAbsolutePath)
+          next
+        } else {
+          System.clearProperty(CoursierCacheProperty)
+          state
+        }
+      case _ =>
+        System.setProperty(CoursierCacheProperty, Mode.coursierCacheFromEnv.getAbsolutePath)
+        state
+    }
+  }
 
   override def buildSettings: Seq[Setting[_]] = Seq(
     nixBuildRoot := buildRootSetting.value,
@@ -232,6 +264,16 @@ object NixBackendPlugin extends AutoPlugin {
     },
     nixCoursierCache := coursierCacheTask.value,
     nixNixpkgs := sys.props.get("sbt.nix.backend.nixpkgs").filter(_.nonEmpty).getOrElse("flake:nixpkgs"),
+    // The sbt wrapper boots sbt with COURSIER_CACHE set to the read-only
+    // tree of locked downloads, and names the user's own cache in
+    // SBT_NIX_BACKEND_USER_COURSIER_CACHE. Every resolution the lock does
+    // not cover (source jars for an IDE, a build whose lock is stale)
+    // goes to the user's cache.
+    csrCacheDirectory := (sys.env.get("SBT_NIX_BACKEND_USER_COURSIER_CACHE") match {
+      case Some(dir) if dir.nonEmpty => new File(dir)
+      case Some(_)                   => defaultUserCoursierCache
+      case None                      => csrCacheDirectory.value
+    }),
     nixLock := lockTask(force = false, updateFlakes = false).value,
     nixRelock := lockTask(force = true, updateFlakes = false).value,
     nixLockUpdate := lockTask(force = true, updateFlakes = true).value
@@ -362,6 +404,16 @@ object NixBackendPlugin extends AutoPlugin {
         sys.error(s"sbt-nix-backend: the meta-build at $base is not a project/ directory under the build root $root")
       root
     }
+  }
+
+  /** Coursier's default cache location when COURSIER_CACHE is unset
+    * (coursier.paths.CoursierPaths): the XDG cache on Linux, Library/Caches
+    * on macOS.
+    */
+  private def defaultUserCoursierCache: File = {
+    val home = new File(sys.props("user.home"))
+    if (sys.props("os.name").toLowerCase.contains("mac")) new File(home, "Library/Caches/Coursier/v1")
+    else new File(sys.env.get("XDG_CACHE_HOME").filter(_.nonEmpty).map(new File(_)).getOrElse(new File(home, ".cache")), "coursier/v1")
   }
 
   private def allFiles(dir: File): Vector[File] =

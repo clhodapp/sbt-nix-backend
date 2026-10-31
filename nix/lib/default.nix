@@ -47,7 +47,6 @@ let
   inherit (pkgs) lib;
 
   lock = import ./lock.nix { inherit lockFile; };
-  fetch = import ./fetch.nix { inherit lock fetchurl; };
   system = pkgs.stdenv.hostPlatform.system;
 
   # Build outputs and editor state never take part in a build.
@@ -77,25 +76,7 @@ let
       or (throw "sbt-nix-backend: nixpkgs has no jdk${javaMajor}_headless or jdk${javaMajor} for the Java ${lock.javaVersion} the lock was made with; pass `jdk`.");
   jdk' = if jdk != null then jdk else defaultJdk;
 
-  # Feature 1: every locked file at its coursier-cache path. The manifest
-  # goes to the builder as a file, since a large build locks thousands of
-  # artifacts and the list would not fit in an environment variable.
-  dependencies =
-    pkgs.runCommand "sbt-coursier-cache"
-      {
-        manifest = lib.concatMapStrings (a: "${a.path}\t${fetch a}\n") lock.artifacts;
-        passAsFile = [ "manifest" ];
-        preferLocalBuild = true;
-        allowSubstitutes = false;
-        passthru = { inherit lock; };
-      }
-      ''
-        mkdir -p $out
-        while IFS=$'\t' read -r rel target; do
-          mkdir -p "$out/$(dirname "$rel")"
-          ln -s "$target" "$out/$rel"
-        done < "$manifestPath"
-      '';
+  dependencies = import ./dependencies.nix { inherit pkgs lockFile fetchurl; };
 
   # Feature 5: the store path of each flake repository of the lock.
   flakeRepositoryPaths = builtins.listToAttrs (

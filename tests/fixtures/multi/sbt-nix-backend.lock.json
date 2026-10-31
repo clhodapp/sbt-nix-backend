@@ -33,8 +33,8 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-Sg4leNH7dCz5dukErL+dhghxVblPKdrnz3iLIQt8/A0=",
-  "definitionHash": "sha256-S/YfWJcx1GrmkzhGnmg8Csw42kLB26f/y4qs2lCJdWA=",
+  "inputsHash": "sha256-5VQEX7KJ+MZKHf3siyuJsIlS3oM7QLfbnN8s4jtlQrY=",
+  "definitionHash": "sha256-wxw+VJyFhIwvZvcDlBRyoo/uXLjXBS2VUI1B576sJ0U=",
   "artifacts": [
     {
       "path": "https/repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_2.12/0.9.3/gigahorse-apache-http_2.12-0.9.3.jar",

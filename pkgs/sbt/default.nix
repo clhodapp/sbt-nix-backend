@@ -69,6 +69,28 @@ writeTextFile {
         [ -e "$dir/$name" ] || ln -s "$entry" "$dir/$name"
       done
     fi
+    # sbt itself boots before any level of the build exists, and the
+    # launcher downloads it through COURSIER_CACHE. With a lockfile for
+    # this sbt version, that cache is the locked downloads, so sbt boots
+    # from them. The plugin points the build's own resolution elsewhere
+    # (the locked cache, or the user's cache named here), so nothing
+    # writes into this read-only tree.
+    lockfile=sbt-nix-backend.lock.json
+    case "''${SBT_NIX_BACKEND:-1}" in 0 | false) lockfile= ;; esac
+    if [ -n "$lockfile" ] && [ -f "$lockfile" ] && [ -f project/build.properties ]; then
+      locked=$(sed -n 's/^  "sbtVersion": "\(.*\)",$/\1/p' "$lockfile")
+      wanted=$(sed -n 's/^[[:space:]]*sbt\.version[[:space:]]*=[[:space:]]*\([^[:space:]]*\).*/\1/p' project/build.properties)
+      if [ -n "$locked" ] && [ "$locked" = "$wanted" ]; then
+        mkdir -p target/sbt-nix-backend/gcroots
+        if tree=$(nix-build ${../../nix/lib}/dependencies.nix --arg pkgs "import ${pkgs.path} { }" \
+          --arg lockFile "$PWD/$lockfile" --out-link target/sbt-nix-backend/gcroots/boot-cache); then
+          export SBT_NIX_BACKEND_USER_COURSIER_CACHE="''${COURSIER_CACHE:-}"
+          export COURSIER_CACHE="$tree"
+        else
+          echo "sbt-nix-backend: the locked downloads did not build; sbt boots the usual way" >&2
+        fi
+      fi
+    fi
     exec ${lib.getExe pkgs.sbt} \
       -Dsbt.global.plugins="$dir" \
       -Dsbt.nix.backend.inject=${inject} \

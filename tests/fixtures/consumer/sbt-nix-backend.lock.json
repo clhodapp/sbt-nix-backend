@@ -23,12 +23,12 @@
   "flakeRepositories": [
     {
       "name": "multi",
-      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.SSu6BsZJPN#app",
-      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.SSu6BsZJPN?lastModified=1793481578&narHash=sha256-34WfCndDf5Gj6b48wA9RpebPJ1FB0gx0jI0m%2B4Zchag%3D",
+      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.oeXKcdVquf#app",
+      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.oeXKcdVquf?lastModified=1793482396&narHash=sha256-n1Y%2B8viL%2BLZUCtS%2BZDQXg9zdQbNelyYENZSMRwEqI/k%3D",
       "attribute": "app"
     }
   ],
-  "inputsHash": "sha256-gbEQYNljaiUJCGkIJ+XAxRw1D8/oFD4jCrlp2O6REwU=",
+  "inputsHash": "sha256-2HYp9p2Z3DfTHY4rXnARnTl9dm50eU/ZetyixKD5xYg=",
   "definitionHash": "sha256-XKDqqOS36DEwE+90vU7tOcn20fxG85ldNnIElG366Qw=",
   "artifacts": [
     {

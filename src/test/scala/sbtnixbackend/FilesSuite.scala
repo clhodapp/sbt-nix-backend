@@ -102,6 +102,21 @@ class FilesSuite extends munit.FunSuite {
     intercept[RuntimeRepository.NotRepresentable](RuntimeRepository.publishedCoordinates(dir))
   }
 
+  test("the plugin carries every file of the Nix library") {
+    val dir = new File("nix/lib")
+    assume(dir.isDirectory, "the tests run from the repository root")
+    assertEquals(NixLibrary.files, dir.list().toVector.filter(_.endsWith(".nix")).sorted)
+    val out = tempDir()
+    NixLibrary.write(out)
+    NixLibrary.files.foreach { n =>
+      assertEquals(
+        Files.readAllBytes(new File(out, n).toPath).toSeq,
+        Files.readAllBytes(new File(dir, n).toPath).toSeq,
+        s"$n in the jar differs from nix/lib/$n"
+      )
+    }
+  }
+
   test("a flake repository's fragment names the attribute, defaulting to the name") {
     assertEquals(NixFlakeRepository("lib", "github:o/r/abc#core").flakeRef, "github:o/r/abc")
     assertEquals(NixFlakeRepository("lib", "github:o/r/abc#core").attribute, "core")
