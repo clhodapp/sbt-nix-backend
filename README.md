@@ -8,8 +8,8 @@ build, and Nix fetches what the build needs and builds it in the sandbox.
 - **A lockfile.** `nixLock` writes `sbt-nix-backend.lock.json` at the build
   root, with every file the build downloads (by URL and SHA-256), the sbt
   launcher, the JVM options, and the projects to build.
-- **Sandboxed builds.** The flake's `lib.sbt-nix-backend.buildSbtProject`
-  turns a build and its lockfile into derivations. `dependencies` is the
+- **Sandboxed builds.** `buildSbtProject`, which the flake's overlay adds
+  to a package set, turns a build and its lockfile into derivations. `dependencies` is the
   coursier cache of every locked file. `packages.<project>` holds the
   project's published artifacts in Maven layout. Its `repository` output
   holds them with their runtime dependencies, as a Maven repository that
@@ -63,7 +63,15 @@ build needs no entry in `project/plugins.sbt`:
 nix run github:clhodapp/sbt-nix-backend -- nixLock
 ```
 
-Commit `sbt-nix-backend.lock.json`, and build from a flake:
+Commit `sbt-nix-backend.lock.json`. The flake's `overlays.default` adds
+`buildSbtProject` to a package set, and a package written for
+`callPackage` takes it by name, like any other builder:
+
+```nix
+# package.nix
+{ buildSbtProject }:
+(buildSbtProject { src = ./.; }).packages.core
+```
 
 ```nix
 {
@@ -73,24 +81,31 @@ Commit `sbt-nix-backend.lock.json`, and build from a flake:
   outputs = { nixpkgs, sbt-nix-backend, ... }:
     let
       system = "x86_64-linux";
-      build = sbt-nix-backend.lib.sbt-nix-backend.buildSbtProject {
-        pkgs = nixpkgs.legacyPackages.${system};
-        src = ./.;
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [
+          sbt-nix-backend.overlays.default
+          (final: prev: { core = final.callPackage ./package.nix { }; })
+        ];
       };
     in
     {
-      packages.${system} = build.packages;
+      packages.${system}.core = pkgs.core;
       # Other builds reference these (see below).
-      sbtRepositories.${system} = build.sbtRepositories;
+      sbtRepositories.${system} = (pkgs.buildSbtProject { src = ./.; }).sbtRepositories;
     };
 }
 ```
 
 `nix build '.#core'` builds project `core`; `nix build '.#core.repository'`
-builds its repository. `nix/lib/default.nix` documents every argument:
-`jdk` (the default is the headless JDK of the major version the lock was
-made with), `fetchurl` (for credentials or mirrors), `doCheck` (runs
-`test`), `srcFilter`, `pluginRepository` and `flakeRepositories`.
+builds its repository. The builder takes what it needs from the package
+set (`stdenvNoCC`, `javaPackages`, the `sbt-nix-backend` scope for its
+plugin repository), so `buildSbtProject.override` or an overlay on the
+scope replaces any of it. `nix/lib/build-sbt-project.nix` documents the
+build's arguments: `jdk` (the default is the headless JDK of the major
+version the lock was made with), `fetchurl` (for credentials or mirrors),
+`doCheck` (runs `test`), `srcFilter`, `pluginRepository` and
+`flakeRepositories`.
 
 ### Without the wrapper
 

@@ -9,8 +9,8 @@ through the store. The README describes what it does for a user.
 
 - The sbt plugin (`src/main/scala`): the lock run, the sandbox command,
   interactive mode, flake repositories, and the keys.
-- The Nix library (`nix/lib`), exported as
-  `lib.sbt-nix-backend.buildSbtProject`. The plugin jar carries the same
+- The Nix library (`nix/lib`), whose builder the flake overlay adds to a
+  package set as `buildSbtProject`, for `callPackage`. The plugin jar carries the same
   files, so the code that builds a lockfile always comes from the plugin
   revision that wrote it.
 - The lockfile format (`Lock.scala`, `nix/lib/lock.nix`), versioned by its

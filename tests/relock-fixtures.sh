@@ -57,11 +57,8 @@ cat > "$producer/flake.nix" <<EOF
   inputs.sbt-nix-backend.url = "git+file://$root";
   outputs = { sbt-nix-backend, ... }:
     let
-      pkgs = sbt-nix-backend.inputs.nixpkgs.legacyPackages.$system;
-      build = sbt-nix-backend.lib.sbt-nix-backend.buildSbtProject {
-        inherit pkgs;
-        src = ./.;
-      };
+      pkgs = sbt-nix-backend.inputs.nixpkgs.legacyPackages.$system.extend sbt-nix-backend.overlays.default;
+      build = pkgs.buildSbtProject { src = ./.; };
     in { sbtRepositories.$system = build.sbtRepositories; };
 }
 EOF

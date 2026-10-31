@@ -4,15 +4,15 @@ import java.io.File
 import java.nio.file.Files
 
 /** The sbt-nix-backend Nix library (nix/lib in its repository), which the
-  * plugin carries in its jar: the same files the flake exports as
-  * `lib.sbt-nix-backend.buildSbtProject`, from the same revision.
+  * plugin carries in its jar: the same files whose builder the flake overlay
+  * adds to a package set as `buildSbtProject`, from the same revision.
   * Interactive mode evaluates realize.nix from it, and nixPackagedArtifacts
   * builds package.nix.
   */
 object NixLibrary {
 
   val files: Vector[String] =
-    Vector("default.nix", "dependencies.nix", "fetch.nix", "lock.nix", "package.nix", "plugin.nix", "realize.nix")
+    Vector("build-sbt-project.nix", "dependencies.nix", "fetch.nix", "lock.nix", "package.nix", "plugin.nix", "realize.nix")
 
   private def resource(name: String): Array[Byte] = {
     val in = getClass.getResourceAsStream("/sbtnixbackend/nix/" + name)

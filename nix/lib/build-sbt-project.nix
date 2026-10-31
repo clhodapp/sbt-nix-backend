@@ -1,10 +1,16 @@
 # buildSbtProject: the sandboxed builds of an sbt build, from the lockfile
-# the plugin's nixLock writes at the build root. The sbt-nix-backend flake
-# exports this function as `lib.sbt-nix-backend.buildSbtProject`:
+# the plugin's nixLock writes at the build root.
 #
-#   sbt-nix-backend.lib.sbt-nix-backend.buildSbtProject { inherit pkgs; src = ./.; }
+# The file is a package for callPackage: the first argument set is what it
+# takes from the package set, and the result is the builder. The
+# sbt-nix-backend overlay (`overlays.default`) adds it to the package set
+# as `buildSbtProject`, so a package written for callPackage takes it like
+# any other dependency:
 #
-# returns
+#   { buildSbtProject }: (buildSbtProject { src = ./.; }).packages.app
+#
+# and `buildSbtProject.override` replaces what it takes from the set. The
+# builder returns
 #
 #   dependencies          the coursier cache of every locked artifact (feature 1)
 #   packages.<id>         the published artifacts of sbt project <id>, in
@@ -16,22 +22,34 @@
 #                         (`sbtRepositories.<system>.<id>`) for other builds
 #                         to reference (feature 5)
 {
+  lib,
+  stdenvNoCC,
+  runCommand,
+  writeText,
+  callPackage,
+  # The JDKs a build can run on; the default JDK of a build is the headless
+  # one of the major version its lock was made with.
+  javaPackages,
+  # The sbt-nix-backend package scope, whose `plugin-repository` is the
+  # default plugin repository. It is null where the overlay is not applied;
+  # a lock that needs the plugin then needs `pluginRepository`.
+  sbt-nix-backend ? null,
+}:
+{
   # The root of the sbt build.
   src,
   # The lockfile; the default is the one nixLock writes at the build root.
   lockFile ? src + "/sbt-nix-backend.lock.json",
-  pkgs,
-  # The JDK that runs sbt. The default is the headless JDK of the major
-  # version the lock was made with.
+  # The JDK that runs sbt.
   jdk ? null,
   # Replaces the built-in fetcher; see fetch.nix.
   fetchurl ? null,
   # The repository the build takes the sbt-nix-backend plugin from, when the
   # lock says the Nix build supplies it (`plugin` in the lock): as a global
   # plugin, or through SBT_NIX_BACKEND_REPOSITORY for a build that installs
-  # the plugin in its project/project/plugins.sbt. The default builds it
-  # from the source this library came with, which is the plugin version of
-  # the same sbt-nix-backend revision.
+  # the plugin in its project/project/plugins.sbt. The default is the
+  # scope's `plugin-repository`: the plugin built from the sbt-nix-backend
+  # revision whose overlay added this builder.
   pluginRepository ? null,
   # Repository paths that replace flake repositories of the lock, by
   # resolver name. A flake that has the producing flake as an input can
@@ -46,10 +64,8 @@
   srcFilter ? null,
 }:
 let
-  inherit (pkgs) lib;
-
   lock = import ./lock.nix { inherit lockFile; };
-  system = pkgs.stdenv.hostPlatform.system;
+  system = stdenvNoCC.hostPlatform.system;
 
   # Build outputs and editor state never take part in a build.
   defaultSrcFilter =
@@ -74,11 +90,11 @@ let
 
   javaMajor = builtins.head (lib.splitString "." lock.javaVersion);
   defaultJdk =
-    pkgs."jdk${javaMajor}_headless" or pkgs."jdk${javaMajor}"
-      or (throw "sbt-nix-backend: nixpkgs has no jdk${javaMajor}_headless or jdk${javaMajor} for the Java ${lock.javaVersion} the lock was made with; pass `jdk`.");
+    javaPackages.compiler."openjdk${javaMajor}".headless
+      or (throw "sbt-nix-backend: javaPackages has no openjdk${javaMajor} for the Java ${lock.javaVersion} the lock was made with; pass `jdk`.");
   jdk' = if jdk != null then jdk else defaultJdk;
 
-  dependencies = import ./dependencies.nix { inherit pkgs lockFile fetchurl; };
+  dependencies = callPackage ./dependencies.nix { inherit lockFile fetchurl; };
 
   # Feature 5: the store path of each flake repository of the lock.
   flakeRepositoryPaths = builtins.listToAttrs (
@@ -101,12 +117,13 @@ let
     else
       let
         p = lock.plugin;
-        # The plugin's own lock names no plugin, so this does not recurse.
         repo =
           if pluginRepository != null then
             pluginRepository
+          else if sbt-nix-backend != null then
+            sbt-nix-backend.plugin-repository
           else
-            (import ./plugin.nix { inherit pkgs; }).repository;
+            throw "sbt-nix-backend: the lock takes the plugin (${p.organization}:${p.name}:${p.version}) from a repository the Nix build supplies; apply the sbt-nix-backend overlay or pass `pluginRepository`.";
         orgPath = lib.replaceStrings [ "." ] [ "/" ] p.organization;
       in
       assert
@@ -118,7 +135,7 @@ let
       {
         inherit (p) via;
         inherit repo;
-        file = pkgs.writeText "sbt-nix-backend-plugin.sbt" ''
+        file = writeText "sbt-nix-backend-plugin.sbt" ''
           resolvers += MavenRepository("sbt-nix-backend-plugin", "file://${repo}")
           addSbtPlugin("${p.organization}" % "${p.name}" % "${p.version}")
         '';
@@ -190,7 +207,7 @@ let
 
   mkPackage =
     project:
-    pkgs.stdenvNoCC.mkDerivation {
+    stdenvNoCC.mkDerivation {
       pname = project.name;
       inherit (project) version;
       src = filteredSrc;
