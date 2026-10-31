@@ -94,7 +94,14 @@ object LockGeneration {
         "-Dsbt.log.noformat=true",
         "-Dsbt.supershell=false"
       ) ++ globalPlugins.map(d => s"-Dsbt.global.plugins=${d.getAbsolutePath}").toSeq ++
-        proxyProperties ++ Seq("-jar", new File(cache, launcherPath).getAbsolutePath, command)
+        Seq("-jar", new File(cache, launcherPath).getAbsolutePath, command)
+
+    // The proxy settings may hold a password, and a command line is
+    // readable by every local user, so they go through the environment,
+    // which only the owner can read. The java launcher reads
+    // JDK_JAVA_OPTIONS, with double quotes around each option.
+    val javaOptionsEnv = (sys.env.get("JDK_JAVA_OPTIONS").filter(_.trim.nonEmpty).toSeq ++
+      proxyProperties.map(p => "\"" + p + "\"")).mkString(" ")
 
     // The fork sees what a Nix build sees: no coursier settings beyond the
     // cache, and the sbt-nix-backend mode variables.
@@ -107,6 +114,7 @@ object LockGeneration {
       "COURSIER_CONFIG_DIR" -> None,
       "COURSIER_CREDENTIALS" -> None,
       "SBT_OPTS" -> None,
+      "JDK_JAVA_OPTIONS" -> Some(javaOptionsEnv).filter(_.nonEmpty),
       "SBT_NIX_BACKEND" -> None,
       "SBT_NIX_MODE" -> Some("lock"),
       "SBT_NIX_OUTPUT" -> Some(output.getAbsolutePath),
