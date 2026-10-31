@@ -92,6 +92,31 @@ builds its repository. `nix/lib/default.nix` documents every argument:
 made with), `fetchurl` (for credentials or mirrors), `doCheck` (runs
 `test`), `srcFilter`, `pluginRepository` and `flakeRepositories`.
 
+### Without the wrapper
+
+A build whose `.sbt` files use the plugin's keys needs the plugin in its
+own definition, or plain sbt cannot load it. Install it once, in the
+meta-most build, `project/project/plugins.sbt`:
+
+```scala
+resolvers += MavenRepository(
+  "sbt-nix-backend",
+  new File(sys.env("SBT_NIX_BACKEND_REPOSITORY")).toURI.toString
+)
+addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % "0.1.0")
+```
+
+In a meta-build, the plugin adds itself to the build the meta-build
+defines, so `project/` and the build both have it: both can use its keys,
+and it governs the resolution of both, `project/plugins.sbt` included.
+`nix develop github:clhodapp/sbt-nix-backend` gives plain nixpkgs sbt with
+`SBT_NIX_BACKEND_REPOSITORY` naming the plugin repository. The lockfile
+records that the build takes the plugin from that variable, and
+`buildSbtProject` sets it in the sandbox. Without the wrapper, sbt itself
+and the meta-most build (which resolves the plugin) download the usual
+way; every level above resolves from the lockfile.
+`tests/fixtures/metameta` is such a build.
+
 ### Depending on another build
 
 ```scala

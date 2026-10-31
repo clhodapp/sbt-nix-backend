@@ -181,18 +181,81 @@ object NixBackendPlugin extends AutoPlugin {
       }
   }
 
+  final case class PluginCoordinates(organization: String, name: String, version: String)
+
   /** The coordinates this plugin was published under, from its jar
     * manifest. A build that compiles the plugin from source (this
-    * repository's own) has no manifest, and then no injected plugin.
+    * repository's own) has no manifest, and then no plugin to pass on.
     */
-  lazy val pluginCoordinates: Option[InjectedPlugin] = {
+  lazy val pluginCoordinates: Option[PluginCoordinates] = {
     val pkg = getClass.getPackage
     for {
       org <- Option(pkg.getImplementationVendor)
       name <- Option(pkg.getImplementationTitle)
       version <- Option(pkg.getImplementationVersion)
-    } yield InjectedPlugin(org, name, version)
+    } yield PluginCoordinates(org, name, version)
   }
+
+  /** The root of the Maven repository this plugin's jar sits in, when its
+    * path ends in `<organization>/<module>/<version>/<jar>`: a file
+    * repository it was resolved from, or the part of a coursier cache that
+    * mirrors a remote one.
+    */
+  lazy val pluginRepositoryRoot: Option[File] =
+    for {
+      c <- pluginCoordinates
+      source <- Option(getClass.getProtectionDomain.getCodeSource)
+      jar = new File(source.getLocation.toURI)
+      if jar.isFile
+      versionDir <- Option(jar.getParentFile)
+      if versionDir.getName == c.version
+      moduleDir <- Option(versionDir.getParentFile)
+      if moduleDir.getName.startsWith(c.name + "_")
+      orgPath = c.organization.split('.').toSeq
+      root <- orgPath.foldLeft(Option(moduleDir.getParentFile))((d, _) => d.flatMap(f => Option(f.getParentFile)))
+      if orgPath.foldLeft(root)((d, s) => new File(d, s)).getCanonicalFile == moduleDir.getParentFile.getCanonicalFile
+    } yield root.getCanonicalFile
+
+  /** The repository `SBT_NIX_BACKEND_REPOSITORY` names, if it is set. */
+  def environmentRepository: Option[File] =
+    sys.env.get(LockedPlugin.RepositoryVariable).filter(_.nonEmpty).map(new File(_).getCanonicalFile)
+
+  /** How a Nix build of the build reaches this plugin, if it must supply
+    * the repository; see [[LockedPlugin]].
+    */
+  def lockedPlugin: Option[LockedPlugin] =
+    pluginCoordinates.flatMap { c =>
+      def as(via: String) = LockedPlugin(c.organization, c.name, c.version, via)
+      if (injectedPluginFile.isDefined) Some(as(LockedPlugin.GlobalPlugin))
+      else if (environmentRepository.isDefined && environmentRepository == pluginRepositoryRoot)
+        Some(as(LockedPlugin.Environment))
+      else None
+    }
+
+  /** In a meta-build, the plugin adds itself to the build the meta-build
+    * defines, so a build installs it once, in its meta-most build
+    * (`project/project/plugins.sbt`), and every level above has it: the
+    * plugin governs each level's resolution, and the `*.sbt` files of each
+    * level can use its keys. The resolvers are the repository its jar came
+    * from and the one `SBT_NIX_BACKEND_REPOSITORY` names. A plugin the
+    * wrapper loaded as a global plugin is at every level already.
+    */
+  private def passOnSettings: Seq[Setting[_]] = Seq(
+    libraryDependencies ++= {
+      if (!isMetaBuild.value || injectedPluginFile.isDefined) Nil
+      else
+        pluginCoordinates.toSeq.map { c =>
+          Defaults.sbtPluginExtra(ModuleID(c.organization, c.name, c.version), sbtBinaryVersion.value, scalaBinaryVersion.value)
+        }
+    },
+    resolvers ++= {
+      if (!isMetaBuild.value || injectedPluginFile.isDefined) Nil
+      else
+        (environmentRepository.toSeq ++ pluginRepositoryRoot.toSeq).distinct.zipWithIndex.map { case (dir, i) =>
+          MavenRepository(s"sbt-nix-backend-plugin-$i", dir.toURI.toString)
+        }
+    }
+  )
 
   def pluginVersion: String = pluginCoordinates.map(_.version).getOrElse("(from source)")
 
@@ -293,7 +356,7 @@ object NixBackendPlugin extends AutoPlugin {
     nixLockUpdate := Compat.uncached(lockTask(force = true, updateFlakes = true).value)
   )
 
-  override def projectSettings: Seq[Setting[_]] = Seq(
+  override def projectSettings: Seq[Setting[_]] = passOnSettings ++ Seq(
     nixPackaged := !(publish / skip).value,
     nixLockedProject := Compat.uncached {
       if (!nixPackaged.value) None
@@ -450,11 +513,25 @@ object NixBackendPlugin extends AutoPlugin {
       sys.error("sbt-nix-backend: nixPackagedArtifacts runs only outside the sandbox")
     val lockFile = (ThisBuild / nixLock).value
     val id = thisProject.value.id
-    if (!Lock.read(lockFile).projects.exists(_.id == id))
+    val lock = Lock.read(lockFile)
+    if (!lock.projects.exists(_.id == id))
       sys.error(s"sbt-nix-backend: $lockFile builds no project $id (nixPackaged is false for it)")
     val base = (ThisBuild / nixBuildRoot).value / "target" / "sbt-nix-backend"
     val lib = NixLibrary.write(base / "nix-lib")
-    val repository = sys.props.get("sbt.nix.backend.repository").filter(_.nonEmpty).getOrElse("")
+    // The repository this sbt takes the plugin from, which the Nix build
+    // supplies too. The library's own default builds the plugin from the
+    // source around the library, which the copy written above lacks.
+    val repository = lock.plugin.map(_.via) match {
+      case None => ""
+      case Some(LockedPlugin.GlobalPlugin) =>
+        sys.props.get("sbt.nix.backend.repository").filter(_.nonEmpty).getOrElse(
+          sys.error("sbt-nix-backend: the lockfile injects the plugin; run sbt through the sbt-nix-backend wrapper")
+        )
+      case Some(_) =>
+        environmentRepository.map(_.getPath).getOrElse(
+          sys.error(s"sbt-nix-backend: the lockfile takes the plugin from ${LockedPlugin.RepositoryVariable}, which is not set")
+        )
+    }
     log.info(s"[sbt-nix-backend] building $id ($output) in the Nix sandbox")
     new Nix(line => log.info("[nix] " + line)).buildFile(
       new File(lib, "package.nix"),
@@ -557,14 +634,14 @@ object NixBackendPlugin extends AutoPlugin {
     val repoBase = ((ThisBuild / nixBuildRoot).value / "target") / "sbt-nix-backend" / "flake-repositories"
     val repoPaths = lockedRepos.map(r => r.name -> realizeFlakeRepository(nix, repoBase, r.name, r.locked, r.attribute)).toMap
     val injectFile = injectedPluginFile
-    val injected = injectFile.flatMap(_ => pluginCoordinates)
-    if (injectFile.isDefined && injected.isEmpty)
+    val plugin = lockedPlugin
+    if (injectFile.isDefined && plugin.isEmpty)
       sys.error("sbt-nix-backend: the plugin was injected but its jar names no coordinates")
     val javaOptions = (ThisBuild / nixSbtJavaOptions).value.toVector
     val launcherUrl = (ThisBuild / nixLauncherUrl).value
     val hash = Lock.buildDefinitionHash(
       root,
-      Seq("plugin=" + injected.fold("none")(p => s"${p.organization}:${p.name}:${p.version}"), "launcher=" + launcherUrl) ++
+      Seq("plugin=" + plugin.fold("none")(p => s"${p.organization}:${p.name}:${p.version} via ${p.via}"), "launcher=" + launcherUrl) ++
         javaOptions.map("javaOption=" + _) ++ urls.map("url=" + _) ++
         lockedRepos.map(r => s"flake=${r.name}=${r.locked}#${r.attribute}") ++
         projects.map(p => s"project=${p.id}=${p.organization}:${p.name}:${p.version}")
@@ -580,7 +657,7 @@ object NixBackendPlugin extends AutoPlugin {
       flakeRepositories = lockedRepos,
       flakeRepositoryPaths = repoPaths,
       injectedPluginFile = injectFile,
-      injectedPlugin = injected,
+      plugin = plugin,
       inputsHash = hash
     )
   }

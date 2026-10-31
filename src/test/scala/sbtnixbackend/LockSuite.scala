@@ -11,7 +11,7 @@ class LockSuite extends munit.FunSuite {
     javaVersion = "21.0.12",
     launcher = "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar",
     javaOptions = Vector("-Xmx2g"),
-    injectedPlugin = Some(InjectedPlugin("io.github.clhodapp", "sbt-nix-backend", "0.1.0")),
+    plugin = Some(LockedPlugin("io.github.clhodapp", "sbt-nix-backend", "0.1.0", LockedPlugin.Environment)),
     projects = Vector(LockedProject("b", "o", "b_3", "1"), LockedProject("a", "o", "a_3", "1")),
     flakeRepositories = Vector(LockedFlakeRepository("r", "github:x/y#z", "github:x/y/abc?narHash=h", "z")),
     artifacts = Vector(

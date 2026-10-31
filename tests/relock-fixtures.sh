@@ -27,16 +27,30 @@ if [[ ${1:-} == --relock ]]; then task=nixRelock; fi
 
 sbt_wrapper=$(nix build --no-link --print-out-paths "$root#sbt")
 
+# A meta-build keeps its resolution of the plugin in project/target, and
+# sbt 2 keeps one in its disk cache under XDG_CACHE_HOME, while the plugin
+# version stays the same, even when the plugin changed. Fresh meta-builds
+# and a cache directory of this run's own resolve the current plugin.
+for fixture in multi sbt2 metameta consumer; do
+  rm -rf "$root/tests/fixtures/$fixture/project/target" "$root/tests/fixtures/$fixture/project/project/target"
+done
+XDG_CACHE_HOME=$(mktemp -d)
+export XDG_CACHE_HOME
+
 for fixture in multi sbt2; do
   (cd "$root/tests/fixtures/$fixture" && "$sbt_wrapper/bin/sbt" --server -batch "$task")
 done
 
+# metameta installs the plugin in its own project/project/plugins.sbt and
+# runs under plain sbt, from the flake's dev shell.
+(cd "$root/tests/fixtures/metameta" && nix develop "$root" -c sbt --server -batch "$task")
+
 # The producer flake for the consumer fixture: a copy of multi with a
 # flake.nix that exports its repositories as sbtRepositories.
 producer=$(mktemp -d)
-trap 'rm -rf "$producer"' EXIT
+trap 'rm -rf "$producer" "$XDG_CACHE_HOME"' EXIT
 cp -r "$root/tests/fixtures/multi/." "$producer/"
-rm -rf "$producer/target" "$producer/project/target" "$producer/project/project"
+rm -rf "$producer/target" "$producer/project/target" "$producer/project/project/target"
 system=$(nix eval --impure --raw --expr builtins.currentSystem)
 cat > "$producer/flake.nix" <<EOF
 {

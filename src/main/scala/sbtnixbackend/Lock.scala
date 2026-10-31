@@ -32,18 +32,37 @@ final case class LockedProject(id: String, organization: String, name: String, v
   */
 final case class LockedFlakeRepository(name: String, ref: String, locked: String, attribute: String)
 
-/** The sbt-nix-backend plugin, when the lock run had it injected as a
-  * global plugin (`sbt.global.plugins`) rather than resolved from
-  * `project/plugins.sbt`. The Nix side must then inject the same version.
+/** The sbt-nix-backend plugin, when the lock run took it from a repository
+  * the Nix build must supply, and how the build reached it (`via`):
+  *
+  *  - [[LockedPlugin.GlobalPlugin]]: the sbt wrapper loaded it as a global
+  *    plugin (`sbt.global.plugins`), and the Nix build does the same.
+  *  - [[LockedPlugin.Environment]]: the build's own
+  *    `project/project/plugins.sbt` resolved it from the repository named by
+  *    `SBT_NIX_BACKEND_REPOSITORY`, and the Nix build sets that variable.
+  *
+  * Either way the Nix build checks that its repository holds this version.
+  * A plugin resolved from a remote repository is an ordinary locked
+  * artifact and has no record here.
   */
-final case class InjectedPlugin(organization: String, name: String, version: String)
+final case class LockedPlugin(organization: String, name: String, version: String, via: String)
+
+object LockedPlugin {
+  val GlobalPlugin = "global-plugin"
+  val Environment = "environment"
+
+  /** The variable a build's `project/project/plugins.sbt` names the plugin
+    * repository with.
+    */
+  val RepositoryVariable = "SBT_NIX_BACKEND_REPOSITORY"
+}
 
 /** The lockfile: every input a sandboxed build of this sbt build needs.
   *
   * `definitionHash` is a digest of the build definition files alone (see
   * [[Lock.buildDefinitionHash]]); every level of the build can compute it,
   * and interactive resolution reads the lock only while it matches.
-  * `inputsHash` adds the inputs only the concrete build knows (the injected
+  * `inputsHash` adds the inputs only the concrete build knows (the
   * plugin, declared network URLs, flake references, the projects); nixLock
   * relocks when it changes.
   */
@@ -52,7 +71,7 @@ final case class Lock(
     javaVersion: String,
     launcher: String,
     javaOptions: Vector[String],
-    injectedPlugin: Option[InjectedPlugin],
+    plugin: Option[LockedPlugin],
     projects: Vector[LockedProject],
     flakeRepositories: Vector[LockedFlakeRepository],
     artifacts: Vector[LockedArtifact],
@@ -67,8 +86,13 @@ final case class Lock(
       "javaVersion" -> str(javaVersion),
       "launcher" -> str(launcher),
       "javaOptions" -> Arr(javaOptions.map(str)),
-      "injectedPlugin" -> injectedPlugin.fold[Json](Null) { p =>
-        obj("organization" -> str(p.organization), "name" -> str(p.name), "version" -> str(p.version))
+      "plugin" -> plugin.fold[Json](Null) { p =>
+        obj(
+          "organization" -> str(p.organization),
+          "name" -> str(p.name),
+          "version" -> str(p.version),
+          "via" -> str(p.via)
+        )
       },
       "projects" -> Arr(projects.sortBy(_.id).map { p =>
         obj(
@@ -119,11 +143,11 @@ object Lock {
       javaVersion = o("javaVersion").asString,
       launcher = o("launcher").asString,
       javaOptions = o("javaOptions").asArray.map(_.asString),
-      injectedPlugin = o("injectedPlugin") match {
+      plugin = o("plugin") match {
         case Json.Null => None
         case j =>
           val p = j.asObject
-          Some(InjectedPlugin(p("organization").asString, p("name").asString, p("version").asString))
+          Some(LockedPlugin(p("organization").asString, p("name").asString, p("version").asString, p("via").asString))
       },
       projects = o("projects").asArray.map { j =>
         val p = j.asObject

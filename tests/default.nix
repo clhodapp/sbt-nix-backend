@@ -34,6 +34,16 @@ let
     doCheck = true;
   };
 
+  # A build that installs the plugin in project/project/plugins.sbt and was
+  # locked with plain sbt; its Nix build names the plugin repository in
+  # SBT_NIX_BACKEND_REPOSITORY.
+  metameta = buildSbtProject {
+    inherit pkgs;
+    src = ./fixtures/metameta;
+    pluginRepository = plugin-repository;
+    doCheck = true;
+  };
+
   consumer = buildSbtProject {
     inherit pkgs;
     src = ./fixtures/consumer;
@@ -138,6 +148,18 @@ in
       [
         ''{"sbt":2}''
         "version 2.0.0"
+      ];
+
+  # A build that installs the plugin once, in its meta-most build, under
+  # plain sbt: the plugin reaches the meta-build and the build (both use its
+  # keys), the Nix build supplies its repository, and the app's repository
+  # alone resolves and runs the app.
+  metameta-app-repository =
+    runFromRepository "metameta-app-repository" metameta.repositories.app "example:app_3:3.0.0"
+      "metameta.Main"
+      [
+        ''{"installed":"project/project"}''
+        "version 3.0.0"
       ];
 
   # The plugin repository holds the plugin for sbt 1 and for sbt 2, each

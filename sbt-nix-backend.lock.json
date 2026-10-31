@@ -7,7 +7,7 @@
     "-Xss4m",
     "-Xmx2g"
   ],
-  "injectedPlugin": null,
+  "plugin": null,
   "projects": [
     {
       "id": "root",
