@@ -225,6 +225,11 @@ sbt downloads the plugin like any other plugin, so the lockfile records it
 with everything else, and a Nix build of the lockfile needs neither the
 wrapper nor the flake's plugin repository.
 
+When Maven resolves the plugin outside the Nix store, it warns that the
+plugin is being resolved impurely and recommends the wrapper for pure
+resolution. A plugin supplied by Nix, including a cache link into the
+store, loads without that warning.
+
 ### Without the wrapper
 
 A build whose `.sbt` files use the plugin's keys needs the plugin in its

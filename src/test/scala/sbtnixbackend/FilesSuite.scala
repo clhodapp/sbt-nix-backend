@@ -13,6 +13,23 @@ class FilesSuite extends munit.FunSuite {
 
   private def tempDir(): File = Files.createTempDirectory("files").toFile
 
+  test("Maven plugin resolution warns unless the loaded jar resolves into the Nix store") {
+    val root = tempDir()
+    val store = new File(root, "store")
+    val jar = new File(store, "plugin/plugin.jar")
+    write(jar, "jar")
+    val cache = new File(root, "cache")
+    cache.mkdirs()
+    val linked = new File(cache, "linked.jar")
+    Files.createSymbolicLink(linked.toPath, jar.toPath)
+    val downloaded = new File(cache, "downloaded.jar")
+    Files.copy(jar.toPath, downloaded.toPath)
+    assert(!NixBackendPlugin.impurePluginResolution(jar, store))
+    assert(!NixBackendPlugin.impurePluginResolution(linked, store))
+    assert(NixBackendPlugin.impurePluginResolution(downloaded, store))
+    assert(!NixBackendPlugin.impurePluginResolution(cache, store))
+  }
+
   private def write(f: File, s: String): Unit = {
     f.getParentFile.mkdirs()
     Files.write(f.toPath, s.getBytes(StandardCharsets.UTF_8))

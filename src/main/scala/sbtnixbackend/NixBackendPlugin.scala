@@ -263,6 +263,24 @@ object NixBackendPlugin extends AutoPlugin {
 
   def pluginVersion: String = pluginCoordinates.map(_.version).getOrElse("(from source)")
 
+  /** Follow cache symlinks: Nix may supply a published Maven artifact too.
+    * A classes directory belongs to a source build, not Maven resolution.
+    */
+  private[sbtnixbackend] def impurePluginResolution(location: File, store: File = new File("/nix/store")): Boolean =
+    location.isFile && !location.getCanonicalFile.toPath.startsWith(store.getCanonicalFile.toPath)
+
+  private def warnImpurePluginResolution(state: State): State = {
+    val metaBuild = Project.extract(state).getOpt(isMetaBuild).getOrElse(false)
+    val location = Option(getClass.getProtectionDomain.getCodeSource).map(s => new File(s.getLocation.toURI))
+    if (!metaBuild && location.exists(impurePluginResolution(_)))
+      state.log.warn(
+        "sbt-purifier: the sbt-purifier plugin is being resolved impurely through Maven. " +
+          "Use sbt-purifier's sbt wrapper (`nix shell github:nix-purifiers/sbt-purifier#sbt`) " +
+          "for pure resolution of the plugin."
+      )
+    state
+  }
+
   /** The plugin file the sbt-nix-backend `sbt` wrapper put into the global
     * plugins it starts sbt with; the wrapper names the file in this system
     * property too.
@@ -311,7 +329,7 @@ object NixBackendPlugin extends AutoPlugin {
     // The default lives in Global only, so a project-level append from any
     // plugin survives whatever order the plugins apply in.
     nixNetworkDependencies := Nil,
-    onLoad := onLoad.value.andThen(publishCoursierCache)
+    onLoad := onLoad.value.andThen(warnImpurePluginResolution).andThen(publishCoursierCache)
   )
 
   /** The system property that names the coursier cache holding the locked
