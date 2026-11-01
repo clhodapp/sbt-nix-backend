@@ -4,8 +4,8 @@
 # access is the fixed-output fetches of locked artifacts.
 {
   pkgs,
-  # The flake's default package overlay, which adds buildSbtProject.
-  overlay,
+  # The library of the flake, with lib.sbt-purifier and lib.purifier.
+  flakeLib,
   plugin,
   plugin-repository,
 }:
@@ -13,13 +13,12 @@ let
   inherit (pkgs) lib;
 
   # Every fixture builds the way a consumer's package does: through
-  # buildSbtProject of a package set the overlay applies to.
-  withOverlay = pkgs.extend overlay;
-  inherit (withOverlay) buildSbtProject;
+  # lib.sbt-purifier.buildSbtProject with a package set.
+  buildSbtProject = args: flakeLib.sbt-purifier.buildSbtProject ({ inherit pkgs; } // args);
 
   # The fixtures were locked with the plugin injected (see
   # tests/relock-fixtures.sh), so their builds inject a plugin. multi takes
-  # the builder's default, the plugin repository of the overlay's scope.
+  # the builder's default, the plugin built from this revision.
   multi = buildSbtProject {
     src = ./fixtures/multi;
     # app's munit suite runs in the build, and it reads the license the
@@ -71,8 +70,8 @@ let
     src = ./fixtures/consumer;
     pluginRepository = plugin-repository;
     flakeRepositories = {
-      multi = multi.repositories.app;
-      ivy = ivy.repositories.ivyjava;
+      multi = multi.sbtRepositories.app;
+      ivy = ivy.sbtRepositories.ivyjava;
     };
   };
 
@@ -239,7 +238,7 @@ in
   # The plugin built by itself from its lock, with its unit tests run.
   inherit plugin;
 
-  nix-library = import ./nix-library.nix { inherit pkgs overlay; };
+  nix-library = import ./nix-library.nix { inherit pkgs flakeLib; };
 
   # Feature 1: the coursier cache of the multi fixture.
   multi-dependencies = multi.dependencies;
@@ -255,7 +254,7 @@ in
 
   # Feature 4: a repository is enough to resolve and run its module.
   multi-app-repository =
-    runFromRepository "multi-app-repository" multi.repositories.app "example:app_3:1.0.0" "example.Main"
+    runFromRepository "multi-app-repository" multi.sbtRepositories.app "example:app_3:1.0.0" "example.Main"
       [
         ''{"hello":"Nix World"}''
         "Apache License"
@@ -265,7 +264,7 @@ in
   # Feature 5: a build that resolves another build's repository through a
   # flake repository, and whose own repository holds what it took from it.
   consumer-repository =
-    runFromRepository "consumer-repository" consumer.repositories.consumer "example:consumer_3:1.0.0"
+    runFromRepository "consumer-repository" consumer.sbtRepositories.consumer "example:consumer_3:1.0.0"
       "consumer.Main"
       [
         ''consumer: {"hello":"Nix World"}''
@@ -274,7 +273,7 @@ in
   # The consumer's repository holds the module it took from the ivy
   # fixture's flake repository in the standard Ivy layout.
   consumer-repository-layouts =
-    repositoryLayouts "consumer-repository-layouts" consumer.repositories.consumer
+    repositoryLayouts "consumer-repository-layouts" consumer.sbtRepositories.consumer
       [
         "example/ivyjava/4.0.0/ivys/ivy.xml"
         "example/ivyjava/4.0.0/jars/ivyjava.jar"
@@ -285,7 +284,7 @@ in
   # resolves and runs the app.
   sbt2-app-artifacts = onlyOwnArtifacts "sbt2-app-artifacts" sbt2.packages.app "example/app_3" { };
   sbt2-app-repository =
-    runFromRepository "sbt2-app-repository" sbt2.repositories.app "example:app_3:2.0.0" "example2.Main"
+    runFromRepository "sbt2-app-repository" sbt2.sbtRepositories.app "example:app_3:2.0.0" "example2.Main"
       [
         ''{"sbt":2}''
         "version 2.0.0"
@@ -302,10 +301,10 @@ in
         ];
       };
   sbt2-ivyplugin-repository =
-    resolveFromRepository "sbt2-ivyplugin-repository" sbt2.repositories.ivyplugin2
+    resolveFromRepository "sbt2-ivyplugin-repository" sbt2.sbtRepositories.ivyplugin2
       ''"example" % "ivyplugin2_sbt2_3" % "2.0.0"''
       ''
-        tr ':' '\n' <<<"$cp" | grep -qx '${sbt2.repositories.ivyplugin2}/example/ivyplugin2_sbt2_3/2.0.0/jars/ivyplugin2_sbt2_3.jar' ||
+        tr ':' '\n' <<<"$cp" | grep -qx '${sbt2.sbtRepositories.ivyplugin2}/example/ivyplugin2_sbt2_3/2.0.0/jars/ivyplugin2_sbt2_3.jar' ||
           { echo "the plugin jar is not on the classpath: $cp" >&2; exit 1; }
       '';
 
@@ -318,7 +317,7 @@ in
     ];
   };
   sbt2-app-repository-layouts =
-    repositoryLayouts "sbt2-app-repository-layouts" sbt2.repositories.app
+    repositoryLayouts "sbt2-app-repository-layouts" sbt2.sbtRepositories.app
       [
         "example/app_3/2.0.0/app_3-2.0.0.pom"
         "example/lib_3/2.0.0/ivys/ivy.xml"
@@ -332,7 +331,7 @@ in
   # keys), the Nix build supplies its repository, and the app's repository
   # alone resolves and runs the app.
   metameta-app-repository =
-    runFromRepository "metameta-app-repository" metameta.repositories.app "example:app_3:3.0.0"
+    runFromRepository "metameta-app-repository" metameta.sbtRepositories.app "example:app_3:3.0.0"
       "metameta.Main"
       [
         ''{"installed":"project/project"}''
@@ -344,14 +343,14 @@ in
   # in Maven layout, and in the standard Ivy layout the Ivy-style lib and
   # sbt's interface module, which came from an Ivy-layout repository.
   ivy-app-repository =
-    runFromRepository "ivy-app-repository" ivy.repositories.app "example:app_2.13:4.0.0"
+    runFromRepository "ivy-app-repository" ivy.sbtRepositories.app "example:app_2.13:4.0.0"
       "ivyexample.Main"
       [
         ''{"resolvedWith":"ivy"}''
         "version 4.0.0"
         "interface xsbti.Logger"
       ];
-  ivy-app-repository-layouts = repositoryLayouts "ivy-app-repository-layouts" ivy.repositories.app [
+  ivy-app-repository-layouts = repositoryLayouts "ivy-app-repository-layouts" ivy.sbtRepositories.app [
     "example/app_2.13/4.0.0/app_2.13-4.0.0.pom"
     "example/lib_2.13/4.0.0/ivys/ivy.xml"
     "example/lib_2.13/4.0.0/jars/lib_2.13.jar"
@@ -364,7 +363,7 @@ in
   # interface module, which the settings read with patterns other than the
   # standard Ivy layout, at its standard Ivy path.
   ivy-settingsfile-repository =
-    runFromRepository "ivy-settingsfile-repository" ivy.repositories.settingsfile
+    runFromRepository "ivy-settingsfile-repository" ivy.sbtRepositories.settingsfile
       "example:settingsfile_2.13:4.0.0"
       "ivyexample.Settings"
       [
@@ -372,7 +371,7 @@ in
         "interface xsbti.Logger"
       ];
   ivy-settingsfile-repository-layouts =
-    repositoryLayouts "ivy-settingsfile-repository-layouts" ivy.repositories.settingsfile
+    repositoryLayouts "ivy-settingsfile-repository-layouts" ivy.sbtRepositories.settingsfile
       [
         "example/settingsfile_2.13/4.0.0/settingsfile_2.13-4.0.0.pom"
         "org.scala-sbt/interface/0.13.18/ivys/ivy.xml"
@@ -388,11 +387,11 @@ in
     onlyOwnArtifacts "matrix-app3-artifacts" matrix.packages.app3 "example/app_3"
       { };
   matrix-app-repository =
-    runFromRepository "matrix-app-repository" matrix.repositories.app "example:app_2.13:5.0.0"
+    runFromRepository "matrix-app-repository" matrix.sbtRepositories.app "example:app_2.13:5.0.0"
       "matrixexample.Main"
       [ "matrix app for Scala 2.13" ];
   matrix-app3-repository =
-    runFromRepository "matrix-app3-repository" matrix.repositories.app3 "example:app_3:5.0.0"
+    runFromRepository "matrix-app3-repository" matrix.sbtRepositories.app3 "example:app_3:5.0.0"
       "matrixexample.Main"
       [ "matrix app for Scala 3" ];
   matrix2-app-artifacts =
@@ -402,11 +401,11 @@ in
     onlyOwnArtifacts "matrix2-app2_13-artifacts" matrix2.packages.app2_13 "example/app_2.13"
       { };
   matrix2-app-repository =
-    runFromRepository "matrix2-app-repository" matrix2.repositories.app "example:app_3:6.0.0"
+    runFromRepository "matrix2-app-repository" matrix2.sbtRepositories.app "example:app_3:6.0.0"
       "matrixexample.Main"
       [ "matrix app for Scala 3" ];
   matrix2-app2_13-repository =
-    runFromRepository "matrix2-app2_13-repository" matrix2.repositories.app2_13 "example:app_2.13:6.0.0"
+    runFromRepository "matrix2-app2_13-repository" matrix2.sbtRepositories.app2_13 "example:app_2.13:6.0.0"
       "matrixexample.Main"
       [ "matrix app for Scala 2.13" ];
 
@@ -420,12 +419,12 @@ in
     "example/crosslib_3/4.0.0/jars/crosslib_3.jar"
   ];
   ivy-crosslib-2_13-repository =
-    runFromRepository "ivy-crosslib-2_13-repository" ivy.repositories.crosslib
+    runFromRepository "ivy-crosslib-2_13-repository" ivy.sbtRepositories.crosslib
       "example:crosslib_2.13:4.0.0"
       "ivyexample.CrossLib"
       [ "crosslib published Ivy-style" ];
   ivy-crosslib-3-repository =
-    runFromRepository "ivy-crosslib-3-repository" ivy.repositories.crosslib "example:crosslib_3:4.0.0"
+    runFromRepository "ivy-crosslib-3-repository" ivy.sbtRepositories.crosslib "example:crosslib_3:4.0.0"
       "ivyexample.CrossLib"
       [ "crosslib published Ivy-style" ];
 
@@ -456,10 +455,10 @@ in
         ];
       };
   ivy-plugin-repository =
-    resolveFromRepository "ivy-plugin-repository" ivy.repositories.ivyplugin
+    resolveFromRepository "ivy-plugin-repository" ivy.sbtRepositories.ivyplugin
       ''Defaults.sbtPluginExtra("example" % "ivyplugin" % "4.0.0", "1.0", "2.12")''
       ''
-        tr ':' '\n' <<<"$cp" | grep -qx '${ivy.repositories.ivyplugin}/example/ivyplugin/scala_2.12/sbt_1.0/4.0.0/jars/ivyplugin.jar' ||
+        tr ':' '\n' <<<"$cp" | grep -qx '${ivy.sbtRepositories.ivyplugin}/example/ivyplugin/scala_2.12/sbt_1.0/4.0.0/jars/ivyplugin.jar' ||
           { echo "the plugin jar is not on the classpath: $cp" >&2; exit 1; }
       '';
 
