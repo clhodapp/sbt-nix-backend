@@ -22,8 +22,12 @@ build, and Nix fetches what the build needs and builds it in the sandbox.
 - **Builds that depend on builds.** `nixFlakeRepositories` names another
   flake's repository output; resolution reads it first, and the lockfile
   pins its revision.
-- **`nixPackagedArtifacts`**: `packagedArtifacts`, built by Nix in its
-  sandbox.
+- **Publishing what Nix built.** `nixPublish` runs sbt's `publish` with
+  the artifacts the Nix sandbox built in place of locally packaged ones.
+  `publishTo`, credentials and the publishing style work as they do for
+  `publish`, and nothing is compiled outside the sandbox. `+nixPublish`
+  publishes every Scala version. `nixPackagedArtifacts` returns the same
+  files: what `publish` publishes, built by Nix.
 
 ## How the lock is made
 
@@ -39,7 +43,9 @@ project's dependencies alike.
 `nixLock` relocks only when the build definition changed: the `*.sbt`
 files, everything under `project/`, the declared network URLs, the flake
 repositories or the projects. `nixRelock` relocks regardless, and
-`nixLockUpdate` also locks the flake repositories afresh.
+`nixLockUpdate` also locks the flake repositories afresh. A lockfile covers
+every Scala version in `crossScalaVersions`, so `nixLock` does not relock
+after `++` switches the Scala version.
 
 Files a plugin downloads outside coursier are invisible to that run. A
 plugin declares them in `nixNetworkDependencies`, a task of URLs. `nixLock`
@@ -238,7 +244,8 @@ sbt 2, which resolves with coursier only.
 | `nixLock` | Writes the lockfile when the build definition changed. |
 | `nixRelock` | Writes the lockfile. |
 | `nixLockUpdate` | Writes the lockfile and locks every flake repository afresh. |
-| `nixPackagedArtifacts` | `packagedArtifacts`, built by Nix in its sandbox. |
+| `nixPublish` | A command: `publish`, with the artifacts Nix built in its sandbox. |
+| `nixPackagedArtifacts` | `publish / packagedArtifacts` for the current Scala version, built by Nix in its sandbox. |
 | `nixRuntimeRepository` | The project's repository output, built by Nix. |
 | `nixNetworkDependencies` | URLs a plugin downloads outside coursier. |
 | `nixFlakeRepositories` | Flake references to other builds' repositories. |

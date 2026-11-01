@@ -74,6 +74,18 @@ object Compat {
         }
     }
 
+  /** `ref / publish / packagedArtifacts` as the files the Nix build made,
+    * as the virtual file references sbt 2 publishes from.
+    */
+  def publishFromNix(ref: ProjectRef): Seq[Setting[?]] = Seq(
+    ref / publish / packagedArtifacts := Def.uncached {
+      val converter = (ref / fileConverter).value
+      (ref / NixBackendPlugin.autoImport.nixPackagedArtifacts).value.map { (a, f) =>
+        a -> (converter.toVirtualFile(f.toPath): xsbti.HashedVirtualFileRef)
+      }
+    }
+  )
+
   /** sbt 2 reads no Ivy settings file. */
   def ivySettingsResolvers(mirror: Def.Initialize[Task[Option[IvyMirror.Setup]]]): Def.Initialize[Task[Vector[Resolver]]] =
     Def.task(Vector.empty[Resolver])
