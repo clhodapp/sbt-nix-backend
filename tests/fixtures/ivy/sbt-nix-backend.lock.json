@@ -141,7 +141,7 @@
                 "compile"
               ],
               "extraAttributes": {},
-              "path": "example/crosslib_2.13/4.0.0/srcs/crosslib_2.13-sources.jar"
+              "path": "example/crosslib_3/4.0.0/srcs/crosslib_3-sources.jar"
             },
             {
               "name": "crosslib",
