@@ -216,7 +216,8 @@ let
     }:
     pkgs.runCommand name { } ''
       cd ${package}
-      others=$(find . -mindepth 2 -maxdepth 3 -type d -path './*/*' | grep -v '^./${dir}' || true)
+      # nix-support holds the links of the package to its own artifacts.
+      others=$(find . -mindepth 2 -maxdepth 3 -type d -path './*/*' -not -path './nix-support/*' | grep -v '^./${dir}' || true)
       test -d ${dir} || { echo "${package} does not hold ${dir}" >&2; exit 1; }
       test -z "$others" || { echo "${package} holds more than ${dir}: $others" >&2; exit 1; }
       ls ${lib.concatMapStringsSep " " (f: "${dir}/${f}") files}

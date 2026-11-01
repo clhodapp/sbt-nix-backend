@@ -194,7 +194,7 @@ sbt_wrapper=$other_wrapper
 output=$(run_sbt "$location") || fail "ivy: sbt did not load with the rebuilt plugin"
 sbt_wrapper=$saved_wrapper
 copy=$(grep -o '/nix/store/[a-z0-9]*-plugin-repository-copy' "$other_wrapper/bin/sbt" | head -1)
-expect "ivy: the first run loads the plugin from the flake's repository" grep -q 'ans: String = file:/nix/store/[a-z0-9]*-sbt-nix-backend_2.12_1.0-0.1.0-repository/' <<<"$first"
+expect "ivy: the first run loads the plugin from the flake's repository" grep -q 'ans: String = file:/nix/store/[a-z0-9]*-sbt-nix-backend_2.12_1.0-repository/' <<<"$first"
 expect "ivy: the second run loads the rebuilt plugin (${copy:-no copy found})" has "ans: String = file:$copy/"
 
 # metameta installs the plugin only in project/project/plugins.sbt and runs
@@ -231,7 +231,7 @@ expect "metameta through the wrapper: the app runs" has '\{"installed":"project/
 expect "metameta through the wrapper: the lockfile records the injected plugin" \
   grep -q '"via": "global-plugin"' "$build/sbt-nix-backend.lock.json"
 expect "metameta through the wrapper: the Nix build of that lockfile succeeds" \
-  has '/nix/store/[a-z0-9]+-app_3-3\.0\.0/example/app_3/3\.0\.0/app_3-3\.0\.0\.jar'
+  has '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/3\.[0-9.]+/app\.jar'
 # project/project resolves the plugin from the repository the wrapper
 # injects it from, so one plugin build runs at every level.
 output=$(run_sbt 'reload plugins' 'reload plugins' 'export Runtime/fullClasspath' 'reload return' 'reload return') ||
