@@ -41,8 +41,8 @@ command reads it there.
 
 Commit `sbt-purifier.lock.json` to the repository: we recommend that
 setup, and the builder and the commands find the lockfile there by
-default. Then build a project with Nix, here
-`core`, from the same directory, with no Nix file in the build:
+default. Then build a project of the sbt build with Nix, here `core`, from
+the same directory, with no Nix file added to the project:
 
 ```zsh
 nix build --impure --expr '
@@ -56,7 +56,16 @@ nix build --impure --expr '
   (pkgs.sbt-purifier.buildSbtProject { src = ./.; }).packages.core'
 ```
 
-A flake applies the overlay to its package set and builds it the same way:
+This uses the purifier's pinned nixpkgs, matching the lock command above.
+To build with ambient `<nixpkgs>` from your Nix search path instead,
+replace `import sbt-purifier.inputs.nixpkgs` with `import <nixpkgs>`.
+Both forms need no Nix files in your project. The build tool and language
+versions must match the lockfile; with ambient nixpkgs, lock with the
+purifier from that package set or pass a compatible toolchain to the builder.
+
+A project whose authors want a flake can package the build in one. The
+flake applies the overlay to its package set and calls the builder, and it
+can live in the project's repository or in another one:
 
 ```nix
 {
@@ -85,14 +94,8 @@ A flake applies the overlay to its package set and builds it the same way:
 
 `overlays.default` adds one attribute to the package set, the scope
 `pkgs.sbt-purifier`. The scope holds `buildSbtProject`, the plugin,
-`plugin-repository` and the `sbt` wrapper, so a package written for
-`callPackage` takes the scope by name:
-
-```nix
-# package.nix
-{ sbt-purifier }:
-(sbt-purifier.buildSbtProject { src = ./.; }).packages.core
-```
+`plugin-repository` and the `sbt` wrapper. A function that `callPackage`
+calls takes the scope by the name `sbt-purifier`.
 
 `buildSbtProject` is itself a package for `callPackage`. It takes the
 packages it needs by name, such as `javaPackages` and `fetchurl`.
@@ -388,27 +391,18 @@ cd pureconfig
 nix run github:nix-purifiers/sbt-purifier -- lock
 ```
 
-and build its `core` module with a flake beside the build, or in a flake
-of your own that keeps the lockfile:
+and build its `core` module from the clone's directory:
 
-```nix
-{
-  inputs.sbt-purifier.url = "github:nix-purifiers/sbt-purifier";
-  inputs.nixpkgs.follows = "sbt-purifier/nixpkgs";
-
-  outputs = { nixpkgs, sbt-purifier, ... }:
-    let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [ sbt-purifier.overlays.default ];
-      };
-      build = pkgs.sbt-purifier.buildSbtProject { src = ./.; };
-    in
-    {
-      packages.${system}.pureconfig-core = build.packages.core;
+```zsh
+nix build --impure --expr '
+  let
+    sbt-purifier = builtins.getFlake "github:nix-purifiers/sbt-purifier";
+    pkgs = import sbt-purifier.inputs.nixpkgs {
+      system = builtins.currentSystem;
+      overlays = [ sbt-purifier.overlays.default ];
     };
-}
+  in
+  (pkgs.sbt-purifier.buildSbtProject { src = ./.; }).packages.core'
 ```
 
 From then on, `sbt test` in the clone runs on the locked downloads, and
