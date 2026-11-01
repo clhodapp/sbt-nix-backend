@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-{ ... }:
+{ closure-lib, ... }:
 {
   config,
   inputs,
@@ -8,22 +8,19 @@
 }:
 {
 
-  imports = [ inputs.flake-parts.flakeModules.partitions ];
+  imports = [
+    inputs.flake-parts.flakeModules.partitions
+    closure-lib.caisson.modules.flake."purifier/purifier-packages"
+  ];
+
+  # The flake exports as `packages` the derivations of the scope
+  # `pkgs.sbt-purifier`, which holds the builder, a function, besides them.
+  purifier.scope = "sbt-purifier";
 
   debug = false;
   caisson = {
     libOverlays.exported = libOverlays: {
       inherit (libOverlays) default;
-    };
-
-    # The `default` entry of this flake's package overlay registry
-    # (pkg-overlays/) is the `sbt-purifier` scope: the package set applies
-    # it by default, and the flake exports it as `pkgOverlays` and as the
-    # plain `overlays.default`. The scope holds the builder, a function, so
-    # the flake exports only its derivations as `packages` (see
-    # perSystem).
-    nixpkgs = {
-      packages.export.enabled = false;
     };
   };
 
@@ -42,9 +39,7 @@
   perSystem =
     { config, pkgs, ... }:
     {
-      packages = lib.filterAttrs (_: lib.isDerivation) pkgs.sbt-purifier // {
-        default = config.packages.sbt-purifier;
-      };
+      packages.default = config.packages.sbt-purifier;
       devShells.default = pkgs.mkShell {
         packages = [ pkgs.sbt ];
         JAVA_HOME = pkgs.jdk.home;
