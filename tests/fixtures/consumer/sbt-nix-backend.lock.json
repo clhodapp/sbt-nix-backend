@@ -75,19 +75,19 @@
   "flakeRepositories": [
     {
       "name": "ivy",
-      "ref": "github:clhodapp/sbt-nix-backend/dae1dec8f1a4620dec21a767c4fc1a848dec4016?dir=tests/producers#ivy-ivyjava",
-      "locked": "github:clhodapp/sbt-nix-backend/dae1dec8f1a4620dec21a767c4fc1a848dec4016?dir=tests/producers&narHash=sha256-ANNq1VbzlHVoP7%2BkEZIHBRR%2BnkQv%2Bgoa0KRLjDHMZ/4%3D",
+      "ref": "github:nix-purifiers/sbt-purifier/cfa2964940aa2382e0efc69c2f1b1f9bacf946ad?dir=tests/producers#ivy-ivyjava",
+      "locked": "github:nix-purifiers/sbt-purifier/cfa2964940aa2382e0efc69c2f1b1f9bacf946ad?dir=tests/producers&narHash=sha256-XA8yI7tSDzj%2BdQyASGkLRkMQ75MeUbhSiOFsx6Tc6N4%3D",
       "attribute": "ivy-ivyjava"
     },
     {
       "name": "multi",
-      "ref": "github:clhodapp/sbt-nix-backend/dae1dec8f1a4620dec21a767c4fc1a848dec4016?dir=tests/producers#multi-app",
-      "locked": "github:clhodapp/sbt-nix-backend/dae1dec8f1a4620dec21a767c4fc1a848dec4016?dir=tests/producers&narHash=sha256-ANNq1VbzlHVoP7%2BkEZIHBRR%2BnkQv%2Bgoa0KRLjDHMZ/4%3D",
+      "ref": "github:nix-purifiers/sbt-purifier/cfa2964940aa2382e0efc69c2f1b1f9bacf946ad?dir=tests/producers#multi-app",
+      "locked": "github:nix-purifiers/sbt-purifier/cfa2964940aa2382e0efc69c2f1b1f9bacf946ad?dir=tests/producers&narHash=sha256-XA8yI7tSDzj%2BdQyASGkLRkMQ75MeUbhSiOFsx6Tc6N4%3D",
       "attribute": "multi-app"
     }
   ],
-  "inputsHash": "sha256-vvuX9UiwjcjN2IrwqFliR3Te9M4AsgR9k34gpNTfyTU=",
-  "definitionHash": "sha256-ccQf+fxGUBzksVIBLkTM3AYECxhhVi3UUWAeyNRMy7g=",
+  "inputsHash": "sha256-aAD3/ZwrFXMpMOHa/7VPPBJh0yf5Elz/W01oYeBFqHM=",
+  "definitionHash": "sha256-1/YR96UMpdsN7pU9HdYUtufzx69Yc+3j9cxHGnFWonY=",
   "artifacts": [
     {
       "path": "https/repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_2.12/0.9.3/gigahorse-apache-http_2.12-0.9.3.jar",

@@ -66,7 +66,7 @@ plugin. sbt loads global plugins below every level of a build, so the
 build needs no entry in `project/plugins.sbt`:
 
 ```zsh
-nix run github:clhodapp/sbt-nix-backend -- nixLock
+nix run github:nix-purifiers/sbt-purifier -- nixLock
 ```
 
 Commit `sbt-nix-backend.lock.json`. The flake's `overlays.default` adds
@@ -81,7 +81,7 @@ Commit `sbt-nix-backend.lock.json`. The flake's `overlays.default` adds
 
 ```nix
 {
-  inputs.sbt-nix-backend.url = "github:clhodapp/sbt-nix-backend";
+  inputs.sbt-nix-backend.url = "github:nix-purifiers/sbt-purifier";
   inputs.nixpkgs.follows = "sbt-nix-backend/nixpkgs";
 
   outputs = { nixpkgs, sbt-nix-backend, ... }:
@@ -161,7 +161,7 @@ the command line. From the top-level directory of an sbt project:
 ```zsh
 nix build --impure --expr '
   let
-    backend = builtins.getFlake "github:clhodapp/sbt-nix-backend";
+    backend = builtins.getFlake "github:nix-purifiers/sbt-purifier";
     pkgs = import backend.inputs.nixpkgs { overlays = [ backend.overlays.default ]; };
   in
   (pkgs.buildSbtProject { src = ./.; }).packages.core'
@@ -171,10 +171,10 @@ nix build --impure --expr '
 
 Each release is in a Maven repository on GitHub Pages, which sbt reads
 without credentials. Install it in the meta-most build, as below, with the
-version of the newest [release](https://github.com/clhodapp/sbt-nix-backend/releases):
+version of the newest [release](https://github.com/nix-purifiers/sbt-purifier/releases):
 
 ```scala
-resolvers += "sbt-nix-backend" at "https://clhodapp.github.io/sbt-nix-backend/maven"
+resolvers += "sbt-nix-backend" at "https://nix-purifiers.github.io/sbt-purifier/maven"
 addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % "<version>")
 ```
 
@@ -199,7 +199,7 @@ addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % "0.1.0")
 In a meta-build, the plugin adds itself to the build the meta-build
 defines, so `project/` and the build both have it: both can use its keys,
 and it governs the resolution of both, `project/plugins.sbt` included.
-`nix develop github:clhodapp/sbt-nix-backend` gives plain nixpkgs sbt with
+`nix develop github:nix-purifiers/sbt-purifier` gives plain nixpkgs sbt with
 `SBT_NIX_BACKEND_REPOSITORY` naming the plugin repository. The lockfile
 records that the build takes the plugin from that variable, and
 `buildSbtProject` sets it in the sandbox. The wrapper sets it too, to the

@@ -71,5 +71,5 @@ if [[ -z $(git -C "$root" branch -r --contains "$rev" 2>/dev/null) ]]; then
 fi
 
 (cd "$root/tests/fixtures/consumer" &&
-  SBT_NIX_BACKEND_TEST_PRODUCER="github:clhodapp/sbt-nix-backend/$rev?dir=tests/producers" \
+  SBT_NIX_BACKEND_TEST_PRODUCER="github:nix-purifiers/sbt-purifier/$rev?dir=tests/producers" \
     "$sbt_wrapper/bin/sbt" --server -batch "$task")
