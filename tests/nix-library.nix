@@ -5,90 +5,118 @@
 # downloads. The check fails with the list of failed tests.
 {
   pkgs,
-  # The flake's default package overlay, which adds buildSbtProject.
-  overlay,
+  # The library of the flake, with lib.sbt-purifier and lib.purifier.
+  flakeLib,
 }:
 let
   inherit (pkgs) lib;
-  withOverlay = pkgs.extend overlay;
-  inherit (withOverlay) buildSbtProject;
+  inherit (flakeLib.sbt-purifier) buildSbtProject readLock;
 
-  lockJson =
+  # The lock that the tests build from, without its version.
+  lockFields = {
+    sbtVersion = "1.11.7";
+    javaVersion = "17";
+    launcher = "https/repo.example/sbt-launch-1.11.7.jar";
+    javaOptions = [ "-Xmx1g" ];
+    plugin = null;
+    projects = [
+      {
+        id = "core";
+        organization = "example";
+        name = "core_3";
+        variants = [
+          {
+            name = "scala3";
+            scalaVersion = "3.3.6";
+            artifacts = [
+              {
+                key = "core.jar";
+                name = "core";
+                type = "jar";
+                extension = "jar";
+                classifier = null;
+                configurations = [ "compile" ];
+                extraAttributes = { };
+              }
+              {
+                key = "core-sources.jar";
+                name = "core";
+                type = "src";
+                extension = "jar";
+                classifier = "sources";
+                configurations = [ "compile" ];
+                extraAttributes = { };
+              }
+            ];
+          }
+        ];
+      }
+    ];
+    flakeRepositories = [ ];
+    inputsHash = "inputs";
+    definitionHash = import ../nix/lib/definition-hash.nix sourceTree;
+    artifacts = [
+      {
+        path = "https/repo.example/a/b/b-1.0.jar";
+        url = "https://repo.example/a/b/b-1.0.jar";
+        mirrors = [ ];
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      }
+      {
+        path = "https/host%3A8080/c/.directory";
+        url = "https://host:8080/c/";
+        mirrors = [ ];
+        hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      }
+    ];
+  };
+
+  # The text of a lockfile as the plugin writes it (Lock.withContentHash):
+  # the version line, then the content hash of the text without that line,
+  # then the rest. Here the rest is compact JSON, which parses the same.
+  lockText =
     overrides:
-    builtins.toFile "lock.json" (
-      builtins.toJSON (
-        {
-          version = 2;
-          sbtVersion = "1.11.7";
-          javaVersion = "17.0.9";
-          launcher = "https/repo.example/sbt-launch-1.11.7.jar";
-          javaOptions = [ "-Xmx1g" ];
-          plugin = null;
-          projects = [
-            {
-              id = "core";
-              organization = "example";
-              name = "core_3";
-              variants = [
-                {
-                  name = "scala3";
-                  scalaVersion = "3.3.6";
-                  artifacts = [
-                    {
-                      key = "core.jar";
-                      name = "core";
-                      type = "jar";
-                      extension = "jar";
-                      classifier = null;
-                      configurations = [ "compile" ];
-                      extraAttributes = { };
-                    }
-                    {
-                      key = "core-sources.jar";
-                      name = "core";
-                      type = "src";
-                      extension = "jar";
-                      classifier = "sources";
-                      configurations = [ "compile" ];
-                      extraAttributes = { };
-                    }
-                  ];
-                }
-              ];
-            }
-          ];
-          flakeRepositories = [ ];
-          inputsHash = "sha256-inputs";
-          definitionHash = "sha256-definition";
-          artifacts = [
-            {
-              path = "https/repo.example/a/b/b-1.0.jar";
-              url = "https://repo.example/a/b/b-1.0.jar";
-              hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-            }
-            {
-              path = "https/host%3A8080/c/.directory";
-              url = "https://host:8080/c/";
-              hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-            }
-          ];
-        }
-        // overrides
-      )
-    );
+    let
+      version = toString (overrides.version or 3);
+      rest =
+        let
+          json = builtins.toJSON (lockFields // builtins.removeAttrs overrides [ "version" ]);
+        in
+        builtins.substring 1 (builtins.stringLength json) json;
+      head = "{\n  \"version\": ${version},\n";
+    in
+    "${head}  \"contentHash\": \"${builtins.hashString "sha256" (head + rest)}\",\n${rest}";
 
-  fakeFetchurl = { name, url, ... }: pkgs.writeText name url;
+  lockJson = overrides: builtins.toFile "sbt-purifier.lock.json" (lockText overrides);
 
+  # The fetcher of the purifier library takes nixpkgs' fetchurl arguments.
+  fakeFetchurl =
+    {
+      name,
+      url ? builtins.head urls,
+      urls ? [ ],
+      ...
+    }:
+    pkgs.writeText name url;
+
+  # An sbt build root with a build.sbt, for the stale check, and the same
+  # tree as a derivation output, whose staleness readLock leaves to the
+  # plugin.
+  sourceTree = builtins.path {
+    name = "build";
+    path = ./nix-library-build;
+  };
   src = pkgs.runCommand "empty-build" { } "mkdir $out";
 
-  build = buildWith buildSbtProject;
+  build = buildWith pkgs;
 
   buildWith =
-    builder: args:
-    builder (
+    pkgs': args:
+    buildSbtProject (
       {
+        pkgs = pkgs';
         inherit src;
-        fetchurl = fakeFetchurl;
+        fetchers.fetchurl = fakeFetchurl;
       }
       // args
     );
@@ -105,58 +133,134 @@ let
     };
 
   markerJdk = pkgs.runCommand "marker-jdk" { } "mkdir $out";
-  markerRepository = pkgs.runCommand "marker-plugin-repository" { } "mkdir $out";
 
-  # A package set with a consumer's package, written for callPackage, that
-  # takes the builder by name, as a package in an overlay does.
-  withConsumer = withOverlay.extend (
+  # A package set whose JDK 17 is the marker.
+  withMarkerJdk = pkgs.extend (
     final: prev: {
-      example = final.callPackage (
-        { buildSbtProject }:
-        (buildWith buildSbtProject { lockFile = lockJson { }; }).packages.core
-      ) { };
+      javaPackages = prev.javaPackages // {
+        compiler = prev.javaPackages.compiler // {
+          openjdk17 = prev.javaPackages.compiler.openjdk17 // {
+            headless = markerJdk;
+          };
+        };
+      };
     }
   );
 
-  # A package set whose sbt-nix-backend scope has another plugin
-  # repository, as an overlay that overrides the scope makes it.
-  withOtherPluginRepository = withOverlay.extend (
-    final: prev: {
-      sbt-nix-backend = prev.sbt-nix-backend.overrideScope (
-        _: _: { plugin-repository = markerRepository; }
-      );
-    }
-  );
+  nameOf = fileName: (import ../nix/lib/fetch.nix { }).nameOf { path = "https/h/${fileName}"; };
 
-  lockOf = overrides: import ../nix/lib/lock.nix { lockFile = lockJson overrides; };
+  problemsOf = args: (readLock args).problems;
+
+  hasProblem =
+    infix: args:
+    let
+      problems = problemsOf args;
+    in
+    builtins.length problems == 1
+    && lib.hasInfix infix (builtins.head problems)
+    && lib.hasInfix "run `sbt-purifier lock`" (builtins.head problems);
 
   failsToEvaluate = value: !(builtins.tryEval (builtins.deepSeq value value)).success;
 
   tests = {
     testStoreNameKeepsValidNames = {
-      expr = (lockOf { }).storeName "scala-library-2.13.16.jar";
+      expr = nameOf "scala-library-2.13.16.jar";
       expected = "scala-library-2.13.16.jar";
     };
     testStoreNameReplacesInvalidCharacters = {
-      expr = (lockOf { }).storeName "a b%c~d.jar";
+      expr = nameOf "a b%c~d.jar";
       expected = "a_b_c_d.jar";
     };
     testStoreNameDropsLeadingDots = {
-      expr = (lockOf { }).storeName ".directory";
+      expr = nameOf ".directory";
       expected = "directory";
     };
     testStoreNameIsNeverEmpty = {
-      expr = (lockOf { }).storeName "...";
+      expr = nameOf "...";
       expected = "file";
     };
     testStoreNameIsAtMost200Characters = {
-      expr = builtins.stringLength ((lockOf { }).storeName (lib.concatStrings (lib.replicate 300 "x")));
+      expr = builtins.stringLength (nameOf (lib.concatStrings (lib.replicate 300 "x")));
       expected = 200;
     };
-    testUnsupportedLockVersionFails = {
-      expr = failsToEvaluate (lockOf { version = 1; }).artifacts;
+
+    # The lock in memory.
+    testAUsableLockHasNoProblems = {
+      expr = problemsOf {
+        src = sourceTree;
+        lockFile = lockJson { };
+      };
+      expected = [ ];
+    };
+    testTheLockPassesCheckLock = {
+      expr =
+        (flakeLib.purifier.checkLock (readLock {
+          src = sourceTree;
+          lockFile = lockJson { };
+        })).purifier;
+      expected = "sbt-purifier";
+    };
+    testTheEntriesAreTheDownloads = {
+      expr =
+        map (e: e.path)
+          (readLock {
+            src = sourceTree;
+            lockFile = lockJson { };
+          }).entries;
+      expected = [
+        "https/repo.example/a/b/b-1.0.jar"
+        "https/host%3A8080/c/.directory"
+      ];
+    };
+    testTheOutputsAreTheProjects = {
+      expr = builtins.attrNames (
+        readLock {
+          src = sourceTree;
+          lockFile = lockJson { };
+        }
+      ).outputs;
+      expected = [ "core" ];
+    };
+    testAMissingLockfileIsAProblem = {
+      expr = hasProblem "does not exist" { src = sourceTree; };
       expected = true;
     };
+    testAnEditedLockfileIsAProblem = {
+      expr = hasProblem "does not match its content hash" {
+        src = sourceTree;
+        lockFile = builtins.toFile "sbt-purifier.lock.json" (
+          builtins.replaceStrings [ "1.11.7" ] [ "1.11.8" ] (lockText { })
+        );
+      };
+      expected = true;
+    };
+    testAMalformedLockfileIsAProblem = {
+      expr = hasProblem "is not a lockfile that sbt-purifier wrote" {
+        src = sourceTree;
+        lockFile = builtins.toFile "sbt-purifier.lock.json" "not json";
+      };
+      expected = true;
+    };
+    testALockfileOfAnotherFormatIsAProblem = {
+      expr = hasProblem "lock format version 2" {
+        src = sourceTree;
+        lockFile = lockJson { version = 2; };
+      };
+      expected = true;
+    };
+    testAStaleLockfileIsAProblem = {
+      expr = hasProblem "is stale" {
+        src = sourceTree;
+        lockFile = lockJson { definitionHash = "0"; };
+      };
+      expected = true;
+    };
+    testTheBuilderFailsOnAProblem = {
+      expr = failsToEvaluate (build { lockFile = lockJson { version = 2; }; }).packages;
+      expected = true;
+    };
+
+    # The builder.
     testPackagesAreNamedByProjectId = {
       expr = builtins.attrNames (build { lockFile = lockJson { }; }).packages;
       expected = [ "core" ];
@@ -168,18 +272,45 @@ let
         "repository"
       ];
     };
-    testRepositoriesAreTheRepositoryOutputs = {
+    testSbtRepositoriesAreTheRepositoryOutputs = {
       expr =
         let
           b = build { lockFile = lockJson { }; };
         in
-        b.repositories.core.outPath == b.packages.core.repository.outPath
-        && b.sbtRepositories.core.outPath == b.repositories.core.outPath;
+        b.sbtRepositories.core.outPath == b.packages.core.repository.outPath;
+      expected = true;
+    };
+    testTheFetchesAreTheEntriesOfTheLock = {
+      expr = map (e: e.url) (build { lockFile = lockJson { }; }).fetches;
+      expected = [
+        "https://repo.example/a/b/b-1.0.jar"
+        "https://host:8080/c/"
+      ];
+    };
+    testTheResultHasTheContractAttributes = {
+      expr = builtins.all (n: (build { lockFile = lockJson { }; }) ? ${n}) [
+        "packages"
+        "tests"
+        "release"
+        "fetches"
+      ];
+      expected = true;
+    };
+    # A lockfile outside the source, of a build kept external, takes the
+    # place of the one in it; the source here has none.
+    testALockfileOutsideTheSourceIsCopiedIn = {
+      expr = lib.hasInfix "cp --no-preserve=mode ${lockJson { }} sbt-purifier.lock.json" (build {
+        lockFile = lockJson { };
+      }).packages.core.buildPhase;
       expected = true;
     };
     testDefaultJdkFollowsTheLockedJavaMajorVersion = {
       expr = (build { lockFile = lockJson { }; }).jdk.outPath;
       expected = pkgs.jdk17_headless.outPath;
+    };
+    testTheJdkComesFromThePackageSet = {
+      expr = (buildWith withMarkerJdk { lockFile = lockJson { }; }).jdk.outPath;
+      expected = markerJdk.outPath;
     };
     testJdkArgumentWins = {
       expr =
@@ -235,16 +366,13 @@ let
       .packages.core.buildPhase;
       expected = true;
     };
-    testAPackageInAnOverlayTakesTheBuilderByCallPackage = {
-      expr = withConsumer.example.drvPath == (build { lockFile = lockJson { }; }).packages.core.drvPath;
-      expected = true;
-    };
-    testBuilderOverrideReplacesWhatItTakesFromThePackageSet = {
+    # The default plugin repository is the plugin built from this revision
+    # for the same package set.
+    testThePluginOfThisRevisionIsTheDefault = {
       expr =
-        (buildWith (buildSbtProject.override { javaPackages.compiler.openjdk17.headless = markerJdk; }) {
-          lockFile = lockJson { };
-        }).jdk.outPath;
-      expected = markerJdk.outPath;
+        lib.hasInfix (flakeLib.sbt-purifier.plugin pkgs).repository.outPath
+          (build { lockFile = pluginLock "environment"; }).packages.core.buildPhase;
+      expected = true;
     };
     # The lock names the artifacts of a package, so evaluating them builds
     # nothing: the empty source tree here builds no sbt project at all.
@@ -290,21 +418,6 @@ let
     testAPackageIsNamedAfterItsProject = {
       expr = (build { lockFile = lockJson { }; }).packages.core.name;
       expected = "core_3";
-    };
-    testTheScopePluginRepositoryIsTheDefault = {
-      expr =
-        lib.hasInfix "marker-plugin-repository"
-          (buildWith withOtherPluginRepository.buildSbtProject { lockFile = pluginLock "environment"; })
-          .packages.core.buildPhase;
-      expected = true;
-    };
-    testWithoutTheScopeAPluginLockNeedsARepository = {
-      expr =
-        failsToEvaluate
-          (buildWith (pkgs.callPackage ../nix/lib/build-sbt-project.nix { sbt-nix-backend = null; }) {
-            lockFile = pluginLock "environment";
-          }).packages.core.drvPath;
-      expected = true;
     };
     testUnknownPluginRouteFails = {
       expr = failsToEvaluate (buildWithPlugin "telepathy").packages.core.drvPath;
