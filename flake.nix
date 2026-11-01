@@ -1,10 +1,13 @@
 # SPDX-License-Identifier: MIT
 {
 
-  description = "sbt-nix-backend: Nix as the dependency and build backend of sbt";
+  description = "sbt-purifier: Nix as the dependency and build backend of sbt";
 
   inputs = {
     caisson.url = "github:nix-caisson/caisson";
+    # The shared library of the nix-purifiers: download entries, their
+    # fetches and trees, and the lock in memory.
+    purifier.url = "github:nix-purifiers/purifier";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     # The library comes from the nixpkgs.lib mirror. The package sets
     # take nixpkgs.
@@ -14,17 +17,17 @@
   };
 
   outputs =
-    inputs@{ caisson, ... }:
+    inputs@{ caisson, purifier, ... }:
     let
       lib = caisson.lib.caisson.mkLib {
         inherit (caisson.lib.caisson.pins.flake inputs) sources root;
-        name = "sbt-nix-backend";
+        name = "sbt-purifier";
         systems = [
           "x86_64-linux"
           "aarch64-linux"
         ];
         projects = {
-          inherit caisson;
+          inherit caisson purifier;
         };
 
         configs = lib: lib.caisson.mkModules ./configs;

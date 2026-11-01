@@ -1,55 +1,43 @@
 # buildSbtProject: the sandboxed builds of an sbt build, from the lockfile
-# the plugin's nixLock writes at the build root.
+# that `sbt-purifier lock` writes. It is the builder of the purifier
+# contract (CONTRACT.md of the purifier library), published as
+# `lib.sbt-purifier.buildSbtProject`:
 #
-# The file is a package for callPackage: the first argument set is what it
-# takes from the package set, and the result is the builder. The
-# sbt-nix-backend overlay (`overlays.default`) adds it to the package set
-# as `buildSbtProject`, so a package written for callPackage takes it like
-# any other dependency:
+#   lib.sbt-purifier.buildSbtProject { inherit pkgs; src = ./.; }
 #
-#   { buildSbtProject }: (buildSbtProject { src = ./.; }).packages.app
+# The first argument set is the composed library, which holds
+# `lib.purifier`. The builder returns
 #
-# and `buildSbtProject.override` replaces what it takes from the set. The
-# builder returns
-#
-#   dependencies          the coursier cache of every locked artifact (feature 1)
-#   packages.<id>         the published artifacts of sbt project <id>, in
-#                         Maven layout (feature 2); its `repository` output
-#                         holds them together with their runtime
-#                         dependencies (feature 4)
-#   repositories.<id>     packages.<id>.repository
-#   sbtRepositories       the same set, under the name a flake exports it as
-#                         (`sbtRepositories.<system>.<id>`) for other builds
-#                         to reference (feature 5)
+#   packages.<id>     the published artifacts of sbt project <id>, in Maven
+#                     or Ivy layout; its `repository` output holds them
+#                     together with their runtime dependencies
+#   tests             the test run of every package, in the sandbox
+#   release           the published artifacts of every package, as one
+#                     repository, which `sbt-purifier publish` uploads
+#   fetches           the download entries of the lock (purifier library)
+#   dependencies      the coursier cache of every locked download
+#   sbtRepositories   packages.<id>.repository by id, under the name a
+#                     flake exports it as (`sbtRepositories.<system>.<id>`)
+#                     for other builds to reference
+{ lib }:
 {
-  lib,
-  stdenvNoCC,
-  runCommand,
-  writeText,
-  callPackage,
-  # The JDKs a build can run on; the default JDK of a build is the headless
-  # one of the major version its lock was made with.
-  javaPackages,
-  # The sbt-nix-backend package scope, whose `plugin-repository` is the
-  # default plugin repository. It is null where the overlay is not applied;
-  # a lock that needs the plugin then needs `pluginRepository`.
-  sbt-nix-backend ? null,
-}:
-{
+  # The package set the build runs with.
+  pkgs,
   # The root of the sbt build.
   src,
-  # The lockfile; the default is the one nixLock writes at the build root.
-  lockFile ? src + "/sbt-nix-backend.lock.json",
+  # The lockfile. A lockfile outside `src` takes the place of any
+  # lockfile in it.
+  lockFile ? src + "/sbt-purifier.lock.json",
+  # The fetchers of the purifier library (`fetchEntry`, `tree`), such as a
+  # `fetchurl` with credentials or a company mirror.
+  fetchers ? { },
   # The JDK that runs sbt.
   jdk ? null,
-  # Replaces the built-in fetcher; see fetch.nix.
-  fetchurl ? null,
-  # The repository the build takes the sbt-nix-backend plugin from, when the
+  # The repository the build takes the sbt-purifier plugin from, when the
   # lock says the Nix build supplies it (`plugin` in the lock): as a global
   # plugin, or through SBT_NIX_BACKEND_REPOSITORY for a build that installs
   # the plugin in its project/project/plugins.sbt. The default is the
-  # scope's `plugin-repository`: the plugin built from the sbt-nix-backend
-  # revision whose overlay added this builder.
+  # plugin built from this revision of sbt-purifier.
   pluginRepository ? null,
   # Repository paths that replace flake repositories of the lock, by
   # resolver name. A flake that has the producing flake as an input can
@@ -64,7 +52,16 @@
   srcFilter ? null,
 }:
 let
-  lock = import ./lock.nix { inherit lockFile; };
+  inherit (pkgs)
+    stdenvNoCC
+    runCommand
+    writeText
+    javaPackages
+    ;
+  # The lock in memory; checkLock fails evaluation with its problems, each
+  # naming `sbt-purifier lock`.
+  read = lib.purifier.checkLock (lib.sbt-purifier.readLock { inherit src lockFile; });
+  inherit (read) lock;
   system = stdenvNoCC.hostPlatform.system;
 
   # Build outputs and editor state never take part in a build.
@@ -91,10 +88,19 @@ let
   javaMajor = builtins.head (lib.splitString "." lock.javaVersion);
   defaultJdk =
     javaPackages.compiler."openjdk${javaMajor}".headless
-      or (throw "sbt-nix-backend: javaPackages has no openjdk${javaMajor} for the Java ${lock.javaVersion} the lock was made with; pass `jdk`.");
+      or (throw "sbt-purifier: javaPackages has no openjdk${javaMajor} for the Java ${lock.javaVersion} the lock was made with; pass `jdk`.");
   jdk' = if jdk != null then jdk else defaultJdk;
 
-  dependencies = callPackage ./dependencies.nix { inherit lockFile fetchurl; };
+  # The coursier cache: every download of the lock for this system, at its
+  # coursier path.
+  dependencies = lib.purifier.tree (
+    {
+      inherit pkgs;
+      name = "sbt-coursier-cache";
+      entries = lib.purifier.entriesFor system read;
+    }
+    // fetchers
+  );
 
   # Feature 5: the store path of each flake repository of the lock.
   flakeRepositoryPaths = builtins.listToAttrs (
@@ -106,7 +112,7 @@ let
             flake = builtins.getFlake r.locked;
           in
           flake.sbtRepositories.${system}.${r.attribute}
-            or (throw "sbt-nix-backend: ${r.locked} has no output sbtRepositories.${system}.${r.attribute} (flake repository ${r.name})")
+            or (throw "sbt-purifier: ${r.locked} has no output sbtRepositories.${system}.${r.attribute} (flake repository ${r.name})")
         );
     }) lock.flakeRepositories
   );
@@ -117,13 +123,7 @@ let
     else
       let
         p = lock.plugin;
-        repo =
-          if pluginRepository != null then
-            pluginRepository
-          else if sbt-nix-backend != null then
-            sbt-nix-backend.plugin-repository
-          else
-            throw "sbt-nix-backend: the lock takes the plugin (${p.organization}:${p.name}:${p.version}) from a repository the Nix build supplies; apply the sbt-nix-backend overlay or pass `pluginRepository`.";
+        repo = if pluginRepository != null then pluginRepository else (lib.sbt-purifier.plugin pkgs).repository;
         orgPath = lib.replaceStrings [ "." ] [ "/" ] p.organization;
       in
       assert
@@ -131,7 +131,7 @@ let
           "global-plugin"
           "environment"
         ]
-        || throw "sbt-nix-backend: the lock reaches the plugin via '${p.via}', which this library does not know";
+        || throw "sbt-purifier: the lock reaches the plugin via '${p.via}', which this library does not know";
       {
         inherit (p) via;
         inherit repo;
@@ -147,8 +147,8 @@ let
           found=(${lib.escapeShellArg "${repo}/${orgPath}/${p.name}_"}*/${lib.escapeShellArg p.version})
           shopt -u nullglob
           if [ ''${#found[@]} -eq 0 ]; then
-            echo "sbt-nix-backend: ${repo} does not hold ${p.organization}:${p.name}:${p.version}, the plugin version the lock was made with." >&2
-            echo "Use the sbt-nix-backend flake revision that matches the lock, or re-lock." >&2
+            echo "sbt-purifier: ${repo} does not hold ${p.organization}:${p.name}:${p.version}, the plugin version the lock was made with." >&2
+            echo "Use the sbt-purifier flake revision that matches the lock, or run \`sbt-purifier lock\`." >&2
             exit 1
           fi
         '';
@@ -217,9 +217,9 @@ let
   linksOf = v: [ "${v.name}/descriptor" ] ++ map (a: "${v.name}/${a.key}") v.artifacts;
 
   mkPackage =
-    project:
+    check: project:
     stdenvNoCC.mkDerivation (finalAttrs: {
-      inherit (project) name;
+      name = project.name + lib.optionalString check "-tests";
       src = filteredSrc;
       outputs = [
         "out"
@@ -232,7 +232,10 @@ let
       dontFixup = true;
       buildPhase = ''
         runHook preBuild
-        ${runSbt ("nixSandboxBuild " + lib.optionalString doCheck "--test " + project.id)}
+        # The lockfile the build was given, which may lie outside src, takes
+        # the place of any lockfile in it.
+        cp --no-preserve=mode ${lockFile} sbt-purifier.lock.json
+        ${runSbt ("nixSandboxBuild " + lib.optionalString check "--test " + project.id)}
         runHook postBuild
       '';
       installPhase = ''
@@ -244,7 +247,7 @@ let
         rm -f "$out/sbt-nix-artifacts.json"
         for link in ${lib.escapeShellArgs (lib.concatMap linksOf project.variants)}; do
           if [ ! -f "$out/${linkDirectory}/$link" ]; then
-            echo "sbt-nix-backend: the lock names $link, which this build of ${project.id} did not publish; run nixLock" >&2
+            echo "sbt-purifier: the lockfile names $link, which this build of ${project.id} did not publish; run \`sbt-purifier lock\`" >&2
             exit 1
           fi
         done
@@ -281,19 +284,35 @@ let
           }) project.variants
         );
       };
-      meta.description = "${project.organization}:${project.name}, built by sbt-nix-backend";
+      meta.description = "${project.organization}:${project.name}, built by sbt-purifier";
     });
 
-  packages = builtins.mapAttrs (_: mkPackage) lock.projectsById;
-  repositories = builtins.mapAttrs (_: p: p.repository) packages;
+  packages = builtins.mapAttrs (_: mkPackage doCheck) read.outputs;
 in
 {
   inherit
     lock
     dependencies
     packages
-    repositories
     ;
-  sbtRepositories = repositories;
+  fetches = read.entries;
+  sbtRepositories = builtins.mapAttrs (_: p: p.repository) packages;
+  # Every package built with its tests run.
+  tests = runCommand "sbt-tests" { } ''
+    mkdir $out
+    ${lib.concatStrings (
+      lib.mapAttrsToList (id: p: "ln -s ${p} $out/${id}\n") (
+        builtins.mapAttrs (_: mkPackage true) read.outputs
+      )
+    )}
+  '';
+  # The published artifacts of every package in one repository, as
+  # `sbt-purifier publish` uploads them; the links of each package to its
+  # own artifacts stay out.
+  release = runCommand "sbt-release" { } ''
+    mkdir $out
+    ${lib.concatStrings (lib.mapAttrsToList (_: p: "cp -r --no-preserve=mode ${p}/. $out/\n") packages)}
+    rm -rf $out/nix-support
+  '';
   jdk = jdk';
 }

@@ -75,8 +75,24 @@ writeTextFile {
     # from them. The plugin points the build's own resolution elsewhere
     # (the locked cache, or the user's cache named here), so nothing
     # writes into this read-only tree.
-    lockfile=sbt-nix-backend.lock.json
+    lockfile=''${SBT_PURIFIER_LOCKFILE:-sbt-purifier.lock.json}
     case "''${SBT_NIX_BACKEND:-1}" in 0 | false) lockfile= ;; esac
+    # sbt runs on nixpkgs' JDK of the Java major the lockfile records, so
+    # a relock records the same major whatever JAVA_HOME the caller has;
+    # without a lockfile, on nixpkgs' default JDK.
+    export JAVA_HOME=${pkgs.jdk.home}
+    if [ -n "$lockfile" ] && [ -f "$lockfile" ]; then
+      major=$(sed -n 's/^  "javaVersion": "\([0-9]*\)",$/\1/p' "$lockfile")
+      if [ -n "$major" ]; then
+        mkdir -p target/sbt-purifier/gcroots
+        if jdk=$(nix-build ${pkgs.path} -A "javaPackages.compiler.openjdk$major.headless" \
+          --out-link target/sbt-purifier/gcroots/jdk 2>/dev/null); then
+          export JAVA_HOME="$jdk/lib/openjdk"
+        else
+          echo "sbt-purifier: nixpkgs has no headless OpenJDK $major, the Java major $lockfile records; sbt runs on $JAVA_HOME" >&2
+        fi
+      fi
+    fi
     if [ -n "$lockfile" ] && [ -f "$lockfile" ] && [ -f project/build.properties ]; then
       locked=$(sed -n 's/^  "sbtVersion": "\(.*\)",$/\1/p' "$lockfile")
       wanted=$(sed -n 's/^[[:space:]]*sbt\.version[[:space:]]*=[[:space:]]*\([^[:space:]]*\).*/\1/p' project/build.properties)
@@ -87,7 +103,7 @@ writeTextFile {
         mkdir -p target/sbt-nix-backend/gcroots
         if tree=$(nix-build --expr \
           '{ lockFile }: (import ${pkgs.path} { }).callPackage ${../../nix/lib}/dependencies.nix { inherit lockFile; }' \
-          --arg lockFile "$PWD/$lockfile" --out-link target/sbt-nix-backend/gcroots/boot-cache); then
+          --arg lockFile "$(realpath "$lockfile")" --out-link target/sbt-nix-backend/gcroots/boot-cache); then
           export SBT_NIX_BACKEND_USER_COURSIER_CACHE="''${COURSIER_CACHE:-}"
           export COURSIER_CACHE="$tree"
         else

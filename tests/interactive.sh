@@ -232,7 +232,7 @@ output=$(run_sbt nixRelock 'app/runMain metameta.Main' 'show app/nixPackagedArti
   fail "metameta through the wrapper: the build failed"
 expect "metameta through the wrapper: the app runs" has '\{"installed":"project/project"\}'
 expect "metameta through the wrapper: the lockfile records the injected plugin" \
-  grep -q '"via": "global-plugin"' "$build/sbt-nix-backend.lock.json"
+  grep -q '"via": "global-plugin"' "$build/sbt-purifier.lock.json"
 expect "metameta through the wrapper: the Nix build of that lockfile succeeds" \
   has '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/scala3/app\.jar'
 # project/project resolves the plugin from the repository the wrapper

@@ -152,6 +152,14 @@ object Lock {
     if (parts.length > 1 && parts(0) == "1") parts(1) else parts(0)
   }
 
+  /** The name of the lockfile in the build root. */
+  val FileName = "sbt-purifier.lock.json"
+
+  /** The environment variable that names a lockfile kept outside the
+    * build, for a build kept external.
+    */
+  val LockFileVariable = "SBT_PURIFIER_LOCKFILE"
+
   /** The command that writes the lockfile, which every error names. */
   val LockCommand = "sbt-purifier lock"
 

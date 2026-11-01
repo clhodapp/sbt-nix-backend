@@ -45,7 +45,7 @@ object NixBackendPlugin extends AutoPlugin {
     )
     val nixLockFile = settingKey[File](
       "The lockfile, which buildSbtProject (from the flake overlay) builds the build from " +
-        "(default: sbt-nix-backend.lock.json in the build root)."
+        "(default: the file SBT_PURIFIER_LOCKFILE names, or else sbt-purifier.lock.json in the build root)."
     )
     val nixBackend = settingKey[Boolean](
       "Whether interactive resolution reads the locked downloads through Nix, offline. " +
@@ -346,7 +346,13 @@ object NixBackendPlugin extends AutoPlugin {
 
   override def buildSettings: Seq[Setting[_]] = Seq(
     nixBuildRoot := buildRootSetting.value,
-    nixLockFile := nixBuildRoot.value / "sbt-nix-backend.lock.json",
+    // A build kept external names its lockfile in SBT_PURIFIER_LOCKFILE,
+    // which the sbt-purifier commands set from --lockfile.
+    nixLockFile := sys.env
+      .get(Lock.LockFileVariable)
+      .filter(_.nonEmpty)
+      .map(new File(_).getAbsoluteFile)
+      .getOrElse(nixBuildRoot.value / Lock.FileName),
     nixBackend := {
       val log = sLog.value
       val lockFile = nixLockFile.value
