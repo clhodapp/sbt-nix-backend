@@ -210,6 +210,24 @@ in
         "version 2.0.0"
         "interface xsbti.Logger"
       ];
+  # An sbt 2 plugin published Ivy-style is named <name>_sbt2_<scala>, as
+  # sbt 2 names it in either style, and its repository resolves it.
+  sbt2-ivyplugin-artifacts =
+    onlyOwnArtifacts "sbt2-ivyplugin-artifacts" sbt2.packages.ivyplugin2 "example/ivyplugin2_sbt2_3"
+      {
+        files = [
+          "2.0.0/ivys/ivy.xml"
+          "2.0.0/jars/ivyplugin2_sbt2_3.jar"
+        ];
+      };
+  sbt2-ivyplugin-repository =
+    resolveFromRepository "sbt2-ivyplugin-repository" sbt2.repositories.ivyplugin2
+      ''"example" % "ivyplugin2_sbt2_3" % "2.0.0"''
+      ''
+        tr ':' '\n' <<<"$cp" | grep -qx '${sbt2.repositories.ivyplugin2}/example/ivyplugin2_sbt2_3/2.0.0/jars/ivyplugin2_sbt2_3.jar' ||
+          { echo "the plugin jar is not on the classpath: $cp" >&2; exit 1; }
+      '';
+
   # sbt 2 publishes the lib Ivy-style, and the app's repository holds it
   # and sbt's interface module in the standard Ivy layout.
   sbt2-lib-artifacts = onlyOwnArtifacts "sbt2-lib-artifacts" sbt2.packages.lib "example/lib_3" {
@@ -279,6 +297,25 @@ in
         "org.scala-sbt/interface/0.13.18/ivys/ivy.xml"
         "org.scala-sbt/interface/0.13.18/jars/interface.jar"
       ];
+
+  # A project published Ivy-style for Scala 2.13 and Scala 3 has a module
+  # for each in its output and in its repository, and each resolves and
+  # runs from the repository alone.
+  ivy-crosslib-artifacts = repositoryLayouts "ivy-crosslib-artifacts" ivy.packages.crosslib [
+    "example/crosslib_2.13/4.0.0/ivys/ivy.xml"
+    "example/crosslib_2.13/4.0.0/jars/crosslib_2.13.jar"
+    "example/crosslib_3/4.0.0/ivys/ivy.xml"
+    "example/crosslib_3/4.0.0/jars/crosslib_3.jar"
+  ];
+  ivy-crosslib-2_13-repository =
+    runFromRepository "ivy-crosslib-2_13-repository" ivy.repositories.crosslib
+      "example:crosslib_2.13:4.0.0"
+      "ivyexample.CrossLib"
+      [ "crosslib published Ivy-style" ];
+  ivy-crosslib-3-repository =
+    runFromRepository "ivy-crosslib-3-repository" ivy.repositories.crosslib "example:crosslib_3:4.0.0"
+      "ivyexample.CrossLib"
+      [ "crosslib published Ivy-style" ];
 
   # A Scala 2.12 project that resolves with Ivy builds in the sandbox: Ivy
   # resolves the compiler bridge sources from the locked downloads too.

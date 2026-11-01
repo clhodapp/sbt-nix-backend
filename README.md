@@ -166,9 +166,11 @@ cache.
 A project publishes into its `out` output in the layout it publishes in
 anywhere. A Maven-style project uses the Maven layout. A project with
 `publishMavenStyle := false` uses sbt's standard Ivy layout
-(`Resolver.ivyStylePatterns`, the layout of `publishLocal`). An sbt plugin
-published Ivy-style keeps its plain name and carries its Scala and sbt
-versions in its path.
+(`Resolver.ivyStylePatterns`, the layout of `publishLocal`). An sbt 1
+plugin published Ivy-style keeps its plain name and carries its Scala and
+sbt versions in its path. An sbt 2 plugin is named `<name>_sbt2_<scala>`
+in either style, as sbt 2 names it. A cross-built project has a module per
+Scala version in each layout.
 
 A `repository` output keeps every module in the layout it was published
 in. Modules from Maven repositories keep their Maven paths. Modules from

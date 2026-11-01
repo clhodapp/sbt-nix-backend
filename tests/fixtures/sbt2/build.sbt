@@ -8,8 +8,14 @@ ThisBuild / version := "2.0.0"
 ThisBuild / scalaVersion := "3.8.4"
 
 lazy val root = (project in file("."))
-  .aggregate(lib, app)
+  .aggregate(lib, app, ivyplugin2)
   .settings(publish / skip := true)
+
+// An sbt 2 plugin published Ivy-style, with its Scala and sbt versions as
+// extra attributes in its path.
+lazy val ivyplugin2 = project
+  .enablePlugins(SbtPlugin)
+  .settings(publishMavenStyle := false)
 
 lazy val lib = project
   .settings(

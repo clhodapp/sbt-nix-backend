@@ -7,8 +7,16 @@ ThisBuild / version := "4.0.0"
 ThisBuild / scalaVersion := "2.13.16"
 
 lazy val root = (project in file("."))
-  .aggregate(lib, app, ivyplugin, legacy, ivyjava, settingsfile)
+  .aggregate(lib, app, ivyplugin, legacy, ivyjava, settingsfile, crosslib)
   .settings(publish / skip := true)
+
+// Published Ivy-style for two Scala versions; its outputs hold a module
+// for each.
+lazy val crosslib = project
+  .settings(
+    crossScalaVersions := Seq("2.13.16", "3.3.6"),
+    publishMavenStyle := false
+  )
 
 // Resolves through an Ivy settings file, which takes a repository root
 // from a properties file and includes the resolvers from another file.
