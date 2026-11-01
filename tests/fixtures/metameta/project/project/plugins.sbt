@@ -5,9 +5,12 @@
 //
 // SBT_NIX_BACKEND_REPOSITORY names the repository it comes from: the
 // sbt-nix-backend flake's dev shell sets it, and so does a Nix build of a
-// lockfile made with it.
+// lockfile made with it. Outside those environments, use the published
+// plugin from GitHub Pages.
+val backendRepository = sys.env.get("SBT_NIX_BACKEND_REPOSITORY")
 resolvers += MavenRepository(
   "sbt-nix-backend",
-  new File(sys.env.getOrElse("SBT_NIX_BACKEND_REPOSITORY", sys.error("SBT_NIX_BACKEND_REPOSITORY is not set"))).toURI.toString
+  backendRepository.map(path => new File(path).toURI.toString)
+    .getOrElse("https://nix-purifiers.github.io/sbt-purifier/maven")
 )
-addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % "0.1.0")
+addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % backendRepository.fold("0.1.3")(_ => "0.1.0"))
