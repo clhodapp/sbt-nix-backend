@@ -33,6 +33,11 @@ entry in `project/plugins.sbt`:
 nix run github:nix-purifiers/sbt-purifier -- lock
 ```
 
+The purifier contract puts the purifier lockfile next to the build tool's
+own lockfile. sbt has no lockfile of its own, so sbt-purifier writes
+`sbt-purifier.lock.json` at the build root, beside `build.sbt`, and every
+command reads it there.
+
 Commit `sbt-purifier.lock.json`. Then build a project with Nix, here
 `core`, from the same directory, with no Nix file in the build:
 
@@ -154,9 +159,13 @@ sbt compile test run
 The wrapper runs sbt on nixpkgs' JDK of the Java major the lockfile
 records, so every developer and CI runner relocks on the same JDK.
 
-To add or upgrade a dependency, edit the build and lock again. sbt warns
-that the lockfile was made from another build definition, and resolves
-the usual way until the lockfile is renewed:
+To add or upgrade a dependency, edit the build and lock again. The purifier
+contract has a command that needs an unlocked download stop with a message
+naming the lock command. sbt-purifier stops that way while the lockfile
+matches the build definition. After an edit to the build definition, sbt
+warns that the lockfile was made from another build definition and
+resolves the usual way, from the network, so the edited build loads and
+`sbt-purifier lock` can run in it:
 
 ```zsh
 sbt-purifier lock     # relocks when the build definition changed
@@ -164,8 +173,12 @@ sbt-purifier update   # resolves every dependency afresh, dynamic versions inclu
 ```
 
 `lock` keeps a lockfile that is up to date as it is, and a relock of an
-unchanged build reproduces it byte for byte. sbt resolves the whole build
-at once, so `update` takes no package names. `sbt-purifier publish` runs
+unchanged build reproduces it byte for byte. The purifier contract has
+`update <package>...` update only the named packages. sbt resolves the
+whole build at once, so `sbt-purifier update` takes no package names: it
+re-resolves every dependency, version ranges and dynamic versions
+included, and `sbt-purifier.lock.json` is the one lockfile that changes.
+`sbt-purifier publish` runs
 `publish` with the artifacts Nix built; `publishTo`, credentials and the
 publishing style work as they do for `publish`, and `+nixPublish` in sbt
 publishes every Scala version.
