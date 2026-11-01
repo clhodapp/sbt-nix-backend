@@ -12,10 +12,12 @@
 # flake's `sbt` wrapper, the way a build without the plugin in
 # project/plugins.sbt uses it.
 #
-# The consumer fixture refers to the multi fixture as a flake. Its lockfile
-# pins a `path:` reference to a copy of multi under $TMPDIR, which exists
-# only while this script runs; the flake checks pass multi's repository
-# output in its place.
+# The consumer fixture refers to the repositories of the multi and ivy
+# fixtures through tests/producers, a flake in this repository, on GitHub.
+# Its lockfile pins the commit this script runs from, which must be pushed;
+# the flake checks pass the repository outputs of this checkout instead.
+# While the GitHub repository is private, Nix fetches it with the token of
+# the GitHub CLI, which this script passes in NIX_CONFIG.
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -36,6 +38,7 @@ for fixture in multi sbt2 ivy matrix matrix2 metameta consumer; do
 done
 XDG_CACHE_HOME=$(mktemp -d)
 export XDG_CACHE_HOME
+trap 'rm -rf "$XDG_CACHE_HOME"' EXIT
 
 for fixture in multi sbt2 ivy matrix matrix2; do
   (cd "$root/tests/fixtures/$fixture" && "$sbt_wrapper/bin/sbt" --server -batch "$task")
@@ -45,30 +48,18 @@ done
 # runs under plain sbt, from the flake's dev shell.
 (cd "$root/tests/fixtures/metameta" && nix develop "$root" -c sbt --server -batch "$task")
 
-# The producer flakes for the consumer fixture: copies of multi and ivy,
-# each with a flake.nix that exports its repositories as sbtRepositories.
-producer=$(mktemp -d)
-ivy_producer=$(mktemp -d)
-trap 'rm -rf "$producer" "$ivy_producer" "$XDG_CACHE_HOME"' EXIT
-system=$(nix eval --impure --raw --expr builtins.currentSystem)
-make_producer() {
-  local fixture=$1 dir=$2
-  cp -r "$root/tests/fixtures/$fixture/." "$dir/"
-  rm -rf "$dir/target" "$dir"/*/target "$dir/project/target" "$dir/project/project/target"
-  cat >"$dir/flake.nix" <<EOF
-{
-  inputs.sbt-nix-backend.url = "git+file://$root";
-  outputs = { sbt-nix-backend, ... }:
-    let
-      pkgs = sbt-nix-backend.inputs.nixpkgs.legacyPackages.$system.extend sbt-nix-backend.overlays.default;
-      build = pkgs.buildSbtProject { src = ./.; };
-    in { sbtRepositories.$system = build.sbtRepositories; };
-}
-EOF
-}
-make_producer multi "$producer"
-make_producer ivy "$ivy_producer"
+# The consumer fixture locks tests/producers at the commit this checkout is
+# at, on GitHub.
+rev=$(git -C "$root" rev-parse HEAD)
+if [[ -z $(git -C "$root" branch -r --contains "$rev" 2>/dev/null) ]]; then
+  echo "relock-fixtures: push $rev first; the consumer fixture locks it from GitHub" >&2
+  exit 1
+fi
+if command -v gh >/dev/null && token=$(gh auth token 2>/dev/null); then
+  NIX_CONFIG="access-tokens = github.com=$token"${NIX_CONFIG:+$'\n'"$NIX_CONFIG"}
+  export NIX_CONFIG
+fi
 
 (cd "$root/tests/fixtures/consumer" &&
-  SBT_NIX_BACKEND_TEST_PRODUCER="path:$producer" SBT_NIX_BACKEND_TEST_IVY_PRODUCER="path:$ivy_producer" \
+  SBT_NIX_BACKEND_TEST_PRODUCER="github:clhodapp/sbt-nix-backend/$rev?dir=tests/producers" \
     "$sbt_wrapper/bin/sbt" --server -batch "$task")
