@@ -271,6 +271,9 @@ object NixBackendPlugin extends AutoPlugin {
 
   private val NixOutputResolver = "sbt-nix-output"
 
+  /** Whether an sbt binary version is sbt 2 or later. */
+  private def isSbt2(sbtBinary: String): Boolean = !sbtBinary.startsWith("1.")
+
   override def globalSettings: Seq[Setting[_]] = Seq(
     commands += sandboxBuildCommand,
     // The default lives in Global only, so a project-level append from any
@@ -367,14 +370,15 @@ object NixBackendPlugin extends AutoPlugin {
         val id = projectID.value
         val cross = CrossVersion(id.crossVersion, scalaVersion.value, scalaBinaryVersion.value)
         val crossed = cross.fold(id.name)(f => f(id.name))
-        // An sbt 1 plugin publishes Maven-style as <name>_<scala>_<sbt>, an
-        // sbt 2 plugin as <name>_sbt2_<scala>. Ivy-style, a plugin keeps its
-        // name, without the cross version of its projectID, and carries the
-        // versions as extra attributes.
+        // An sbt 1 plugin publishes Maven-style as <name>_<scala>_<sbt>.
+        // Ivy-style, an sbt 1 plugin keeps its name, without the cross
+        // version of its projectID, and carries the versions as extra
+        // attributes. An sbt 2 plugin publishes as <name>_sbt2_<scala> in
+        // either style.
         val name =
           if (!sbtPlugin.value) crossed
-          else if (!publishMavenStyle.value) id.name
-          else if (sbtBinaryVersion.value.startsWith("1.")) s"${crossed}_${scalaBinaryVersion.value}_${sbtBinaryVersion.value}"
+          else if (!isSbt2(sbtBinaryVersion.value) && !publishMavenStyle.value) id.name
+          else if (!isSbt2(sbtBinaryVersion.value)) s"${crossed}_${scalaBinaryVersion.value}_${sbtBinaryVersion.value}"
           else s"${id.name}_sbt${sbtBinaryVersion.value}_${scalaBinaryVersion.value}"
         Some(LockedProject(thisProject.value.id, id.organization, name, id.revision))
       }
@@ -749,7 +753,9 @@ object NixBackendPlugin extends AutoPlugin {
       } else {
         val locked = nixLockedProject.value.getOrElse(sys.error(s"sbt-nix-backend: $id is not packaged"))
         val attributes =
-          if (sbtPlugin.value) IvyLayout.pluginAttributes(scalaBinaryVersion.value, sbtBinaryVersion.value) else Map.empty[String, String]
+          if (sbtPlugin.value && !isSbt2(sbtBinaryVersion.value))
+            IvyLayout.pluginAttributes(scalaBinaryVersion.value, sbtBinaryVersion.value)
+          else Map.empty[String, String]
         RuntimeRepository.Coordinates(locked.organization, locked.name, locked.version, attributes)
       }
     // A project that resolves through an Ivy settings file adds its

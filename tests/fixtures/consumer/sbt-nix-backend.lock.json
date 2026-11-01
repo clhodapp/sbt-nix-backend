@@ -24,18 +24,18 @@
   "flakeRepositories": [
     {
       "name": "ivy",
-      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.7ewR48lA2L#ivyjava",
-      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.7ewR48lA2L?lastModified=1793494510&narHash=sha256-tJgMUTnPKBsLeIAHCylE9hOgQe11zoHeZPdOm1KKUAI%3D",
+      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.AEjsvHJaXS#ivyjava",
+      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.AEjsvHJaXS?lastModified=1793495776&narHash=sha256-cyw6W7RfNiLnPpXOFBlmhrLD8uZgrfGLaOOI3Z0jV6M%3D",
       "attribute": "ivyjava"
     },
     {
       "name": "multi",
-      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.Ph1DGfQ7lS#app",
-      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.Ph1DGfQ7lS?lastModified=1793494510&narHash=sha256-zQ8ApNAcFsKc/r%2B0Po23akDWlN%2BvLHtoeBBiRwMQDNs%3D",
+      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.cQo3w3hQpe#app",
+      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.cQo3w3hQpe?lastModified=1793495776&narHash=sha256-zQ8ApNAcFsKc/r%2B0Po23akDWlN%2BvLHtoeBBiRwMQDNs%3D",
       "attribute": "app"
     }
   ],
-  "inputsHash": "sha256-JOkMTS5dTYCN8VphvlfGpDXNm+Jg5xrcrBmNOgel5Dk=",
+  "inputsHash": "sha256-XOZh4jTvoVdp3nwgAZDkJx2waXZ9fW7wbvK4ejYn6zQ=",
   "definitionHash": "sha256-z74zB5/fODmrFBpJKFDePaVcBjnOBSz7LZDDJNNBrL4=",
   "artifacts": [
     {

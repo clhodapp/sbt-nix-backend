@@ -21,6 +21,12 @@
       "version": "2.0.0"
     },
     {
+      "id": "ivyplugin2",
+      "organization": "example",
+      "name": "ivyplugin2_sbt2_3",
+      "version": "2.0.0"
+    },
+    {
       "id": "lib",
       "organization": "example",
       "name": "lib_3",
@@ -28,8 +34,8 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-0S6GhhgZrRZ2BFOwNYK42zWutoqDV03Gsc14ETYnaXU=",
-  "definitionHash": "sha256-bHN4LxLY1yACZuGcbYcwyFhdOtnUdNWI5CDS8+XLLmc=",
+  "inputsHash": "sha256-+sz0wPetKhONl4FhSwD7fJBGJIObVjOun5sWa/VeL8A=",
+  "definitionHash": "sha256-uWmO9oW2J424Tl9zNYWsG65ZO2Z+hlqtexkBh2OkAHg=",
   "artifacts": [
     {
       "path": "https/repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/interface/0.13.18/ivys/ivy.xml",
@@ -937,6 +943,16 @@
       "hash": "sha256-HhGMZJTuLGverW3L+VnrKK9J6SaFAEOzPnfWO0uMIdg="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/modules/scala-parser-combinators_3/2.4.0/scala-parser-combinators_3-2.4.0.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/modules/scala-parser-combinators_3/2.4.0/scala-parser-combinators_3-2.4.0.jar",
+      "hash": "sha256-UPGz3PjxSXVwLcbaKHeX45H8XUg05NPn6fkSXv2y3po="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/modules/scala-parser-combinators_3/2.4.0/scala-parser-combinators_3-2.4.0.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/modules/scala-parser-combinators_3/2.4.0/scala-parser-combinators_3-2.4.0.pom",
+      "hash": "sha256-0bGJwIk1j8dJQ/IwqVoHP/0tXmKxZ/CUR8psQl5CaIc="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scala-lang/modules/scala-xml_3/2.4.0/scala-xml_3-2.4.0.jar",
       "url": "https://repo1.maven.org/maven2/org/scala-lang/modules/scala-xml_3/2.4.0/scala-xml_3-2.4.0.jar",
       "hash": "sha256-tTlxt3EkCyQWGJDkCDBk/yO8L0gAoBPJYYv0bSI0F38="
@@ -1272,6 +1288,11 @@
       "hash": "sha256-0XOuS9brB/1wsAChLLcnXHqrJsZX48mTL0l9lXjXHrE="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/2.0.12/sbt-launch-2.0.12.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/sbt-launch/2.0.12/sbt-launch-2.0.12.pom",
+      "hash": "sha256-H21qusrHPcyu/0RRpxVGbTnfa/shlI/Eh1ve5QcByn8="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/sbt/2.0.12/sbt-2.0.12.jar",
       "url": "https://repo1.maven.org/maven2/org/scala-sbt/sbt/2.0.12/sbt-2.0.12.jar",
       "hash": "sha256-Rpf3hJvkavTQ8Y2TfRcSQTXXrXlFxfusSegHpnVqNKs="
@@ -1280,6 +1301,16 @@
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/sbt/2.0.12/sbt-2.0.12.pom",
       "url": "https://repo1.maven.org/maven2/org/scala-sbt/sbt/2.0.12/sbt-2.0.12.pom",
       "hash": "sha256-nR0dEqAycEErkYFwjF4nV2TZ7y0Aa8oGNShH2kQsk6w="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/scripted-sbt_3/2.0.12/scripted-sbt_3-2.0.12.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/scripted-sbt_3/2.0.12/scripted-sbt_3-2.0.12.jar",
+      "hash": "sha256-7goNGxVcvPF7zwojMkY6YhhRh6Fmn4kI2wRqPV/23fk="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/scripted-sbt_3/2.0.12/scripted-sbt_3-2.0.12.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/scripted-sbt_3/2.0.12/scripted-sbt_3-2.0.12.pom",
+      "hash": "sha256-V2AUQ3Qz9Vu5dxz6tIOHF20IFHSjbglhsiAjTWjEiFw="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/task-system_3/2.0.12/task-system_3-2.0.12.jar",
@@ -1410,6 +1441,16 @@
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/util-relation_3/2.0.12/util-relation_3-2.0.12.pom",
       "url": "https://repo1.maven.org/maven2/org/scala-sbt/util-relation_3/2.0.12/util-relation_3-2.0.12.pom",
       "hash": "sha256-lAAlCgwQJeaXzuq0gw3aYsNuHPLUThEuEDVCNAs51eI="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/util-scripted_3/2.0.12/util-scripted_3-2.0.12.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/util-scripted_3/2.0.12/util-scripted_3-2.0.12.jar",
+      "hash": "sha256-SR9U6Pux/wW1nQP/DyeHcZ9U6Gy0S91PBGYYShjIcR8="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/util-scripted_3/2.0.12/util-scripted_3-2.0.12.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/util-scripted_3/2.0.12/util-scripted_3-2.0.12.pom",
+      "hash": "sha256-jOnh6dGSo1RIqSNTrpQyf+GxjtCDEiFqrth9zmZgUGI="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/util-tracking_3/2.0.12/util-tracking_3-2.0.12.jar",
