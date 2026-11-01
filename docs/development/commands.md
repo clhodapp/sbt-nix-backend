@@ -31,11 +31,14 @@ locked file.
 
 The workflows under `.github/workflows` run on GitHub:
 
-- `check.yml`, `check-pr.yml` and `cache-cleanup.yml` run
-  `nix flake check` on every push to main and every pull request, with a
-  build cache in the repository's Actions cache. A check of main pushes
-  its builds to the clhodapp cachix cache. They are the pipeline of the
-  workspace (its `docs/development/ci.md`).
+- `check.yml` runs on every push to main, every pull request, and when
+  `update.yml` dispatches it, on x86_64-linux and aarch64-linux, as every
+  nix-purifier's check workflow does. Its `check` job runs
+  `nix flake check`, which includes the conformance checks of the
+  purifier contract that the sandbox runs. The `conformance-relock` job
+  relocks the fixtures and fails on any change to their lockfiles, and
+  `conformance-offline` runs `tests/interactive.sh`. Every job reads the
+  clhodapp cachix cache.
 - `release.yml` runs after each successful check of a push to main. It
   builds the artifacts with the version of the last release and compares
   them with that release. When they differ, it releases the next revision
