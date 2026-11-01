@@ -370,7 +370,7 @@ object NixBackendPlugin extends AutoPlugin {
             case _ =>
               log.warn(
                 s"[sbt-nix-backend] ${lockFile.getName} was made from another build definition; " +
-                  "resolution does not read the locked downloads until nixLock renews it"
+                  s"resolution does not read the locked downloads until `${Lock.LockCommand}` renews it"
               )
               false
           }
@@ -503,10 +503,15 @@ object NixBackendPlugin extends AutoPlugin {
       Compat.toEither(result) match {
         case Right(report) => report
         case Left(cause) =>
-          if ((ThisBuild / nixBackend).value)
+          if (Mode.current == Mode.Sandbox)
+            log.error(
+              s"[sbt-nix-backend] the Nix build reads only the downloads ${Lock.FileName} locks, and it lacks one " +
+                s"this resolution needs; run `${Lock.LockCommand}`."
+            )
+          else if ((ThisBuild / nixBackend).value)
             log.error(
               s"[sbt-nix-backend] resolution reads only the downloads ${(ThisBuild / nixLockFile).value.getName} locks. " +
-                "If the build's dependencies changed, run nixLock; SBT_NIX_BACKEND=0 resolves without the lock."
+                s"If the build's dependencies changed, run `${Lock.LockCommand}`; SBT_NIX_BACKEND=0 resolves without the lock."
             )
           throw cause
       }
@@ -637,7 +642,7 @@ object NixBackendPlugin extends AutoPlugin {
     val lockFile = nixLockFile.value
     val base = ((ThisBuild / nixBuildRoot).value / "target") / "sbt-nix-backend"
     val dir = base / "coursier-cache"
-    if (!lockFile.isFile) sys.error(s"sbt-nix-backend: no lock at $lockFile; run nixLock")
+    if (!lockFile.isFile) sys.error(s"sbt-nix-backend: no lock at $lockFile; run `${Lock.LockCommand}`")
     coursierCacheLock.synchronized {
       val marker = dir / ".sbt-nix-backend-lock"
       val lockHash = Lock.sriHash(lockFile)
