@@ -254,7 +254,8 @@ in
 
   # Feature 4: a repository is enough to resolve and run its module.
   multi-app-repository =
-    runFromRepository "multi-app-repository" multi.sbtRepositories.app "example:app_3:1.0.0" "example.Main"
+    runFromRepository "multi-app-repository" multi.sbtRepositories.app "example:app_3:1.0.0"
+      "example.Main"
       [
         ''{"hello":"Nix World"}''
         "Apache License"
@@ -284,7 +285,8 @@ in
   # resolves and runs the app.
   sbt2-app-artifacts = onlyOwnArtifacts "sbt2-app-artifacts" sbt2.packages.app "example/app_3" { };
   sbt2-app-repository =
-    runFromRepository "sbt2-app-repository" sbt2.sbtRepositories.app "example:app_3:2.0.0" "example2.Main"
+    runFromRepository "sbt2-app-repository" sbt2.sbtRepositories.app "example:app_3:2.0.0"
+      "example2.Main"
       [
         ''{"sbt":2}''
         "version 2.0.0"
@@ -350,13 +352,15 @@ in
         "version 4.0.0"
         "interface xsbti.Logger"
       ];
-  ivy-app-repository-layouts = repositoryLayouts "ivy-app-repository-layouts" ivy.sbtRepositories.app [
-    "example/app_2.13/4.0.0/app_2.13-4.0.0.pom"
-    "example/lib_2.13/4.0.0/ivys/ivy.xml"
-    "example/lib_2.13/4.0.0/jars/lib_2.13.jar"
-    "org.scala-sbt/interface/0.13.18/ivys/ivy.xml"
-    "org.scala-sbt/interface/0.13.18/jars/interface.jar"
-  ];
+  ivy-app-repository-layouts =
+    repositoryLayouts "ivy-app-repository-layouts" ivy.sbtRepositories.app
+      [
+        "example/app_2.13/4.0.0/app_2.13-4.0.0.pom"
+        "example/lib_2.13/4.0.0/ivys/ivy.xml"
+        "example/lib_2.13/4.0.0/jars/lib_2.13.jar"
+        "org.scala-sbt/interface/0.13.18/ivys/ivy.xml"
+        "org.scala-sbt/interface/0.13.18/jars/interface.jar"
+      ];
 
   # A project that resolves through an Ivy settings file builds in the
   # sandbox, and its repository alone runs it. The repository holds sbt's
@@ -405,7 +409,8 @@ in
       "matrixexample.Main"
       [ "matrix app for Scala 3" ];
   matrix2-app2_13-repository =
-    runFromRepository "matrix2-app2_13-repository" matrix2.sbtRepositories.app2_13 "example:app_2.13:6.0.0"
+    runFromRepository "matrix2-app2_13-repository" matrix2.sbtRepositories.app2_13
+      "example:app_2.13:6.0.0"
       "matrixexample.Main"
       [ "matrix app for Scala 2.13" ];
 
@@ -424,7 +429,8 @@ in
       "ivyexample.CrossLib"
       [ "crosslib published Ivy-style" ];
   ivy-crosslib-3-repository =
-    runFromRepository "ivy-crosslib-3-repository" ivy.sbtRepositories.crosslib "example:crosslib_3:4.0.0"
+    runFromRepository "ivy-crosslib-3-repository" ivy.sbtRepositories.crosslib
+      "example:crosslib_3:4.0.0"
       "ivyexample.CrossLib"
       [ "crosslib published Ivy-style" ];
 

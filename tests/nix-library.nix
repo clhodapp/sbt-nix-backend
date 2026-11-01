@@ -213,12 +213,12 @@ let
       ];
     };
     testTheOutputsAreTheProjects = {
-      expr = builtins.attrNames (
-        readLock {
-          src = sourceTree;
-          lockFile = lockJson { };
-        }
-      ).outputs;
+      expr =
+        builtins.attrNames
+          (readLock {
+            src = sourceTree;
+            lockFile = lockJson { };
+          }).outputs;
       expected = [ "core" ];
     };
     testAMissingLockfileIsAProblem = {
@@ -372,12 +372,11 @@ let
     # The default plugin repository is the plugin built from this revision
     # for the same package set.
     testThePluginOfThisRevisionIsTheDefault = {
-      expr =
-        builtins.elem (flakeLib.sbt-purifier.plugin pkgs).drvPath (
-          builtins.attrNames (
-            builtins.getContext (build { lockFile = pluginLock "environment"; }).packages.core.buildPhase
-          )
-        );
+      expr = builtins.elem (flakeLib.sbt-purifier.plugin pkgs).drvPath (
+        builtins.attrNames (
+          builtins.getContext (build { lockFile = pluginLock "environment"; }).packages.core.buildPhase
+        )
+      );
       expected = true;
     };
     # The lock names the artifacts of a package, so evaluating them builds
