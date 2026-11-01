@@ -299,9 +299,12 @@ let
     # A lockfile outside the source, of a build kept external, takes the
     # place of the one in it; the source here has none.
     testALockfileOutsideTheSourceIsCopiedIn = {
-      expr = lib.hasInfix "cp --no-preserve=mode ${lockJson { }} sbt-purifier.lock.json" (build {
-        lockFile = lockJson { };
-      }).packages.core.buildPhase;
+      expr =
+        let
+          phase = (build { lockFile = lockJson { }; }).packages.core.buildPhase;
+        in
+        builtins.elem (toString (lockJson { })) (builtins.attrNames (builtins.getContext phase))
+        && lib.hasInfix " sbt-purifier.lock.json" phase;
       expected = true;
     };
     testDefaultJdkFollowsTheLockedJavaMajorVersion = {
@@ -370,8 +373,11 @@ let
     # for the same package set.
     testThePluginOfThisRevisionIsTheDefault = {
       expr =
-        lib.hasInfix (flakeLib.sbt-purifier.plugin pkgs).repository.outPath
-          (build { lockFile = pluginLock "environment"; }).packages.core.buildPhase;
+        builtins.elem (flakeLib.sbt-purifier.plugin pkgs).drvPath (
+          builtins.attrNames (
+            builtins.getContext (build { lockFile = pluginLock "environment"; }).packages.core.buildPhase
+          )
+        );
       expected = true;
     };
     # The lock names the artifacts of a package, so evaluating them builds

@@ -72,15 +72,25 @@ let
 
   lock = if contentProblem == null then builtins.fromJSON text else null;
 
-  # A source that is the output of a derivation would have to be built to
-  # be read, which evaluation does not do; its staleness is left to the
-  # plugin. So is the staleness of a lock read with `src = null`, as the
-  # sbt wrapper and the plugin's interactive mode read it for its
-  # downloads alone.
+  # A source that is the output of a derivation (a derivation, or a string
+  # whose context names derivation outputs) would have to be built to be
+  # read, which evaluation does not do; its staleness is left to the
+  # plugin. A path, a flake input, or a store path of a source is read. So
+  # is no source at all for a lock read with `src = null`, as the sbt
+  # wrapper and the plugin's interactive mode read it for its downloads
+  # alone.
+  srcPath = if builtins.isAttrs src then src.outPath else src;
+  readable =
+    src != null
+    && !(builtins.isAttrs src && src ? drvPath)
+    && (
+      !(isString srcPath && hasContext srcPath)
+      || builtins.all (c: c.path or false) (builtins.attrValues (builtins.getContext srcPath))
+    );
   staleProblem =
-    if lock == null || src == null || (isString src && hasContext src) then
+    if lock == null || !readable then
       null
-    else if import ./definition-hash.nix src != lock.definitionHash then
+    else if import ./definition-hash.nix srcPath != lock.definitionHash then
       "${where} is stale: the build definition (the *.sbt files and project/) changed since it was written; ${fix}"
     else
       null;
