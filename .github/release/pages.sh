@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MIT
 #
-# pages.sh <site> <artifacts>: adds the release in <artifacts> (the
-# directory build.sh wrote) to the Maven repository under <site>/maven,
-# the checkout of the gh-pages branch that GitHub Pages serves at
-# https://clhodapp.github.io/sbt-nix-backend/maven. A version already in
-# the repository is left as it is.
+# pages.sh <site> <zips>: builds the GitHub Pages site under <site> from
+# the release zips in <zips> (each sbt-nix-backend-<version>-maven.zip,
+# as release.yml attaches them to the GitHub releases): a Maven
+# repository under <site>/maven, served at
+# https://clhodapp.github.io/sbt-nix-backend/maven. The GitHub releases
+# are the only copy of the artifacts; the site is rebuilt from all of them
+# at each release, and nothing of it is in git.
 #
 # Each artifact directory gets a maven-metadata.xml listing its versions,
 # with its checksums, so tools that resolve a version range or the latest
@@ -13,15 +15,19 @@
 set -euo pipefail
 
 site=$1
-artifacts=$2
+zips=$2
 repo="$site/maven"
 mkdir -p "$repo"
 
-(cd "$artifacts" && find . -type f -not -name SHA256SUMS) | while read -r f; do
-  target="$repo/${f#./}"
-  if [[ -e $target ]]; then continue; fi
-  mkdir -p "$(dirname "$target")"
-  cp "$artifacts/$f" "$target"
+shopt -s nullglob
+archives=("$zips"/*-maven.zip)
+if ((${#archives[@]} == 0)); then
+  echo "pages.sh: no release zips in $zips" >&2
+  exit 1
+fi
+for zip in "${archives[@]}"; do
+  # Versions do not overlap, so no file is in two zips.
+  unzip -q -n "$zip" -d "$repo"
 done
 
 now=$(date -u +%Y%m%d%H%M%S)
@@ -50,5 +56,5 @@ find "$repo" -name '*.pom' -printf '%h\n' | xargs -n1 dirname | sort -u | while 
   md5sum "$adir/maven-metadata.xml" | cut -d' ' -f1 >"$adir/maven-metadata.xml.md5"
 done
 
-# GitHub Pages serves the branch as it is, without Jekyll.
+# GitHub Pages serves the site as it is, without Jekyll.
 touch "$site/.nojekyll"
