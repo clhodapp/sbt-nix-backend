@@ -23,14 +23,20 @@
   ],
   "flakeRepositories": [
     {
+      "name": "ivy",
+      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.7ewR48lA2L#ivyjava",
+      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.7ewR48lA2L?lastModified=1793494510&narHash=sha256-tJgMUTnPKBsLeIAHCylE9hOgQe11zoHeZPdOm1KKUAI%3D",
+      "attribute": "ivyjava"
+    },
+    {
       "name": "multi",
-      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.hQKKZaY9Jt#app",
-      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.hQKKZaY9Jt?lastModified=1793488521&narHash=sha256-zQ8ApNAcFsKc/r%2B0Po23akDWlN%2BvLHtoeBBiRwMQDNs%3D",
+      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.Ph1DGfQ7lS#app",
+      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.Ph1DGfQ7lS?lastModified=1793494510&narHash=sha256-zQ8ApNAcFsKc/r%2B0Po23akDWlN%2BvLHtoeBBiRwMQDNs%3D",
       "attribute": "app"
     }
   ],
-  "inputsHash": "sha256-+HRVeYHa9ljS+iX5T2eZqb3yGZ8MZOBeUikJByqPsQ4=",
-  "definitionHash": "sha256-XKDqqOS36DEwE+90vU7tOcn20fxG85ldNnIElG366Qw=",
+  "inputsHash": "sha256-JOkMTS5dTYCN8VphvlfGpDXNm+Jg5xrcrBmNOgel5Dk=",
+  "definitionHash": "sha256-z74zB5/fODmrFBpJKFDePaVcBjnOBSz7LZDDJNNBrL4=",
   "artifacts": [
     {
       "path": "https/repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_2.12/0.9.3/gigahorse-apache-http_2.12-0.9.3.jar",

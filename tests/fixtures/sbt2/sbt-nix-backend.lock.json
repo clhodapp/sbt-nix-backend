@@ -28,9 +28,19 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-qI39o1jP6r9LW+Ke9PLUrIDNg4laEv2Oal71xPxAKzA=",
-  "definitionHash": "sha256-1463D+4mDNm9VU34/4D7x2hOU5xS0GfI0pH0MyEkOlI=",
+  "inputsHash": "sha256-0S6GhhgZrRZ2BFOwNYK42zWutoqDV03Gsc14ETYnaXU=",
+  "definitionHash": "sha256-bHN4LxLY1yACZuGcbYcwyFhdOtnUdNWI5CDS8+XLLmc=",
   "artifacts": [
+    {
+      "path": "https/repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/interface/0.13.18/ivys/ivy.xml",
+      "url": "https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/interface/0.13.18/ivys/ivy.xml",
+      "hash": "sha256-QQUT/WnP1P7zQrifwJMWdsw2RiiaCloaf2Cfn/29Kro="
+    },
+    {
+      "path": "https/repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/interface/0.13.18/jars/interface.jar",
+      "url": "https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/interface/0.13.18/jars/interface.jar",
+      "hash": "sha256-7G3wdhDiMyawz0h2Qc/Nl3saby4xi43TC1aXS4DfbJ0="
+    },
     {
       "path": "https/repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_3/0.9.6/gigahorse-apache-http_3-0.9.6.jar",
       "url": "https://repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_3/0.9.6/gigahorse-apache-http_3-0.9.6.jar",

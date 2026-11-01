@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MIT
 #
-# Tests of what runs outside the Nix sandbox, on copies of the multi (sbt 1)
-# and sbt2 (sbt 2) fixtures with their committed lockfiles:
+# Tests of what runs outside the Nix sandbox, on copies of the multi (sbt 1),
+# sbt2 (sbt 2) and ivy (sbt 1, resolving with Ivy) fixtures with their
+# committed lockfiles:
 #
 #  - interactive mode (feature 3): compile, test and run read every
 #    dependency from the locked downloads, at every level of the build
@@ -113,7 +114,7 @@ interactive_suite() {
   output=$(run_sbt 'show app/nixPackagedArtifacts' 'show app/nixRuntimeRepository') ||
     fail "$fixture: nixPackagedArtifacts failed"
   expect "$fixture: nixPackagedArtifacts returns the jar the Nix build made" has "$jar"
-  expect "$fixture: nixRuntimeRepository returns the repository output" has 'app_3-[0-9.]+-repository'
+  expect "$fixture: nixRuntimeRepository returns the repository output" has 'app_[0-9.]+-[0-9.]+-repository'
 
   echo "== $fixture: a lockfile made from another build definition"
   echo '// changed' >>"$build/build.sbt"
@@ -133,7 +134,55 @@ interactive_suite sbt2 \
   "$maven/com/eed3si9n/sbt-buildinfo_sbt2_3/0.13.2/sbt-buildinfo_sbt2_3-0.13.2.jar" \
   '/nix/store/[a-z0-9]+-app_3-2\.0\.0/example/app_3/2\.0\.0/app_3-2\.0\.0\.jar' \
   'app/runMain example2.Main' \
-  '\{"sbt":2\}' 'version 2\.0\.0'
+  '\{"sbt":2\}' 'version 2\.0\.0' 'interface xsbti\.Logger'
+
+# ivy resolves with Ivy (useCoursier := false) in the build and its
+# meta-build; Ivy reads the locked downloads through a file: mirror.
+interactive_suite ivy \
+  "$maven/com/eed3si9n/sbt-buildinfo_2.12_1.0/0.13.1/sbt-buildinfo_2.12_1.0-0.13.1.jar" \
+  '/nix/store/[a-z0-9]+-app_2\.13-4\.0\.0/example/app_2\.13/4\.0\.0/app_2\.13-4\.0\.0\.jar' \
+  'app/runMain ivyexample.Main' \
+  '\{"resolvedWith":"ivy"\}' 'version 4\.0\.0' 'interface xsbti\.Logger'
+
+# ivy's settingsfile resolves through an Ivy settings file, which Ivy reads
+# as a copy on the mirror, with the network cut off.
+echo "== ivy: a project that resolves through an Ivy settings file"
+use_fixture ivy
+output=$(run_sbt 'settingsfile/runMain ivyexample.Settings') || fail "ivy: settingsfile did not run offline"
+expect "ivy: settingsfile runs from the locked downloads" has '\{"resolvedWith":"ivysettings.xml"\}'
+expect "ivy: settingsfile has the module of the Ivy repository" has 'interface xsbti\.Logger'
+downloads=$(find "$COURSIER_CACHE" "$HOME/.ivy2/cache" -type f -not -name '.*' 2>/dev/null | head -5 || true)
+expect "ivy: nothing went to the user's caches (found: ${downloads:-nothing})" test -z "$downloads"
+
+# A rebuilt plugin keeps its version but is a new store path. A meta-build
+# that resolves with Ivy loads the new one: Ivy reads a module of a local
+# repository where its cache first found it, and each set of local
+# repositories has an Ivy home of its own. The second wrapper takes a copy
+# of the plugin repository at another store path.
+echo "== ivy: a rebuilt plugin repository under the same version"
+# shellcheck disable=SC2016 # the expression is Nix, and Nix expands it
+other_wrapper=$(nix build --no-link --print-out-paths --impure --argstr root "$root" --expr '
+  { root }:
+  let
+    flake = builtins.getFlake "git+file://${root}";
+    system = builtins.currentSystem;
+    pkgs = flake.inputs.nixpkgs.legacyPackages.${system};
+    sbt = flake.packages.${system}.sbt;
+  in
+  sbt.override {
+    pluginRepository = pkgs.runCommand "plugin-repository-copy" { } "cp -r ${sbt.pluginRepository} $out";
+  }')
+use_fixture ivy
+location='eval sbtnixbackend.NixBackendPlugin.getClass.getProtectionDomain.getCodeSource.getLocation.toString'
+output=$(run_sbt "$location") || fail "ivy: sbt did not load"
+first=$output
+saved_wrapper=$sbt_wrapper
+sbt_wrapper=$other_wrapper
+output=$(run_sbt "$location") || fail "ivy: sbt did not load with the rebuilt plugin"
+sbt_wrapper=$saved_wrapper
+copy=$(grep -o '/nix/store/[a-z0-9]*-plugin-repository-copy' "$other_wrapper/bin/sbt" | head -1)
+expect "ivy: the first run loads the plugin from the flake's repository" grep -q 'ans: String = file:/nix/store/[a-z0-9]*-sbt-nix-backend_2.12_1.0-0.1.0-repository/' <<<"$first"
+expect "ivy: the second run loads the rebuilt plugin (${copy:-no copy found})" has "ans: String = file:$copy/"
 
 # metameta installs the plugin only in project/project/plugins.sbt and runs
 # under plain sbt, without the wrapper. Without the wrapper, sbt boots

@@ -31,13 +31,13 @@ sbt_wrapper=$(nix build --no-link --print-out-paths "$root#sbt")
 # sbt 2 keeps one in its disk cache under XDG_CACHE_HOME, while the plugin
 # version stays the same, even when the plugin changed. Fresh meta-builds
 # and a cache directory of this run's own resolve the current plugin.
-for fixture in multi sbt2 metameta consumer; do
+for fixture in multi sbt2 ivy metameta consumer; do
   rm -rf "$root/tests/fixtures/$fixture/project/target" "$root/tests/fixtures/$fixture/project/project/target"
 done
 XDG_CACHE_HOME=$(mktemp -d)
 export XDG_CACHE_HOME
 
-for fixture in multi sbt2; do
+for fixture in multi sbt2 ivy; do
   (cd "$root/tests/fixtures/$fixture" && "$sbt_wrapper/bin/sbt" --server -batch "$task")
 done
 
@@ -45,14 +45,17 @@ done
 # runs under plain sbt, from the flake's dev shell.
 (cd "$root/tests/fixtures/metameta" && nix develop "$root" -c sbt --server -batch "$task")
 
-# The producer flake for the consumer fixture: a copy of multi with a
-# flake.nix that exports its repositories as sbtRepositories.
+# The producer flakes for the consumer fixture: copies of multi and ivy,
+# each with a flake.nix that exports its repositories as sbtRepositories.
 producer=$(mktemp -d)
-trap 'rm -rf "$producer" "$XDG_CACHE_HOME"' EXIT
-cp -r "$root/tests/fixtures/multi/." "$producer/"
-rm -rf "$producer/target" "$producer/project/target" "$producer/project/project/target"
+ivy_producer=$(mktemp -d)
+trap 'rm -rf "$producer" "$ivy_producer" "$XDG_CACHE_HOME"' EXIT
 system=$(nix eval --impure --raw --expr builtins.currentSystem)
-cat > "$producer/flake.nix" <<EOF
+make_producer() {
+  local fixture=$1 dir=$2
+  cp -r "$root/tests/fixtures/$fixture/." "$dir/"
+  rm -rf "$dir/target" "$dir"/*/target "$dir/project/target" "$dir/project/project/target"
+  cat >"$dir/flake.nix" <<EOF
 {
   inputs.sbt-nix-backend.url = "git+file://$root";
   outputs = { sbt-nix-backend, ... }:
@@ -62,6 +65,10 @@ cat > "$producer/flake.nix" <<EOF
     in { sbtRepositories.$system = build.sbtRepositories; };
 }
 EOF
+}
+make_producer multi "$producer"
+make_producer ivy "$ivy_producer"
 
 (cd "$root/tests/fixtures/consumer" &&
-  SBT_NIX_BACKEND_TEST_PRODUCER="path:$producer" "$sbt_wrapper/bin/sbt" --server -batch "$task")
+  SBT_NIX_BACKEND_TEST_PRODUCER="path:$producer" SBT_NIX_BACKEND_TEST_IVY_PRODUCER="path:$ivy_producer" \
+    "$sbt_wrapper/bin/sbt" --server -batch "$task")

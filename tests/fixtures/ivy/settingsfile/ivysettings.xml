@@ -1,0 +1,7 @@
+<ivysettings>
+  <!-- central.root comes from a properties file, and the resolvers from an
+       included settings file. -->
+  <properties file="${ivy.settings.dir}/repositories.properties"/>
+  <settings defaultResolver="main"/>
+  <include file="${ivy.settings.dir}/resolvers.xml"/>
+</ivysettings>

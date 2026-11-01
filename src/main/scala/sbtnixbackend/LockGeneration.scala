@@ -129,9 +129,15 @@ object LockGeneration {
       )
     )
     info(s"[sbt-nix-backend] running `$command` in a fresh sbt with an empty cache")
+    // A project that resolves with Ivy downloads through this mirror, which
+    // keeps every file in the fork's cache at its coursier path.
+    val mirror = new IvyMirror.Server(cache)
     val code =
-      try Proc.stream(cmd, src, env, line => info("[sbt-nix-backend lock] " + line))
-      finally deleteRecursively(runtime)
+      try Proc.stream(cmd, src, env + (IvyMirror.Variable -> Some(mirror.base)), line => info("[sbt-nix-backend lock] " + line))
+      finally {
+        mirror.stop()
+        deleteRecursively(runtime)
+      }
     if (code != 0)
       throw new LockFailed(
         s"the lock run failed (exit code $code); its output is above, and its directories are kept in $work"

@@ -11,9 +11,9 @@ build, and Nix fetches what the build needs and builds it in the sandbox.
 - **Sandboxed builds.** `buildSbtProject`, which the flake's overlay adds
   to a package set, turns a build and its lockfile into derivations. `dependencies` is the
   coursier cache of every locked file. `packages.<project>` holds the
-  project's published artifacts in Maven layout. Its `repository` output
-  holds them with their runtime dependencies, as a Maven repository that
-  resolves offline.
+  project's published artifacts, in the layout it publishes in. Its
+  `repository` output holds them with their runtime dependencies, as a
+  repository that resolves offline (see [Repository layouts](#repository-layouts)).
 - **Interactive sbt on the locked downloads.** With a lockfile present,
   `compile`, `run`, `test` and `packagedArtifacts` stay incremental, but
   resolution reads only the locked files, through Nix, offline. That holds
@@ -161,6 +161,74 @@ interactive mode off. Source jars for an IDE are not build inputs, so
 `updateClassifiers` resolves the usual way, into the user's coursier
 cache.
 
+### Repository layouts
+
+A project publishes into its `out` output in the layout it publishes in
+anywhere. A Maven-style project uses the Maven layout. A project with
+`publishMavenStyle := false` uses sbt's standard Ivy layout
+(`Resolver.ivyStylePatterns`, the layout of `publishLocal`). An sbt plugin
+published Ivy-style keeps its plain name and carries its Scala and sbt
+versions in its path.
+
+A `repository` output keeps every module in the layout it was published
+in. Modules from Maven repositories keep their Maven paths. Modules from
+Ivy repositories go to their paths in the standard Ivy layout, whatever
+patterns their repository used. The two layouts share the directory
+without colliding. A Maven path starts with the organization split at its
+dots, and an Ivy path with the organization whole. A consumer reads the
+directory with both resolvers:
+
+```scala
+externalResolvers := Seq(
+  MavenRepository("repository", "file:///nix/store/...-repository"),
+  Resolver.file("repository-ivy", file("/nix/store/...-repository"))(Resolver.ivyStylePatterns)
+)
+```
+
+`nixFlakeRepositories` adds both resolvers for each flake repository, and
+`nixFlakeModule` returns a module with the extra attributes it was
+published with.
+
+### Resolution with Ivy
+
+On sbt 1, a project or meta-build may resolve with Apache Ivy
+(`useCoursier := false`). The plugin rewrites every remote resolver of
+such a project onto a mirror of the coursier cache, where the file of
+`https://host/path` sits at `https/host/path`. The rewrite covers the
+project's Ivy configuration and the one that resolves the compiler bridge
+of Scala 2.12 and older. In a Nix build and in interactive mode, the
+mirror is the coursier cache built from the lockfile, read as a `file:`
+URL, so Ivy reads only the locked files. In the lock run, the mirror is an
+HTTP server on localhost that fetches each file Ivy asks for from its real
+URL into the fork's coursier cache, so the lockfile holds it under that URL
+with everything else.
+
+Such a project gets an Ivy home of its own under
+`target/sbt-nix-backend/ivy-homes`, named by a digest of the lockfile and
+of the local repositories it reads. Ivy keeps each module it resolved
+from a local repository in its cache by version, and reads its files where
+it first found them. A rebuilt plugin or flake repository keeps its
+version at a new store path, and gets a fresh cache under the new digest.
+sbt's `local` repository stays in the user's Ivy home, so `publishLocal`
+and its readers are unaffected.
+
+A project that resolves through an Ivy settings file
+(`externalIvySettings`) gives Ivy a copy of the file under its Ivy home.
+In the copy, every remote URL is on the mirror. That covers attribute
+values, the values of included properties files, and every included
+settings file, which is copied the same way. A remote file the settings
+include is read through the mirror too, so the lock run locks it. Ivy
+interprets the copy itself, so chains, module rules and conflict managers
+keep their meaning. Coursier, which completes the repository outputs,
+reads the resolvers of the copy, converted to sbt resolvers at their real
+URLs.
+
+`tests/fixtures/ivy` resolves with Ivy at both levels. It publishes
+Ivy-style, including an sbt plugin. It depends on a module that only an
+Ivy-layout repository has, and one of its projects resolves through an Ivy
+settings file. `tests/fixtures/sbt2` publishes Ivy-style on
+sbt 2, which resolves with coursier only.
+
 ## Keys
 
 | Key | What it does |
@@ -188,9 +256,6 @@ cache.
   settings in `SBT_OPTS`, which the server it starts receives too.
 - A cross-built project (`crossScalaVersions`) is built for each of its
   Scala versions, as `+` does, and its outputs hold every variant.
-- Nix outputs are Maven repositories, so a project with
-  `publishMavenStyle := false` is refused, and a runtime dependency that
-  comes from an Ivy-layout repository cannot go into a repository output.
 - A lockfile records URLs, not credentials; a dependency from an
   authenticated repository needs a `fetchurl` that supplies them.
 - A `-SNAPSHOT` dependency changes under its URL, so its locked hash stops
