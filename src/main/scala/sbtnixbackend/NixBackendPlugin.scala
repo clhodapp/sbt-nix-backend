@@ -750,9 +750,9 @@ object NixBackendPlugin extends AutoPlugin {
     val lockFile = (ThisBuild / nixLockFile).value
     if (Mode.current != Mode.Interactive) sys.error("sbt-nix-backend: nixLock runs only outside the sandbox")
     val existing = Lock.readOption(lockFile)
-    val javaMajor = System.getProperty("java.version").takeWhile(_ != '.')
+    val javaMajor = Lock.javaMajor(System.getProperty("java.version"))
     val fresh = existing.exists { l =>
-      l.inputsHash == in.inputsHash && l.javaVersion.takeWhile(_ != '.') == javaMajor && l.sbtVersion == in.sbtVersion
+      l.inputsHash == in.inputsHash && l.javaVersion == javaMajor && l.sbtVersion == in.sbtVersion
     }
     if (!force && fresh) {
       log.info(s"[sbt-nix-backend] $lockFile is up to date")

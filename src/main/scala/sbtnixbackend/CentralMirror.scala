@@ -27,6 +27,16 @@ object CentralMirror {
   /** The root of Maven Central. */
   val Central = "https://repo1.maven.org/maven2/"
 
+  /** The root of Google's mirror of Maven Central, which every lockfile
+    * records as a mirror of each file of Central, so that a Nix fetch that
+    * Central refuses (HTTP 429) falls back to it.
+    */
+  val Google = "https://maven-central.storage-download.googleapis.com/maven2/"
+
+  /** The mirrors the lockfile records for `url`. */
+  def recordedMirrors(url: String): Vector[String] =
+    if (url.startsWith(Central)) Vector(Google + url.stripPrefix(Central)) else Vector.empty
+
   private def withSlash(url: String) = if (url.endsWith("/")) url else url + "/"
 
   /** The mirror [[Variable]] names in `env`, with a trailing slash. */

@@ -144,6 +144,14 @@ object Lock {
   /** Bumped when the format changes incompatibly; [[parse]] rejects others. */
   val FormatVersion = 3
 
+  /** The major version of the Java version `v`: `21` of `21.0.12`, and `8`
+    * of `1.8.0_402`.
+    */
+  def javaMajor(v: String): String = {
+    val parts = v.split("[.+_-]")
+    if (parts.length > 1 && parts(0) == "1") parts(1) else parts(0)
+  }
+
   /** The command that writes the lockfile, which every error names. */
   val LockCommand = "sbt-purifier lock"
 

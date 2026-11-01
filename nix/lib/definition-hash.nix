@@ -70,5 +70,7 @@ let
   projectFiles = if pathExists (root + "/project") then files (root + "/project") "project" else [ ];
 in
 hashString "sha256" (
-  concatStringsSep "" (map (rel: "${rel} ${hashFile "sha256" (root + "/${rel}")}\n") (sbtFiles ++ projectFiles))
+  concatStringsSep "" (
+    map (rel: "${rel} ${hashFile "sha256" (root + "/${rel}")}\n") (sbtFiles ++ projectFiles)
+  )
 )

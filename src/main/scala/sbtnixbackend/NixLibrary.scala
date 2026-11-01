@@ -14,12 +14,14 @@ object NixLibrary {
   val files: Vector[String] =
     Vector(
       "build-sbt-project.nix",
+      "definition-hash.nix",
       "dependencies.nix",
       "fetch.nix",
       "lock-version.nix",
       "lock.nix",
       "package.nix",
       "plugin.nix",
+      "read-lock.nix",
       "realize.nix"
     )
 

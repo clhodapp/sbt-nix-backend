@@ -159,7 +159,7 @@ object LockGeneration {
       val url =
         try CachePaths.url(rel)
         catch { case e: IllegalArgumentException => throw new LockFailed(e.getMessage) }
-      LockedArtifact(rel, url, Lock.sriHash(new File(cache, rel)))
+      LockedArtifact(rel, url, Lock.sriHash(new File(cache, rel)), CentralMirror.recordedMirrors(url))
     }
     reportStrayFiles(home, warn)
     val snapshots = artifacts.filter(_.path.contains("-SNAPSHOT/"))
@@ -170,7 +170,9 @@ object LockGeneration {
       )
     Lock(
       sbtVersion = in.sbtVersion,
-      javaVersion = System.getProperty("java.version"),
+      // Only the major version: a Nix build runs on nixpkgs' JDK of that
+      // major, and a JDK update within it leaves the lockfile as it is.
+      javaVersion = Lock.javaMajor(System.getProperty("java.version")),
       launcher = launcherPath,
       javaOptions = in.javaOptions,
       plugin = in.plugin,
