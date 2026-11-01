@@ -36,7 +36,7 @@
   perSystem =
     { config, pkgs, ... }:
     {
-      packages.default = config.packages.sbt;
+      packages.default = config.packages.sbt-purifier;
       devShells.default = pkgs.mkShell {
         packages = [ pkgs.sbt ];
         SBT_NIX_BACKEND_REPOSITORY = config.packages.plugin-repository;

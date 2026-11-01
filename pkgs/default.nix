@@ -20,3 +20,7 @@ in
     pluginVersion = builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ../version.txt);
   };
 }
+// {
+  # The commands of the purifier contract: lock, update, prefetch, publish.
+  sbt-purifier = callPackage ./sbt-purifier { };
+}
