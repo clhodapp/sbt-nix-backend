@@ -220,7 +220,9 @@ let
   mkPackage =
     check: project:
     stdenvNoCC.mkDerivation (finalAttrs: {
-      name = project.name + lib.optionalString check "-tests";
+      # The packages of `tests` are the packages themselves when the
+      # packages run their tests anyway.
+      name = project.name + lib.optionalString (check && !doCheck) "-tests";
       src = filteredSrc;
       outputs = [
         "out"
