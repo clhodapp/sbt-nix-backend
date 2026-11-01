@@ -497,6 +497,17 @@ object NixBackendPlugin extends AutoPlugin {
     csrConfiguration := Compat.uncached(withLockedCache(csrConfiguration).value),
     scalaCompilerBridgeScope / csrConfiguration :=
       Compat.uncached(withLockedCache(scalaCompilerBridgeScope / csrConfiguration).value),
+    // javadoc writes the time it ran into every page, so a Nix build of a
+    // Java project would differ from a rebuild of it; it leaves the time
+    // out with -notimestamp.
+    Compile / doc / javacOptions ++= (if (Mode.current == Mode.Interactive) Nil else Seq("-notimestamp")),
+    // The sources and javadoc jars an editor asks for resolve through
+    // configurations of their own, which sbt does not derive from the one
+    // above.
+    updateClassifiers / csrConfiguration :=
+      Compat.uncached(withLockedCache(updateClassifiers / csrConfiguration).value),
+    updateSbtClassifiers / csrConfiguration :=
+      Compat.uncached(withLockedCache(updateSbtClassifiers / csrConfiguration).value),
     update := Compat.uncached {
       val result = update.result.value
       val log = streams.value.log
