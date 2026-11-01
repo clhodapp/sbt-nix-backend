@@ -103,7 +103,7 @@ object LockGeneration {
         "-Dsbt.supershell=false"
       ) ++ globalPlugins.map(d => s"-Dsbt.global.plugins=${d.getAbsolutePath}").toSeq ++
         launcherRepositories.map(f => s"-Dsbt.repository.config=${f.getAbsolutePath}").toSeq ++
-        Seq("-jar", new File(cache, launcherPath).getAbsolutePath, command)
+        Seq("-jar", new File(cache, launcherPath).getAbsolutePath, "nixEditorDownloads", command)
 
     // The proxy settings may hold a password, and a command line is
     // readable by every local user, so they go through the environment,
@@ -138,7 +138,7 @@ object LockGeneration {
         Json.Obj(in.flakeRepositoryPaths.toVector.sortBy(_._1).map { case (k, v) => k -> Json.str(v.getAbsolutePath) }).render
       )
     )
-    info(s"[sbt-nix-backend] running `$command` in a fresh sbt with an empty cache")
+    info(s"[sbt-nix-backend] running `nixEditorDownloads` and `$command` in a fresh sbt with an empty cache")
     // A project that resolves with Ivy downloads through this mirror, which
     // keeps every file in the fork's cache at its coursier path.
     val ivyMirror = new IvyMirror.Server(cache, mirror)

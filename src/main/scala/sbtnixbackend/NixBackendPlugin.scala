@@ -307,7 +307,7 @@ object NixBackendPlugin extends AutoPlugin {
     taskKey[Seq[String]]("The published names of this project for each Scala version the lock builds it for.")
 
   override def globalSettings: Seq[Setting[_]] = Seq(
-    commands ++= Seq(sandboxBuildCommand, nixPublishCommand),
+    commands ++= Seq(sandboxBuildCommand, editorDownloadsCommand, nixPublishCommand),
     // The default lives in Global only, so a project-level append from any
     // plugin survives whatever order the plugins apply in.
     nixNetworkDependencies := Nil,
@@ -877,6 +877,27 @@ object NixBackendPlugin extends AutoPlugin {
       val after = Project.extract(state1)
       after.runAggregated(after.currentRef / publish, state1)
       state0
+    }
+
+  /** `nixEditorDownloads`: what an editor resolves through sbt's build
+    * server, so interactive mode has it in the locked downloads. The lock
+    * run runs it before nixSandboxBuild, at the Scala version each project
+    * has by default, which is the version an editor imports. It resolves
+    * the sources and javadoc jars of every project's dependencies
+    * (`updateClassifiers`, which a build server's `dependencySources`
+    * request runs), unpublished projects included, and the sources of sbt
+    * and the build's plugins (`updateSbtClassifiers`), which an editor
+    * reads for the build's own files.
+    */
+  lazy val editorDownloadsCommand: Command =
+    Command.command("nixEditorDownloads") { state0 =>
+      if (Mode.current != Mode.Lock) sys.error("sbt-nix-backend: nixEditorDownloads runs in nixLock")
+      val extracted = Project.extract(state0)
+      var state = state0
+      extracted.structure.allProjectRefs.foreach { ref =>
+        state = extracted.runTask(ref / updateClassifiers, state)._1
+      }
+      extracted.runTask(updateSbtClassifiers, state)._1
     }
 
   lazy val sandboxBuildCommand: Command =
