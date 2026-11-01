@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "sbtVersion": "1.11.7",
   "javaVersion": "21.0.12.1",
   "launcher": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar",
@@ -13,7 +13,109 @@
       "id": "root",
       "organization": "io.github.clhodapp",
       "name": "sbt-nix-backend_2.12_1.0",
-      "version": "0.1.0"
+      "version": "0.1.0",
+      "variants": [
+        {
+          "scalaVersion": "2.12.20",
+          "descriptor": "io/github/clhodapp/sbt-nix-backend_2.12_1.0/0.1.0/sbt-nix-backend_2.12_1.0-0.1.0.pom",
+          "artifacts": [
+            {
+              "name": "sbt-nix-backend_2.12_1.0",
+              "type": "pom",
+              "extension": "pom",
+              "classifier": null,
+              "configurations": [
+                "pom"
+              ],
+              "extraAttributes": {},
+              "path": "io/github/clhodapp/sbt-nix-backend_2.12_1.0/0.1.0/sbt-nix-backend_2.12_1.0-0.1.0.pom"
+            },
+            {
+              "name": "sbt-nix-backend_2.12_1.0",
+              "type": "jar",
+              "extension": "jar",
+              "classifier": null,
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {},
+              "path": "io/github/clhodapp/sbt-nix-backend_2.12_1.0/0.1.0/sbt-nix-backend_2.12_1.0-0.1.0.jar"
+            },
+            {
+              "name": "sbt-nix-backend_2.12_1.0",
+              "type": "src",
+              "extension": "jar",
+              "classifier": "sources",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {},
+              "path": "io/github/clhodapp/sbt-nix-backend_2.12_1.0/0.1.0/sbt-nix-backend_2.12_1.0-0.1.0-sources.jar"
+            },
+            {
+              "name": "sbt-nix-backend_2.12_1.0",
+              "type": "doc",
+              "extension": "jar",
+              "classifier": "javadoc",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {},
+              "path": "io/github/clhodapp/sbt-nix-backend_2.12_1.0/0.1.0/sbt-nix-backend_2.12_1.0-0.1.0-javadoc.jar"
+            }
+          ]
+        },
+        {
+          "scalaVersion": "3.8.4",
+          "descriptor": "io/github/clhodapp/sbt-nix-backend_sbt2_3/0.1.0/sbt-nix-backend_sbt2_3-0.1.0.pom",
+          "artifacts": [
+            {
+              "name": "sbt-nix-backend",
+              "type": "pom",
+              "extension": "pom",
+              "classifier": null,
+              "configurations": [
+                "pom"
+              ],
+              "extraAttributes": {},
+              "path": "io/github/clhodapp/sbt-nix-backend_sbt2_3/0.1.0/sbt-nix-backend_sbt2_3-0.1.0.pom"
+            },
+            {
+              "name": "sbt-nix-backend",
+              "type": "jar",
+              "extension": "jar",
+              "classifier": null,
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {},
+              "path": "io/github/clhodapp/sbt-nix-backend_sbt2_3/0.1.0/sbt-nix-backend_sbt2_3-0.1.0.jar"
+            },
+            {
+              "name": "sbt-nix-backend",
+              "type": "src",
+              "extension": "jar",
+              "classifier": "sources",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {},
+              "path": "io/github/clhodapp/sbt-nix-backend_sbt2_3/0.1.0/sbt-nix-backend_sbt2_3-0.1.0-sources.jar"
+            },
+            {
+              "name": "sbt-nix-backend",
+              "type": "doc",
+              "extension": "jar",
+              "classifier": "javadoc",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {},
+              "path": "io/github/clhodapp/sbt-nix-backend_sbt2_3/0.1.0/sbt-nix-backend_sbt2_3-0.1.0-javadoc.jar"
+            }
+          ]
+        }
+      ]
     }
   ],
   "flakeRepositories": [],

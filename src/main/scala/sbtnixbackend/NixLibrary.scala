@@ -12,7 +12,16 @@ import java.nio.file.Files
 object NixLibrary {
 
   val files: Vector[String] =
-    Vector("build-sbt-project.nix", "dependencies.nix", "fetch.nix", "lock.nix", "package.nix", "plugin.nix", "realize.nix")
+    Vector(
+      "build-sbt-project.nix",
+      "dependencies.nix",
+      "fetch.nix",
+      "lock-version.nix",
+      "lock.nix",
+      "package.nix",
+      "plugin.nix",
+      "realize.nix"
+    )
 
   private def resource(name: String): Array[Byte] = {
     val in = getClass.getResourceAsStream("/sbtnixbackend/nix/" + name)

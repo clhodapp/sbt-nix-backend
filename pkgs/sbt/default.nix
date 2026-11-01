@@ -80,7 +80,10 @@ writeTextFile {
     if [ -n "$lockfile" ] && [ -f "$lockfile" ] && [ -f project/build.properties ]; then
       locked=$(sed -n 's/^  "sbtVersion": "\(.*\)",$/\1/p' "$lockfile")
       wanted=$(sed -n 's/^[[:space:]]*sbt\.version[[:space:]]*=[[:space:]]*\([^[:space:]]*\).*/\1/p' project/build.properties)
-      if [ -n "$locked" ] && [ "$locked" = "$wanted" ]; then
+      # A lockfile of another format (made by another plugin version) is
+      # one nixLock replaces; until then, sbt boots the usual way.
+      format=$(sed -n 's/^  "version": \([0-9]*\),$/\1/p' "$lockfile")
+      if [ -n "$locked" ] && [ "$locked" = "$wanted" ] && [ "$format" = "${toString (import ../../nix/lib/lock-version.nix)}" ]; then
         mkdir -p target/sbt-nix-backend/gcroots
         if tree=$(nix-build --expr \
           '{ lockFile }: (import ${pkgs.path} { }).callPackage ${../../nix/lib}/dependencies.nix { inherit lockFile; }' \

@@ -43,12 +43,20 @@ object NixArtifacts {
     */
   def record(dir: File, scalaVersion: String, published: Seq[(Artifact, File)]): Unit = {
     val byDigest = files(dir).groupBy(digest)
-    val entries = published.toVector.map { case (a, f) =>
-      val held = byDigest
-        .getOrElse(digest(f), Vector.empty)
-        .headOption
-        .getOrElse(sys.error(s"sbt-nix-backend: the output $dir holds no file with the bytes of $f ($a)"))
-      Entry(a, dir.toPath.relativize(held.toPath).toString.replace(File.separatorChar, '/'))
+    def rel(f: File) = dir.toPath.relativize(f.toPath).toString.replace(File.separatorChar, '/')
+    val candidates = published.toVector.map { case (a, f) =>
+      val held = byDigest.getOrElse(digest(f), Vector.empty).map(rel).sorted
+      if (held.isEmpty) sys.error(s"sbt-nix-backend: the output $dir holds no file with the bytes of $f ($a)")
+      a -> held
+    }
+    // Two variants can publish files with the same bytes (the sources jar
+    // of a project built for two Scala versions). A file only this publish
+    // matches places it in the output; of several files with the bytes of
+    // an artifact, it takes the one nearest those.
+    val placed = candidates.collect { case (_, Vector(only)) => only }
+    def shared(a: String, b: String) = a.split('/').zip(b.split('/')).takeWhile { case (x, y) => x == y }.length
+    val entries = candidates.map { case (a, held) =>
+      Entry(a, held.maxBy(p => placed.map(shared(p, _)).foldLeft(0)(math.max)))
     }
     val descriptor = entries
       .collectFirst { case e if e.artifact.`type` == "pom" => e.path }
