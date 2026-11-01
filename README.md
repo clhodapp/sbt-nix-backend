@@ -337,14 +337,13 @@ externalResolvers := Seq(
 - Building in Nix needs the build's sources to be visible to Nix: in a
   flake, tracked by git.
 
-## Real-world projects
+## Examples
 
-None is verified end to end yet. The first is
-[pureconfig](https://github.com/pureconfig/pureconfig) at `7c2efae`
-(sbt 1.13.0, 36 projects for Scala 2.12, 2.13 and 3, with sbt-boilerplate,
-scalafix, scalafmt, mdoc, microsites and scoverage); its lock run
-compiles the build, and its lockfile, Nix build and offline loop are in
-progress.
+[pureconfig](https://github.com/pureconfig/pureconfig) at `7c2efae` locks
+with `sbt-purifier lock` in about four minutes: sbt 1.13.0, 36 projects
+for Scala 2.12, 2.13 and 3, with sbt-boilerplate, scalafix, scalafmt,
+mdoc, microsites and scoverage, and 6,798 downloads in its lockfile. Its
+Nix build and a CI job that locks and builds it are in progress.
 
 ## Credits
 
