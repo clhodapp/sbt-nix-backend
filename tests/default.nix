@@ -260,6 +260,26 @@ in
     "org.scala-sbt/interface/0.13.18/jars/interface.jar"
   ];
 
+  # A project that resolves through an Ivy settings file builds in the
+  # sandbox, and its repository alone runs it. The repository holds sbt's
+  # interface module, which the settings read with patterns other than the
+  # standard Ivy layout, at its standard Ivy path.
+  ivy-settingsfile-repository =
+    runFromRepository "ivy-settingsfile-repository" ivy.repositories.settingsfile
+      "example:settingsfile_2.13:4.0.0"
+      "ivyexample.Settings"
+      [
+        ''{"resolvedWith":"ivysettings.xml"}''
+        "interface xsbti.Logger"
+      ];
+  ivy-settingsfile-repository-layouts =
+    repositoryLayouts "ivy-settingsfile-repository-layouts" ivy.repositories.settingsfile
+      [
+        "example/settingsfile_2.13/4.0.0/settingsfile_2.13-4.0.0.pom"
+        "org.scala-sbt/interface/0.13.18/ivys/ivy.xml"
+        "org.scala-sbt/interface/0.13.18/jars/interface.jar"
+      ];
+
   # A Scala 2.12 project that resolves with Ivy builds in the sandbox: Ivy
   # resolves the compiler bridge sources from the locked downloads too.
   ivy-legacy-artifacts =

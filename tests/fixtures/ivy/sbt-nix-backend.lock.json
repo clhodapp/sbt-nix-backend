@@ -43,11 +43,17 @@
       "organization": "example",
       "name": "lib_2.13",
       "version": "4.0.0"
+    },
+    {
+      "id": "settingsfile",
+      "organization": "example",
+      "name": "settingsfile_2.13",
+      "version": "4.0.0"
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-g8g8cGdXppmYERtCuvbFPfdvzoajpUnb2L/uQdBddeY=",
-  "definitionHash": "sha256-BJHVXhFW/S9kPOlhR3eiyCD98Qi5Pb/bk4zxXlEG18I=",
+  "inputsHash": "sha256-h+20HSVSaepRuuce3QArRuDxRy9Iwo8VBdLT9IJyYgA=",
+  "definitionHash": "sha256-wXkEVyXX4yHe5UlOr4RPuuCC80E4XShOXe6WbfMWvfs=",
   "artifacts": [
     {
       "path": "https/repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/interface/0.13.18/ivys/ivy.xml",
@@ -205,6 +211,16 @@
       "hash": "sha256-3t2gzaTadSrIDeDSHIKc0/uRm9IlaBQmDrOrzi9Ohpo="
     },
     {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/geny_2.13/1.1.1/geny_2.13-1.1.1-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/geny_2.13/1.1.1/geny_2.13-1.1.1-javadoc.jar",
+      "hash": "sha256-DZJ/5KeISmr/xcR4pddll0unrjpnwRKVuZ4FOygqlEY="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/geny_2.13/1.1.1/geny_2.13-1.1.1-sources.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/geny_2.13/1.1.1/geny_2.13-1.1.1-sources.jar",
+      "hash": "sha256-vYUNg/ciGU/JFgJBIQ1PwrxhPs3MmhG/1pMKe3dtVU8="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/com/lihaoyi/geny_2.13/1.1.1/geny_2.13-1.1.1.jar",
       "url": "https://repo1.maven.org/maven2/com/lihaoyi/geny_2.13/1.1.1/geny_2.13-1.1.1.jar",
       "hash": "sha256-IK8jHCIvxxwp4Gs82NkZCha0EtqDzEn7C3eM8txvlNI="
@@ -223,6 +239,16 @@
       "path": "https/repo1.maven.org/maven2/com/lihaoyi/geny_2.13/1.1.1/geny_2.13-1.1.1.pom.sha1",
       "url": "https://repo1.maven.org/maven2/com/lihaoyi/geny_2.13/1.1.1/geny_2.13-1.1.1.pom.sha1",
       "hash": "sha256-pThMIhpT8ZH1LRnRCHhE4SPKbx1ubs+UUqqg3h4MUQc="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/ujson_2.13/4.1.0/ujson_2.13-4.1.0-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/ujson_2.13/4.1.0/ujson_2.13-4.1.0-javadoc.jar",
+      "hash": "sha256-KYm28CycOVOAkl788oRw4nurcGcXGJFUF5qCwdWMNNE="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/ujson_2.13/4.1.0/ujson_2.13-4.1.0-sources.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/ujson_2.13/4.1.0/ujson_2.13-4.1.0-sources.jar",
+      "hash": "sha256-JMhd2FNil3K1ygIidwz7ON1f0Dt0eJaUeyp147Jalj8="
     },
     {
       "path": "https/repo1.maven.org/maven2/com/lihaoyi/ujson_2.13/4.1.0/ujson_2.13-4.1.0.jar",
@@ -245,6 +271,16 @@
       "hash": "sha256-Q0Id/EThao/um1lFBHEpgdO6tSPLqHgDrSbJydQXygI="
     },
     {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/upack_2.13/4.1.0/upack_2.13-4.1.0-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/upack_2.13/4.1.0/upack_2.13-4.1.0-javadoc.jar",
+      "hash": "sha256-/nIwdC/8BZclUMCawgystCexh8NlF44beEq+afkuqxw="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/upack_2.13/4.1.0/upack_2.13-4.1.0-sources.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/upack_2.13/4.1.0/upack_2.13-4.1.0-sources.jar",
+      "hash": "sha256-y83HELazVrnkf/Uh8Xus0Gk/hRs3g6B8qCYbg3TO7ZI="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/com/lihaoyi/upack_2.13/4.1.0/upack_2.13-4.1.0.jar",
       "url": "https://repo1.maven.org/maven2/com/lihaoyi/upack_2.13/4.1.0/upack_2.13-4.1.0.jar",
       "hash": "sha256-hnfRhvoo3OmN7yQiI4Xa0R9dUlDhAAXPttv4gnJqC6Q="
@@ -263,6 +299,16 @@
       "path": "https/repo1.maven.org/maven2/com/lihaoyi/upack_2.13/4.1.0/upack_2.13-4.1.0.pom.sha1",
       "url": "https://repo1.maven.org/maven2/com/lihaoyi/upack_2.13/4.1.0/upack_2.13-4.1.0.pom.sha1",
       "hash": "sha256-dK59YTcAwU79jhXZSSNkX1IOsbNDbjK1kFxAbqfJ0kE="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/upickle-core_2.13/4.1.0/upickle-core_2.13-4.1.0-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/upickle-core_2.13/4.1.0/upickle-core_2.13-4.1.0-javadoc.jar",
+      "hash": "sha256-4CARR0fX0wIqtdKT119QKV06Axnaf1Ig4Kjrgi+ExWM="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/upickle-core_2.13/4.1.0/upickle-core_2.13-4.1.0-sources.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/upickle-core_2.13/4.1.0/upickle-core_2.13-4.1.0-sources.jar",
+      "hash": "sha256-gCUokTfQwlCrcrjXPjtoGXJIA0l2KjKWjcj9Y4974uc="
     },
     {
       "path": "https/repo1.maven.org/maven2/com/lihaoyi/upickle-core_2.13/4.1.0/upickle-core_2.13-4.1.0.jar",
@@ -285,6 +331,16 @@
       "hash": "sha256-KrHGWXZsqHQDVK9x+tYI0Z1v+IcbvrsQC2I7SBeKbOc="
     },
     {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/upickle-implicits_2.13/4.1.0/upickle-implicits_2.13-4.1.0-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/upickle-implicits_2.13/4.1.0/upickle-implicits_2.13-4.1.0-javadoc.jar",
+      "hash": "sha256-ZOtaQewi3EQTJDMpQhMlZ5FlA5EgH1AfyFVShhjBN8g="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/upickle-implicits_2.13/4.1.0/upickle-implicits_2.13-4.1.0-sources.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/upickle-implicits_2.13/4.1.0/upickle-implicits_2.13-4.1.0-sources.jar",
+      "hash": "sha256-BMloUadWueVcxKmvSg4GtFi/iRWnXrZi1AKAWHsAJzU="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/com/lihaoyi/upickle-implicits_2.13/4.1.0/upickle-implicits_2.13-4.1.0.jar",
       "url": "https://repo1.maven.org/maven2/com/lihaoyi/upickle-implicits_2.13/4.1.0/upickle-implicits_2.13-4.1.0.jar",
       "hash": "sha256-LexjLXUg2meSLOscSm3lQMBfMoG941PB3WZTkQirS4k="
@@ -303,6 +359,16 @@
       "path": "https/repo1.maven.org/maven2/com/lihaoyi/upickle-implicits_2.13/4.1.0/upickle-implicits_2.13-4.1.0.pom.sha1",
       "url": "https://repo1.maven.org/maven2/com/lihaoyi/upickle-implicits_2.13/4.1.0/upickle-implicits_2.13-4.1.0.pom.sha1",
       "hash": "sha256-QI4mlsG06TzTKwUMNLxZr8aogdXsqvTecaTFCksMYjE="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/upickle_2.13/4.1.0/upickle_2.13-4.1.0-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/upickle_2.13/4.1.0/upickle_2.13-4.1.0-javadoc.jar",
+      "hash": "sha256-/hFNAKt6QfoP+M9BKvkqdlmn0Bqq2MmwPtMRzXf5wnk="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/lihaoyi/upickle_2.13/4.1.0/upickle_2.13-4.1.0-sources.jar",
+      "url": "https://repo1.maven.org/maven2/com/lihaoyi/upickle_2.13/4.1.0/upickle_2.13-4.1.0-sources.jar",
+      "hash": "sha256-IUmUIGcx2/I/ZJCyiPbRtCc16/heur5xQeNJusktsSA="
     },
     {
       "path": "https/repo1.maven.org/maven2/com/lihaoyi/upickle_2.13/4.1.0/upickle_2.13-4.1.0.jar",
@@ -383,6 +449,16 @@
       "path": "https/repo1.maven.org/maven2/io/github/java-diff-utils/java-diff-utils-parent/4.15/java-diff-utils-parent-4.15.pom.sha1",
       "url": "https://repo1.maven.org/maven2/io/github/java-diff-utils/java-diff-utils-parent/4.15/java-diff-utils-parent-4.15.pom.sha1",
       "hash": "sha256-6gHgzEagJP4s3GS5Kmdjopuvom56f0USegqpjDT/byg="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/io/github/java-diff-utils/java-diff-utils/4.15/java-diff-utils-4.15-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/io/github/java-diff-utils/java-diff-utils/4.15/java-diff-utils-4.15-javadoc.jar",
+      "hash": "sha256-b56uDqDbgEkiMqhVccH7S/v7Q8Yb9S8336V0f2YKjSg="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/io/github/java-diff-utils/java-diff-utils/4.15/java-diff-utils-4.15-sources.jar",
+      "url": "https://repo1.maven.org/maven2/io/github/java-diff-utils/java-diff-utils/4.15/java-diff-utils-4.15-sources.jar",
+      "hash": "sha256-heTtM6doi+IE021IokTPgVwFtUxibGKX7Ez3W+Kvki8="
     },
     {
       "path": "https/repo1.maven.org/maven2/io/github/java-diff-utils/java-diff-utils/4.15/java-diff-utils-4.15.jar",
@@ -655,6 +731,11 @@
       "hash": "sha256-hHjnmqIupq95eWRD+O0w//pdxkfrPS0YYLrC4j800pc="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/jline/jline/3.27.1/jline-3.27.1-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/org/jline/jline/3.27.1/jline-3.27.1-javadoc.jar",
+      "hash": "sha256-2RkJve1OjRtucot6wddQkA/LZS89H8QvqbHMB7GwQ4c="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/jline/jline/3.27.1/jline-3.27.1-jdk8.jar",
       "url": "https://repo1.maven.org/maven2/org/jline/jline/3.27.1/jline-3.27.1-jdk8.jar",
       "hash": "sha256-nRZa/z1xSkVd4ucR3JDfCf2woJaaHNTVKqcqRMtUXbA="
@@ -663,6 +744,11 @@
       "path": "https/repo1.maven.org/maven2/org/jline/jline/3.27.1/jline-3.27.1-jdk8.jar.sha1",
       "url": "https://repo1.maven.org/maven2/org/jline/jline/3.27.1/jline-3.27.1-jdk8.jar.sha1",
       "hash": "sha256-wXD91bbw/aDRF51BlSVNRouhjMBau/RgPb7vnZIzCu8="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/jline/jline/3.27.1/jline-3.27.1-sources.jar",
+      "url": "https://repo1.maven.org/maven2/org/jline/jline/3.27.1/jline-3.27.1-sources.jar",
+      "hash": "sha256-bKTY6ssA+cmahnMvmQh84fjyuUKUZRsELLb9z79z4TY="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/jline/jline/3.27.1/jline-3.27.1.jar",
@@ -755,6 +841,16 @@
       "hash": "sha256-ZzlYMeNSini+1J+c/CYTrEPrZjI37k5sMJdxh226164="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.13.16/scala-compiler-2.13.16-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.13.16/scala-compiler-2.13.16-javadoc.jar",
+      "hash": "sha256-wNx5R/16PNYqgDIs1ieo1/Dj8Td5VgVzSbcemtnh/MU="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.13.16/scala-compiler-2.13.16-sources.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.13.16/scala-compiler-2.13.16-sources.jar",
+      "hash": "sha256-6SLcL5fVRf3Ag/L88pFesAx2R/N3C5VIneC8nve1Sj4="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.13.16/scala-compiler-2.13.16.jar",
       "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.13.16/scala-compiler-2.13.16.jar",
       "hash": "sha256-9ZmCcUWR4yG6nAh68shmbi9fuSsRoM73LCxemzQhUtM="
@@ -793,6 +889,16 @@
       "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.20/scala-library-2.12.20.pom.sha1",
       "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.20/scala-library-2.12.20.pom.sha1",
       "hash": "sha256-d0B1qjwJE9X/OFfjUKNL0ry4hLVN/GOMgEcAfV+ytV4="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16-javadoc.jar",
+      "hash": "sha256-l/QmT0tbU3fSmnmjsJi+xN2wqFW8V7ZgcfHpm8+rJfs="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16-sources.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16-sources.jar",
+      "hash": "sha256-wC7cMk59tZxSEVIUpu824teNClDf9jXtpNzuVQKx3qU="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16.jar",
@@ -835,6 +941,16 @@
       "hash": "sha256-osW5qIOgqK5qN/DanKfL5XTycPo9Gn3mijEej/xUk4o="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.13.16/scala-reflect-2.13.16-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.13.16/scala-reflect-2.13.16-javadoc.jar",
+      "hash": "sha256-XQGaydK53HmDl5pO4M67ieLeg83EADu6hIp3tk3KmU8="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.13.16/scala-reflect-2.13.16-sources.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.13.16/scala-reflect-2.13.16-sources.jar",
+      "hash": "sha256-EcFfv57iA+JiBJ/dVNi4Ry4WAZcPumVWeMI3YpgVEX4="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.13.16/scala-reflect-2.13.16.jar",
       "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.13.16/scala-reflect-2.13.16.jar",
       "hash": "sha256-+0nM2crHRkSGq5k82iCjwVadjvJvBS6JdXetKklw+x0="
@@ -853,6 +969,16 @@
       "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.13.16/scala-reflect-2.13.16.pom.sha1",
       "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.13.16/scala-reflect-2.13.16.pom.sha1",
       "hash": "sha256-2Cb60EqgR5wL3+5c331DaWuhsKOaEMbjNaGTxdDZsf4="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala2-sbt-bridge/2.13.16/scala2-sbt-bridge-2.13.16-javadoc.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala2-sbt-bridge/2.13.16/scala2-sbt-bridge-2.13.16-javadoc.jar",
+      "hash": "sha256-06E8afrvZHe+59XSu2c+fqcmO6KhIx+d9BfXR8nUaTo="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala2-sbt-bridge/2.13.16/scala2-sbt-bridge-2.13.16-sources.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala2-sbt-bridge/2.13.16/scala2-sbt-bridge-2.13.16-sources.jar",
+      "hash": "sha256-lY3Fi4kfPuHG2KsiRSQ4oRQc6xbFg4ajl//k59p4rUU="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-lang/scala2-sbt-bridge/2.13.16/scala2-sbt-bridge-2.13.16.jar",

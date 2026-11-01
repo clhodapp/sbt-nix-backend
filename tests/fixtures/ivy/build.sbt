@@ -7,8 +7,20 @@ ThisBuild / version := "4.0.0"
 ThisBuild / scalaVersion := "2.13.16"
 
 lazy val root = (project in file("."))
-  .aggregate(lib, app, ivyplugin, legacy, ivyjava)
+  .aggregate(lib, app, ivyplugin, legacy, ivyjava, settingsfile)
   .settings(publish / skip := true)
+
+// Resolves through an Ivy settings file, which takes a repository root
+// from a properties file and includes the resolvers from another file.
+lazy val settingsfile = project
+  .settings(
+    externalIvySettings(baseDirectory(_ / "ivysettings.xml")),
+    Compile / mainClass := Some("ivyexample.Settings"),
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "upickle" % "4.1.0",
+      "org.scala-sbt" % "interface" % "0.13.18"
+    )
+  )
 
 // A Java library published Ivy-style; the consumer fixture depends on its
 // repository through a flake repository.

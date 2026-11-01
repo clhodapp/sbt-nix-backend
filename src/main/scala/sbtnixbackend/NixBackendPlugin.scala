@@ -752,7 +752,11 @@ object NixBackendPlugin extends AutoPlugin {
           if (sbtPlugin.value) IvyLayout.pluginAttributes(scalaBinaryVersion.value, sbtBinaryVersion.value) else Map.empty[String, String]
         RuntimeRepository.Coordinates(locked.organization, locked.name, locked.version, attributes)
       }
-    val conf = csrConfiguration.value
+    // A project that resolves through an Ivy settings file adds its
+    // resolvers, which coursier cannot read from the file.
+    val baseConf = csrConfiguration.value
+    val settingsResolvers = Compat.ivySettingsResolvers(ivyMirror).value
+    val conf = baseConf.withResolvers(baseConf.resolvers ++ settingsResolvers.filterNot(baseConf.resolvers.contains))
     val copied = RuntimeRepository.complete(
       repository,
       coordinates,

@@ -210,13 +210,23 @@ from a local repository in its cache by version, and reads its files where
 it first found them. A rebuilt plugin or flake repository keeps its
 version at a new store path, and gets a fresh cache under the new digest.
 sbt's `local` repository stays in the user's Ivy home, so `publishLocal`
-and its readers are unaffected. An Ivy settings file (`externalIvySettings`)
-names resolvers the plugin cannot rewrite, and is refused when the build
-resolves through the mirror.
+and its readers are unaffected.
+
+A project that resolves through an Ivy settings file
+(`externalIvySettings`) gives Ivy a copy of the file under its Ivy home.
+In the copy, every remote URL is on the mirror. That covers attribute
+values, the values of included properties files, and every included
+settings file, which is copied the same way. A remote file the settings
+include is read through the mirror too, so the lock run locks it. Ivy
+interprets the copy itself, so chains, module rules and conflict managers
+keep their meaning. Coursier, which completes the repository outputs,
+reads the resolvers of the copy, converted to sbt resolvers at their real
+URLs.
 
 `tests/fixtures/ivy` resolves with Ivy at both levels. It publishes
 Ivy-style, including an sbt plugin. It depends on a module that only an
-Ivy-layout repository has. `tests/fixtures/sbt2` publishes Ivy-style on
+Ivy-layout repository has, and one of its projects resolves through an Ivy
+settings file. `tests/fixtures/sbt2` publishes Ivy-style on
 sbt 2, which resolves with coursier only.
 
 ## Keys

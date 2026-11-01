@@ -77,6 +77,17 @@ object IvyMirror {
       Some(base.stripSuffix("/") + "/" + rel + (if (slash) "/" else ""))
     }
 
+  /** The URL a mirror URL below `base` mirrors; any other string as it is. */
+  def unrewritePrefix(s: String, base: String): String = {
+    val root = base.stripSuffix("/") + "/"
+    if (!s.startsWith(root)) s
+    else {
+      val rel = s.substring(root.length)
+      val slash = rel.endsWith("/")
+      CachePaths.url(rel.stripSuffix("/")) + (if (slash) "/" else "")
+    }
+  }
+
   /** `resolver` reading from the mirror at `base` instead of the network;
     * a resolver that is not a remote Maven or URL repository is left alone.
     */

@@ -144,6 +144,16 @@ interactive_suite ivy \
   'app/runMain ivyexample.Main' \
   '\{"resolvedWith":"ivy"\}' 'version 4\.0\.0' 'interface xsbti\.Logger'
 
+# ivy's settingsfile resolves through an Ivy settings file, which Ivy reads
+# as a copy on the mirror, with the network cut off.
+echo "== ivy: a project that resolves through an Ivy settings file"
+use_fixture ivy
+output=$(run_sbt 'settingsfile/runMain ivyexample.Settings') || fail "ivy: settingsfile did not run offline"
+expect "ivy: settingsfile runs from the locked downloads" has '\{"resolvedWith":"ivysettings.xml"\}'
+expect "ivy: settingsfile has the module of the Ivy repository" has 'interface xsbti\.Logger'
+downloads=$(find "$COURSIER_CACHE" "$HOME/.ivy2/cache" -type f -not -name '.*' 2>/dev/null | head -5 || true)
+expect "ivy: nothing went to the user's caches (found: ${downloads:-nothing})" test -z "$downloads"
+
 # A rebuilt plugin keeps its version but is a new store path. A meta-build
 # that resolves with Ivy loads the new one: Ivy reads a module of a local
 # repository where its cache first found it, and each set of local

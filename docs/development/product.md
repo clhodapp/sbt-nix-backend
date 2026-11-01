@@ -31,7 +31,5 @@ through the store. The README describes what it does for a user.
 
 ## Not in scope
 
-The plugin rewrites the resolvers sbt declares, so a build that names its
-resolvers in an Ivy settings file (`externalIvySettings`) is refused. A
-repository that needs credentials works only through a fetcher the caller
-supplies.
+A repository that needs credentials works only through a fetcher the
+caller supplies.

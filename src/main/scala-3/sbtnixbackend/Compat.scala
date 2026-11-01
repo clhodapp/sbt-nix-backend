@@ -74,6 +74,10 @@ object Compat {
         }
     }
 
+  /** sbt 2 reads no Ivy settings file. */
+  def ivySettingsResolvers(mirror: Def.Initialize[Task[Option[IvyMirror.Setup]]]): Def.Initialize[Task[Vector[Resolver]]] =
+    Def.task(Vector.empty[Resolver])
+
   /** sbt 2 has no Ivy configuration to rewrite. */
   def ivyMirrorSettings(mirror: Def.Initialize[Task[Option[IvyMirror.Setup]]]): Seq[Setting[?]] = Nil
 

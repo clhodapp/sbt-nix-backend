@@ -1,0 +1,12 @@
+<ivysettings>
+  <resolvers>
+    <chain name="main" returnFirst="true">
+      <ibiblio name="central" m2compatible="true" root="${central.root}"/>
+      <!-- Patterns other than the standard Ivy layout. -->
+      <url name="typesafe-ivy">
+        <ivy pattern="https://repo.typesafe.com/typesafe/ivy-releases/[organisation]/[module]/[revision]/ivys/ivy.xml"/>
+        <artifact pattern="https://repo.typesafe.com/typesafe/ivy-releases/[organisation]/[module]/[revision]/[type]s/[artifact].[ext]"/>
+      </url>
+    </chain>
+  </resolvers>
+</ivysettings>
