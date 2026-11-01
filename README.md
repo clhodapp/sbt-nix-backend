@@ -242,13 +242,13 @@ resolvers += MavenRepository(
   backendRepository.map(path => new File(path).toURI.toString)
     .getOrElse("https://nix-purifiers.github.io/sbt-purifier/maven")
 )
-addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % backendRepository.fold("0.1.3")(_ => "0.1.0"))
+addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % backendRepository.fold("0.1.4")(_ => "0.1.0"))
 ```
 
 `nix develop github:nix-purifiers/sbt-purifier` gives plain nixpkgs sbt
 with `SBT_NIX_BACKEND_REPOSITORY` naming the plugin repository. The example
 uses its source-built version, `0.1.0`, when that variable is set and the
-published version, `0.1.3`, from GitHub Pages otherwise. In a
+published version, `0.1.4`, from GitHub Pages otherwise. In a
 meta-build, the plugin adds itself to the build the meta-build defines,
 so `project/` and the build both have it.
 

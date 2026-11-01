@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "contentHash": "5ddb0855ebfb49c28476307e7494c2de80978125f4eed2815f0424af177f2c27",
+  "contentHash": "9cf79aff028e37ff438e89c743d0eb34607f3a4d6ea5c83f043b740cef575903",
   "sbtVersion": "1.11.7",
   "javaVersion": "21",
   "launcher": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar",
@@ -74,8 +74,8 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "eb073a188c0b39fc8e89b08a5093222a77dcf2e607978c1852b81885bd212a6d",
-  "definitionHash": "093db6c949ac3b9391dee25eaa638fdcc22394e4cf8d57e7bdeb93eec6eba56c",
+  "inputsHash": "1b19ca86f78f1cb09740d8274fb25181e1445466aaf30c1e644fd4ab79b06e21",
+  "definitionHash": "df5a4ae1ea62e7795002f71fe0b227482c803a3632e049bb017556824f78ae98",
   "artifacts": [
     {
       "path": "https/repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_2.12/0.9.3/gigahorse-apache-http_2.12-0.9.3-sources.jar",
