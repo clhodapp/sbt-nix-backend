@@ -77,6 +77,9 @@ writeTextFile {
     # writes into this read-only tree.
     lockfile=''${SBT_PURIFIER_LOCKFILE:-sbt-purifier.lock.json}
     case "''${SBT_NIX_BACKEND:-1}" in 0 | false) lockfile= ;; esac
+    if [ -n "$lockfile" ] && [ ! -e "$lockfile" ]; then
+      echo "sbt-purifier: warning: no sbt-purifier.lock.json found; running sbt impurely. Run \`sbt nixLock\` to use Nix-resolved dependencies." >&2
+    fi
     # sbt runs on nixpkgs' JDK of the Java major the lockfile records, so
     # a relock records the same major whatever JAVA_HOME the caller has;
     # without a lockfile, on nixpkgs' default JDK.
