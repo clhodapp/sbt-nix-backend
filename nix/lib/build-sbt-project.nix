@@ -75,7 +75,8 @@
   doCheck ? false,
   # Filters the build root before it is copied into the store, as the
   # `filter` of builtins.path. The default leaves out build outputs and
-  # editor state.
+  # editor state. A derivation source is already a prepared tree and is
+  # passed through; filter it in the producing derivation instead.
   srcFilter ? null,
 }:
 let
@@ -102,11 +103,17 @@ let
       || lib.hasPrefix "result" name
     );
 
-  filteredSrc = builtins.path {
-    path = src;
-    name = "sbt-source";
-    filter = if srcFilter != null then srcFilter else defaultSrcFilter;
-  };
+  filteredSrc =
+    if import ./source-readable.nix src then
+      builtins.path {
+        path = src;
+        name = "sbt-source";
+        filter = if srcFilter != null then srcFilter else defaultSrcFilter;
+      }
+    else if srcFilter != null then
+      throw "sbt-purifier: srcFilter needs a source readable at evaluation; filter a derivation source in its producing derivation instead."
+    else
+      src;
 
   javaMajor = builtins.head (lib.splitString "." lock.javaVersion);
   defaultJdk =

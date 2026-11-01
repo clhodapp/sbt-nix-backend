@@ -262,6 +262,27 @@ let
     };
 
     # The builder.
+    testSourceDerivationRemainsABuildInput = {
+      expr = (build { lockFile = lockJson { }; }).packages.core.src.drvPath;
+      expected = src.drvPath;
+    };
+    testSourceOutputStringRemainsABuildInput = {
+      expr =
+        (build {
+          src = "${src}";
+          lockFile = lockJson { };
+        }).packages.core.src;
+      expected = "${src}";
+    };
+    testSourceFilterRejectsADeferredSource = {
+      expr =
+        failsToEvaluate
+          (build {
+            lockFile = lockJson { };
+            srcFilter = _: _: true;
+          }).packages.core.drvPath;
+      expected = true;
+    };
     testPackagesAreNamedByProjectId = {
       expr = builtins.attrNames (build { lockFile = lockJson { }; }).packages;
       expected = [ "core" ];

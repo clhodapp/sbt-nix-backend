@@ -26,7 +26,8 @@ object NixLibrary {
       "plugin.nix",
       "purifier-source.nix",
       "read-lock.nix",
-      "realize.nix"
+      "realize.nix",
+      "source-readable.nix"
     )
 
   private def resource(name: String): Array[Byte] = {

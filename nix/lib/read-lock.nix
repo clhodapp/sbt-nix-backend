@@ -26,7 +26,6 @@ let
   inherit (builtins)
     elemAt
     filter
-    hasContext
     hashString
     isString
     length
@@ -80,13 +79,7 @@ let
   # wrapper and the plugin's interactive mode read it for its downloads
   # alone.
   srcPath = if builtins.isAttrs src then src.outPath else src;
-  readable =
-    src != null
-    && !(builtins.isAttrs src && src ? drvPath)
-    && (
-      !(isString srcPath && hasContext srcPath)
-      || builtins.all (c: c.path or false) (builtins.attrValues (builtins.getContext srcPath))
-    );
+  readable = import ./source-readable.nix src;
   staleProblem =
     if lock == null || !readable then
       null

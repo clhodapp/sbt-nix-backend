@@ -119,6 +119,11 @@ arguments are `jdk` (the default is nixpkgs' headless JDK of the Java
 major the lock records), `doCheck` (runs `test` in every package build),
 `srcFilter`, `pluginRepository` and `flakeRepositories`;
 `nix/lib/build-sbt-project.nix` documents them.
+Path sources are filtered during evaluation. A source produced by a
+derivation remains a build input, so evaluating the builder does not build
+it. Prepare that source in its producing derivation; `srcFilter` applies
+only to sources that can be read during evaluation.
+
 `lib.sbt-purifier.readLock { src, lockFile ? ... }` reads the lockfile
 into the purifier library's lock in memory, which other tools read.
 
