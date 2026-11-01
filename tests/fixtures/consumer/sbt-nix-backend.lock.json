@@ -18,13 +18,12 @@
       "id": "consumer",
       "organization": "example",
       "name": "consumer_3",
-      "version": "1.0.0",
       "variants": [
         {
           "scalaVersion": "3.3.6",
-          "descriptor": "example/consumer_3/1.0.0/consumer_3-1.0.0.pom",
           "artifacts": [
             {
+              "key": "consumer.pom",
               "name": "consumer",
               "type": "pom",
               "extension": "pom",
@@ -32,10 +31,10 @@
               "configurations": [
                 "pom"
               ],
-              "extraAttributes": {},
-              "path": "example/consumer_3/1.0.0/consumer_3-1.0.0.pom"
+              "extraAttributes": {}
             },
             {
+              "key": "consumer.jar",
               "name": "consumer",
               "type": "jar",
               "extension": "jar",
@@ -43,10 +42,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/consumer_3/1.0.0/consumer_3-1.0.0.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "consumer-sources.jar",
               "name": "consumer",
               "type": "src",
               "extension": "jar",
@@ -54,10 +53,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/consumer_3/1.0.0/consumer_3-1.0.0-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "consumer-javadoc.jar",
               "name": "consumer",
               "type": "doc",
               "extension": "jar",
@@ -65,8 +64,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/consumer_3/1.0.0/consumer_3-1.0.0-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -76,18 +74,18 @@
   "flakeRepositories": [
     {
       "name": "ivy",
-      "ref": "github:clhodapp/sbt-nix-backend/ae4f34044dcd58d4eb190fc6cf0862dbb5fc3db5?dir=tests/producers#ivy-ivyjava",
-      "locked": "github:clhodapp/sbt-nix-backend/ae4f34044dcd58d4eb190fc6cf0862dbb5fc3db5?dir=tests/producers&narHash=sha256-uSklacI7nk3YutNQrEGgk2/bQpmXBh6tUGCybHK2kk0%3D",
+      "ref": "github:clhodapp/sbt-nix-backend/efab0860f3a58a4e3faf05afe89be4a67dc0ec80?dir=tests/producers#ivy-ivyjava",
+      "locked": "github:clhodapp/sbt-nix-backend/efab0860f3a58a4e3faf05afe89be4a67dc0ec80?dir=tests/producers&narHash=sha256-A85OpYOb8xQfLgfQ9Slm3/xpNxVLEyYxHPYdtKjx%2Bxc%3D",
       "attribute": "ivy-ivyjava"
     },
     {
       "name": "multi",
-      "ref": "github:clhodapp/sbt-nix-backend/ae4f34044dcd58d4eb190fc6cf0862dbb5fc3db5?dir=tests/producers#multi-app",
-      "locked": "github:clhodapp/sbt-nix-backend/ae4f34044dcd58d4eb190fc6cf0862dbb5fc3db5?dir=tests/producers&narHash=sha256-uSklacI7nk3YutNQrEGgk2/bQpmXBh6tUGCybHK2kk0%3D",
+      "ref": "github:clhodapp/sbt-nix-backend/efab0860f3a58a4e3faf05afe89be4a67dc0ec80?dir=tests/producers#multi-app",
+      "locked": "github:clhodapp/sbt-nix-backend/efab0860f3a58a4e3faf05afe89be4a67dc0ec80?dir=tests/producers&narHash=sha256-A85OpYOb8xQfLgfQ9Slm3/xpNxVLEyYxHPYdtKjx%2Bxc%3D",
       "attribute": "multi-app"
     }
   ],
-  "inputsHash": "sha256-g5HZcLMI81ag0Ix8QDeacEJG/PSYNqrGkaOu8TVxYZY=",
+  "inputsHash": "sha256-EKEbpBNxpyTL/GZBgLNc+v1UIlxahz847Uws50i+Wus=",
   "definitionHash": "sha256-ccQf+fxGUBzksVIBLkTM3AYECxhhVi3UUWAeyNRMy7g=",
   "artifacts": [
     {
