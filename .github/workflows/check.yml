@@ -77,3 +77,20 @@ jobs:
           skipPush: true
       - name: Interactive tests
         run: tests/interactive.sh
+
+  conformance-update:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: clhodapp
+          skipPush: true
+      - name: Update moves the pinned producer
+        run: tests/update.sh

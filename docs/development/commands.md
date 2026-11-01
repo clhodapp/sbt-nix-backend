@@ -12,6 +12,9 @@ nix flake check --max-jobs 2
 # Interactive-mode tests (needs Nix; gives sbt no network)
 tests/interactive.sh
 
+# The update check: update moves a pinned flake repository (needs the network)
+tests/update.sh
+
 # Renew the lockfiles of this build and the fixtures (needs the network)
 tests/relock-fixtures.sh            # what is stale
 tests/relock-fixtures.sh --relock   # all of them
@@ -37,7 +40,10 @@ The workflows under `.github/workflows` run on GitHub:
   `nix flake check`, which includes the conformance checks of the
   purifier contract that the sandbox runs. The `conformance-relock` job
   relocks the fixtures and fails on any change to their lockfiles, and
-  `conformance-offline` runs `tests/interactive.sh`. Every job reads the
+  `conformance-offline` runs `tests/interactive.sh`. The
+  `conformance-update` job runs `tests/update.sh`, which locks the update
+  fixture against a producer flake that the script commits to twice. Every
+  job reads the
   clhodapp cachix cache.
 - `release.yml` runs after each successful check of a push to main. It
   builds the artifacts with the version of the last release and compares

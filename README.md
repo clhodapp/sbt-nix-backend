@@ -169,7 +169,7 @@ resolves the usual way, from the network, so the edited build loads and
 
 ```zsh
 sbt-purifier lock     # relocks when the build definition changed
-sbt-purifier update   # resolves every dependency afresh, dynamic versions included
+sbt-purifier update   # resolves every dependency afresh and moves the flake repositories
 ```
 
 `lock` keeps a lockfile that is up to date as it is, and a relock of an
@@ -178,7 +178,9 @@ unchanged build reproduces it byte for byte. The purifier contract has
 whole build at once, so `sbt-purifier update` takes no package names: it
 re-resolves every dependency, version ranges and dynamic versions
 included, and `sbt-purifier.lock.json` is the one lockfile that changes.
-`sbt-purifier publish` runs
+`lock` keeps the revision the lockfile records for each flake repository
+(see "Supported language repositories"), and `update` locks each one at
+the newest revision of its reference. `sbt-purifier publish` runs
 `publish` with the artifacts Nix built; `publishTo`, credentials and the
 publishing style work as they do for `publish`, and `+nixPublish` in sbt
 publishes every Scala version.
@@ -232,8 +234,8 @@ so `project/` and the build both have it.
 | Key | What it does |
 |---|---|
 | `nixLock` | Writes the lockfile when the build definition changed (`sbt-purifier lock`). |
-| `nixRelock` | Writes the lockfile (`sbt-purifier update`). |
-| `nixLockUpdate` | Writes the lockfile and locks every flake repository afresh. |
+| `nixRelock` | Writes the lockfile, keeping the revisions of the flake repositories. |
+| `nixLockUpdate` | Writes the lockfile and locks every flake repository afresh (`sbt-purifier update`). |
 | `nixPublish` | A command: `publish`, with the artifacts Nix built (`sbt-purifier publish`). |
 | `nixPackagedArtifacts` | `publish / packagedArtifacts` for the current Scala version, built by Nix. |
 | `nixRuntimeRepository` | The project's repository output, built by Nix. |

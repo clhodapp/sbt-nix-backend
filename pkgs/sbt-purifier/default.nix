@@ -6,8 +6,10 @@
 #
 #   sbt-purifier lock      nixLock: lock the build, keeping a lockfile
 #                          that is up to date as it is
-#   sbt-purifier update    nixRelock: resolve every dependency afresh,
-#                          dynamic versions included, and relock
+#   sbt-purifier update    nixLockUpdate: resolve every dependency afresh,
+#                          dynamic versions included, lock every flake
+#                          repository at the newest revision of its
+#                          reference, and relock
 #   sbt-purifier prefetch  realize every locked download and the JDK in
 #                          the Nix store, with garbage-collector roots
 #                          beside the lockfile, so sbt and an editor work
@@ -80,7 +82,7 @@ writeShellScriptBin "sbt-purifier" ''
         echo "sbt-purifier: sbt resolves every dependency of the build at once, so update takes no package names; run \`sbt-purifier update\`" >&2
         exit 2
       fi
-      exec ${lib.getExe sbt} -batch nixRelock
+      exec ${lib.getExe sbt} -batch nixLockUpdate
       ;;
     prefetch)
       check
