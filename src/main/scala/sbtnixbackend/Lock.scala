@@ -6,13 +6,15 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.security.MessageDigest
 import java.util.Base64
 
-/** One file in the locked coursier cache.
+/** One file in the locked coursier cache: a file entry of the purifier
+  * library.
   *
-  * @param path the coursier-cache-relative path (see [[CachePaths]])
-  * @param url  where the Nix side downloads it from
-  * @param hash an SRI SHA-256 hash (`sha256-<base64>`)
+  * @param path    the coursier-cache-relative path (see [[CachePaths]])
+  * @param url     where the Nix side downloads it from
+  * @param hash    an SRI SHA-256 hash (`sha256-<base64>`)
+  * @param mirrors other URLs that serve the same file, tried after `url`
   */
-final case class LockedArtifact(path: String, url: String, hash: String)
+final case class LockedArtifact(path: String, url: String, hash: String, mirrors: Vector[String] = Vector.empty)
 
 /** A project of the build, as the Nix side names and builds it.
   *
@@ -121,15 +123,18 @@ final case class Lock(
       "inputsHash" -> str(inputsHash),
       "definitionHash" -> str(definitionHash),
       "artifacts" -> Arr(artifacts.sortBy(_.path).map { a =>
-        obj("path" -> str(a.path), "url" -> str(a.url), "hash" -> str(a.hash))
+        obj("path" -> str(a.path), "url" -> str(a.url), "mirrors" -> Arr(a.mirrors.map(str)), "hash" -> str(a.hash))
       })
     )
   }
 
+  /** The text of the lockfile, with its content hash (see [[Lock.parse]]). */
+  def render: String = Lock.withContentHash(toJson.render + "\n")
+
   def write(file: File): Unit = {
     Option(file.getParentFile).foreach(_.mkdirs())
     val tmp = new File(file.getPath + ".tmp")
-    Files.write(tmp.toPath, (toJson.render + "\n").getBytes(StandardCharsets.UTF_8))
+    Files.write(tmp.toPath, render.getBytes(StandardCharsets.UTF_8))
     Files.move(tmp.toPath, file.toPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
   }
 }
@@ -137,15 +142,51 @@ final case class Lock(
 object Lock {
 
   /** Bumped when the format changes incompatibly; [[parse]] rejects others. */
-  val FormatVersion = 2
+  val FormatVersion = 3
+
+  /** The command that writes the lockfile, which every error names. */
+  val LockCommand = "sbt-purifier lock"
+
+  private val VersionLine = """  "version": ([0-9]+),""".r
+  private val ContentHashLine = """  "contentHash": "([0-9a-f]{64})",""".r
+
+  private def sha256Hex(s: String): String =
+    MessageDigest
+      .getInstance("SHA-256")
+      .digest(s.getBytes(StandardCharsets.UTF_8))
+      .map(b => f"${b & 0xff}%02x")
+      .mkString
+
+  /** `text`, a lockfile without its content hash, with the line
+    * `  "contentHash": "<hex>",` after its version line. The hash is the
+    * SHA-256 of `text`. The line has a fixed place and shape so that Nix
+    * can check it with string functions before it parses the JSON (see
+    * nix/lib/lock.nix).
+    */
+  def withContentHash(text: String): String = {
+    val afterVersion = text.indexOf('\n', text.indexOf('\n') + 1) + 1
+    text.substring(0, afterVersion) + "  \"contentHash\": \"" + sha256Hex(text) + "\",\n" + text.substring(afterVersion)
+  }
+
+  /** Why `text` is not a lockfile of this format with the content hash
+    * it records, or None when it is.
+    */
+  def contentProblem(text: String): Option[String] =
+    text.split("\n", 4) match {
+      case Array("{", VersionLine(v), ContentHashLine(h), rest) =>
+        if (v.toInt != FormatVersion)
+          Some(s"it has lock format version $v, and this plugin reads version $FormatVersion")
+        else if (sha256Hex("{\n" + "  \"version\": " + v + ",\n" + rest) != h)
+          Some("its content does not match its content hash: it was edited, or it is damaged")
+        else None
+      case Array("{", VersionLine(v), _*) if v.toInt != FormatVersion =>
+        Some(s"it has lock format version $v, and this plugin reads version $FormatVersion")
+      case _ => Some("it is not a lockfile that sbt-purifier wrote")
+    }
 
   def parse(text: String): Lock = {
+    contentProblem(text).foreach(p => throw new Json.JsonError(s"$p; run `$LockCommand`"))
     val o = Json.parse(text).asObject
-    val version = o("version").asInt
-    if (version != FormatVersion)
-      throw new Json.JsonError(
-        s"lock format version $version is not supported by this plugin (it reads version $FormatVersion); run nixLock"
-      )
     Lock(
       sbtVersion = o("sbtVersion").asString,
       javaVersion = o("javaVersion").asString,
@@ -172,7 +213,7 @@ object Lock {
       },
       artifacts = o("artifacts").asArray.map { j =>
         val a = j.asObject
-        LockedArtifact(a("path").asString, a("url").asString, a("hash").asString)
+        LockedArtifact(a("path").asString, a("url").asString, a("hash").asString, a("mirrors").asArray.map(_.asString))
       },
       inputsHash = o("inputsHash").asString,
       definitionHash = o("definitionHash").asString
@@ -194,36 +235,40 @@ object Lock {
       try Some(read(file))
       catch { case _: IllegalStateException => None }
 
+  /** Names that take no part in a build: build outputs and editor state.
+    * buildSbtProject leaves the same names out of the source it copies.
+    */
+  def outsideTheBuild(name: String, isDirectory: Boolean): Boolean =
+    (isDirectory && Set("target", ".bsp", ".metals", ".bloop")(name)) ||
+      name == ".git" || name == ".idea" || name.startsWith("result")
+
   /** A digest of the files that define the build's dependencies: every
-    * `*.sbt` file at the root, and everything under `project/` except its
-    * `target/` directories, recursively through the meta-builds. The extra
+    * `*.sbt` file at the root, and everything under `project/`,
+    * recursively through the meta-builds, except what
+    * [[outsideTheBuild]] names. The digest is the SHA-256, in hex, of one
+    * line `<path> <SHA-256 of the file, in hex>` for each file, in name
+    * order at each level, and then one line `extra <string>` for each of
+    * `extra`. With no extra strings, buildSbtProject computes the same
+    * digest from its source (nix/lib/definition-hash.nix). The extra
     * strings cover dependency inputs that live outside those files (the
     * injected plugin, declared network URLs, flake references).
     */
   def buildDefinitionHash(root: File, extra: Seq[String]): String = {
-    val md = MessageDigest.getInstance("SHA-256")
-    def add(s: String): Unit = {
-      val b = s.getBytes(StandardCharsets.UTF_8)
-      md.update(java.nio.ByteBuffer.allocate(4).putInt(b.length).array())
-      md.update(b)
-    }
-    def files(dir: File, rel: String): Vector[(String, File)] =
-      Option(dir.listFiles()).getOrElse(Array.empty[File]).toVector.sortBy(_.getName).flatMap { f =>
-        val r = if (rel.isEmpty) f.getName else rel + "/" + f.getName
-        if (f.isDirectory) { if (f.getName == "target") Vector.empty else files(f, r) }
-        else Vector(r -> f)
+    def list(dir: File) = Option(dir.listFiles()).getOrElse(Array.empty[File]).toVector.sortBy(_.getName)
+    def files(dir: File, rel: String): Vector[String] =
+      list(dir).flatMap { f =>
+        val r = rel + "/" + f.getName
+        if (outsideTheBuild(f.getName, f.isDirectory)) Vector.empty
+        else if (f.isDirectory) files(f, r)
+        else Vector(r)
       }
-    val sbtFiles = Option(root.listFiles()).getOrElse(Array.empty[File]).toVector
-      .filter(f => f.isFile && f.getName.endsWith(".sbt"))
-      .sortBy(_.getName)
-      .map(f => f.getName -> f)
-    val all = sbtFiles ++ files(new File(root, "project"), "project")
-    all.foreach { case (rel, f) =>
-      add(rel)
-      md.update(Files.readAllBytes(f.toPath))
-    }
-    extra.foreach(add)
-    "sha256-" + Base64.getEncoder.encodeToString(md.digest())
+    val sbtFiles =
+      list(root).filter(f => f.isFile && f.getName.endsWith(".sbt") && !outsideTheBuild(f.getName, false)).map(_.getName)
+    val project = new File(root, "project")
+    val all = sbtFiles ++ (if (project.isDirectory) files(project, "project") else Vector.empty)
+    def fileHash(rel: String) =
+      MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(new File(root, rel).toPath)).map(b => f"${b & 0xff}%02x").mkString
+    sha256Hex(all.map(rel => s"$rel ${fileHash(rel)}\n").mkString + extra.map(e => s"extra $e\n").mkString)
   }
 
   /** The SRI SHA-256 hash of a file, as Nix's `hash` attribute takes it. */

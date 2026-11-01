@@ -73,6 +73,42 @@ class LockSuite extends munit.FunSuite {
     assertEquals(Lock.readOption(new File(tempDir(), "absent.json")), None)
   }
 
+  private def readError(text: String): String = {
+    val f = new File(tempDir(), "lock.json")
+    write(f, text)
+    intercept[IllegalStateException](Lock.read(f)).getMessage
+  }
+
+  test("the content hash line follows the version line, and an edit fails naming the command") {
+    val text = lock.render
+    assert(text.startsWith("{\n  \"version\": " + Lock.FormatVersion + ",\n  \"contentHash\": \""), text.take(80))
+    val message = readError(text.replace("sha256-a", "sha256-b"))
+    assert(message.contains("does not match its content hash"), message)
+    assert(message.contains("run `sbt-purifier lock`"), message)
+  }
+
+  test("a malformed lockfile fails naming the command") {
+    for (text <- Seq("", "not json", lock.render.dropRight(10), lock.render.replace("\"contentHash\"", "\"hash\""))) {
+      val message = readError(text)
+      assert(message.contains("run `sbt-purifier lock`"), message)
+    }
+  }
+
+  test("a lockfile of an earlier format fails naming the command") {
+    val message = readError("{\n  \"version\": 2,\n  \"sbtVersion\": \"1.11.7\"\n}\n")
+    assert(message.contains("lock format version 2"), message)
+    assert(message.contains("run `sbt-purifier lock`"), message)
+  }
+
+  test("the definition hash is the hash of one line per file") {
+    val root = tempDir()
+    write(new File(root, "build.sbt"), "a")
+    write(new File(root, "project/build.properties"), "b")
+    def hex(s: String) =
+      java.security.MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8)).map(b => f"${b & 0xff}%02x").mkString
+    assertEquals(Lock.buildDefinitionHash(root, Nil), hex(s"build.sbt ${hex("a")}\nproject/build.properties ${hex("b")}\n"))
+  }
+
   test("the definition hash covers *.sbt and project/, and ignores target/ and sources") {
     val root = tempDir()
     write(new File(root, "build.sbt"), "a")
