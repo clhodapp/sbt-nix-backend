@@ -99,17 +99,18 @@ class FilesSuite extends munit.FunSuite {
     intercept[RuntimeRepository.NotRepresentable](RuntimeRepository.pomCoordinates(pom))
   }
 
-  test("the plugin carries every file of the Nix library") {
+  test("the plugin carries every file of the Nix library, and the flake.lock") {
     val dir = new File("nix/lib")
     assume(dir.isDirectory, "the tests run from the repository root")
-    assertEquals(NixLibrary.files, dir.list().toVector.filter(_.endsWith(".nix")).sorted)
+    assertEquals(NixLibrary.files, (dir.list().toVector.filter(_.endsWith(".nix")) :+ "flake.lock").sorted)
     val out = tempDir()
     NixLibrary.write(out)
     NixLibrary.files.foreach { n =>
+      val source = if (n == "flake.lock") new File(n) else new File(dir, n)
       assertEquals(
         Files.readAllBytes(new File(out, n).toPath).toSeq,
-        Files.readAllBytes(new File(dir, n).toPath).toSeq,
-        s"$n in the jar differs from nix/lib/$n"
+        Files.readAllBytes(source.toPath).toSeq,
+        s"$n in the jar differs from $source"
       )
     }
   }

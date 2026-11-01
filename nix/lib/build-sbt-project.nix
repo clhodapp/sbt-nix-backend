@@ -123,7 +123,8 @@ let
     else
       let
         p = lock.plugin;
-        repo = if pluginRepository != null then pluginRepository else (lib.sbt-purifier.plugin pkgs).repository;
+        repo =
+          if pluginRepository != null then pluginRepository else (lib.sbt-purifier.plugin pkgs).repository;
         orgPath = lib.replaceStrings [ "." ] [ "/" ] p.organization;
       in
       assert

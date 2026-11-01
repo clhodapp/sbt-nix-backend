@@ -597,6 +597,7 @@ object NixBackendPlugin extends AutoPlugin {
         "nixpkgs" -> (ThisBuild / nixNixpkgs).value,
         "src" -> (ThisBuild / nixBuildRoot).value.getAbsolutePath,
         "project" -> id,
+        "lockFile" -> (ThisBuild / nixLockFile).value.getAbsolutePath,
         "pluginRepository" -> repository
       ),
       base / "gcroots" / s"package-$id-$output"

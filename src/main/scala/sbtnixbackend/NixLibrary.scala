@@ -17,10 +17,14 @@ object NixLibrary {
       "definition-hash.nix",
       "dependencies.nix",
       "fetch.nix",
+      // The flake.lock of the repository, whose purifier node
+      // purifier-source.nix reads.
+      "flake.lock",
+      "library.nix",
       "lock-version.nix",
-      "lock.nix",
       "package.nix",
       "plugin.nix",
+      "purifier-source.nix",
       "read-lock.nix",
       "realize.nix"
     )

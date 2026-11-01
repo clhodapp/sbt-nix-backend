@@ -177,7 +177,7 @@ object Lock {
     * `  "contentHash": "<hex>",` after its version line. The hash is the
     * SHA-256 of `text`. The line has a fixed place and shape so that Nix
     * can check it with string functions before it parses the JSON (see
-    * nix/lib/lock.nix).
+    * nix/lib/read-lock.nix).
     */
   def withContentHash(text: String): String = {
     val afterVersion = text.indexOf('\n', text.indexOf('\n') + 1) + 1

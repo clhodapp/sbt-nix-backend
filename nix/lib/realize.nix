@@ -16,26 +16,30 @@
   libDir ? ./.,
 }:
 let
-  lock = import (libDir + "/lock.nix") { inherit lockFile; };
-  fetch = import (libDir + "/fetch.nix") { inherit lock; };
+  # The plugin realizes a lock it has checked; only the downloads count.
+  read = import (libDir + "/read-lock.nix") {
+    src = null;
+    inherit lockFile;
+  };
+  fetcher = import (libDir + "/fetch.nix") { };
   byPath =
     f:
     builtins.listToAttrs (
       map (artifact: {
         name = artifact.path;
         value = f artifact;
-      }) lock.artifacts
+      }) read.entries
     );
 in
 {
-  fetches = byPath fetch;
-  manifest = builtins.toFile "sbt-nix-backend-coursier-cache.json" (
+  fetches = byPath fetcher.fetch;
+  manifest = builtins.toFile "sbt-purifier-coursier-cache.json" (
     builtins.toJSON (
       byPath (
         artifact:
         builtins.fetchurl {
           inherit (artifact) url;
-          name = lock.artifactName artifact;
+          name = fetcher.nameOf artifact;
           sha256 = artifact.hash;
         }
       )

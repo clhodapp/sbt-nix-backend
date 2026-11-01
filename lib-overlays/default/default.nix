@@ -8,7 +8,8 @@
 #   plugin pkgs                             the plugin, built for `pkgs`
 #
 # It takes `lib.purifier` from the purifier flake, which this flake lists
-# in its projects.
+# in its projects. nix/lib/library.nix composes the same namespace for an
+# evaluation outside the flake.
 { ... }:
 {
 

@@ -6,6 +6,7 @@
 #   nixpkgs           a nixpkgs source directory, or a flake reference
 #   src               the build root
 #   project           the sbt project id
+#   lockFile          the lockfile, or "" for the one in the build root
 #   pluginRepository  the repository to inject the plugin from, or ""
 #
 # `out` and `repository` are the two outputs of the project's package.
@@ -13,6 +14,8 @@
   nixpkgs,
   src,
   project,
+  # The lockfile, or "" for sbt-purifier.lock.json in src.
+  lockFile ? "",
   pluginRepository ? "",
 }:
 let
@@ -21,15 +24,22 @@ let
       import nixpkgs { }
     else
       (builtins.getFlake nixpkgs).legacyPackages.${builtins.currentSystem};
-  build = pkgs.callPackage ./build-sbt-project.nix { } {
-    src = /. + src;
-    # A store path passed as a string has no context; storePath gives it
-    # one, so the package build may read the repository.
-    pluginRepository = if pluginRepository == "" then null else builtins.storePath pluginRepository;
-  };
+  lib = import ./library.nix { inherit (pkgs) lib; };
+  build = lib.sbt-purifier.buildSbtProject (
+    {
+      inherit pkgs;
+      src = /. + src;
+    }
+    // lib.optionalAttrs (lockFile != "") { lockFile = /. + lockFile; }
+    // lib.optionalAttrs (pluginRepository != "") {
+      # A store path passed as a string has no context; storePath gives
+      # it one, so the package build may read the repository.
+      pluginRepository = builtins.storePath pluginRepository;
+    }
+  );
   package =
     build.packages.${project}
-      or (throw "sbt-nix-backend: the lockfile builds no project ${project} (it builds ${builtins.concatStringsSep ", " (builtins.attrNames build.packages)})");
+      or (throw "sbt-purifier: the lockfile builds no project ${project} (it builds ${builtins.concatStringsSep ", " (builtins.attrNames build.packages)})");
 in
 {
   out = package;

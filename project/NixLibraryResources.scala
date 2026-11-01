@@ -11,9 +11,11 @@ object NixLibraryResources {
   def settings: Seq[Setting[_]] = Seq(
     Compile / resourceGenerators += Def.task {
       val out = (Compile / resourceManaged).value / "sbtnixbackend" / "nix"
-      ((ThisBuild / baseDirectory).value / "nix" / "lib" * "*.nix").get.map(_.getName).map { name =>
-        val target = out / name
-        IO.copyFile((ThisBuild / baseDirectory).value / "nix" / "lib" / name, target)
+      val root = (ThisBuild / baseDirectory).value
+      // The flake.lock goes beside the library, for purifier-source.nix.
+      ((root / "nix" / "lib" * "*.nix").get :+ (root / "flake.lock")).map { source =>
+        val target = out / source.getName
+        IO.copyFile(source, target)
         target
       }
     }.taskValue

@@ -74,9 +74,11 @@ let
 
   # A source that is the output of a derivation would have to be built to
   # be read, which evaluation does not do; its staleness is left to the
-  # plugin.
+  # plugin. So is the staleness of a lock read with `src = null`, as the
+  # sbt wrapper and the plugin's interactive mode read it for its
+  # downloads alone.
   staleProblem =
-    if lock == null || (isString src && hasContext src) then
+    if lock == null || src == null || (isString src && hasContext src) then
       null
     else if import ./definition-hash.nix src != lock.definitionHash then
       "${where} is stale: the build definition (the *.sbt files and project/) changed since it was written; ${fix}"

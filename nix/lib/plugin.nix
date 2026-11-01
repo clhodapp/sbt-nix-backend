@@ -13,6 +13,7 @@ let
   # wiring do not change it.
   parts = [
     "build.sbt"
+    "flake.lock"
     "version.txt"
     "project"
     "src"

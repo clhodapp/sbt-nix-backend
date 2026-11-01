@@ -8,9 +8,10 @@
 Compile / unmanagedSourceDirectories ++= Seq("scala", "scala-2.12").map(baseDirectory.value.getParentFile / "src" / "main" / _)
 Compile / resourceGenerators += Def.task {
   val out = (Compile / resourceManaged).value / "sbtnixbackend" / "nix"
-  (baseDirectory.value.getParentFile / "nix" / "lib" * "*.nix").get.map(_.getName).map { name =>
-    val target = out / name
-    IO.copyFile(baseDirectory.value.getParentFile / "nix" / "lib" / name, target)
+  val root = baseDirectory.value.getParentFile
+  ((root / "nix" / "lib" * "*.nix").get :+ (root / "flake.lock")).map { source =>
+    val target = out / source.getName
+    IO.copyFile(source, target)
     target
   }
 }.taskValue
