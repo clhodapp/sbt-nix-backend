@@ -153,6 +153,7 @@ object LockGeneration {
         s"the lock run failed (exit code $code); its output is above, and its directories are kept in $work"
       )
     mirror.foreach(CentralMirror.canonicalize(cache, _))
+    materializeCentralChecksums(cache, mirror, download)
 
     val files = CachePaths.downloadedFiles(cache)
     val artifacts = files.map { rel =>
@@ -228,6 +229,26 @@ object LockGeneration {
           "nixNetworkDependencies: " + found.mkString(", ")
       )
   }
+
+  /** Central and its mirrors may send the SHA-1 in an HTTP header. Coursier
+    * then skips the sidecar download, so identical resolutions otherwise
+    * lock different files depending on the server's response headers.
+    * Fetch the real sidecar of each Central artifact, including pre-seeded
+    * downloads such as the launcher, preserving its published bytes and URL.
+    */
+  private[sbtnixbackend] def materializeCentralChecksums(
+      cache: File,
+      mirror: Option[String],
+      fetch: (String, File) => Unit
+  ): Unit =
+    CachePaths.downloadedFiles(cache).foreach { rel =>
+      val file = new File(cache, rel)
+      val url = CachePaths.url(rel)
+      val sidecar = new File(file.getPath + ".sha1")
+      val checksum = Vector(".sha1", ".md5", ".sha256", ".sha512").exists(rel.endsWith)
+      if (url.startsWith(CentralMirror.Central) && !url.endsWith("/") && !checksum && !sidecar.isFile)
+        fetch(CentralMirror.downloadUrl(url + ".sha1", mirror), sidecar)
+    }
 
   /** Downloads `url` to `target` through java.net, honoring this JVM's
     * proxy settings and following redirects within the same protocol.

@@ -55,6 +55,29 @@ class LockSuite extends munit.FunSuite {
     assertEquals(read.copy(projects = lock.projects, artifacts = lock.artifacts), lock)
   }
 
+  test("header checksums and pre-seeded downloads lock the same published sidecars") {
+    val cache = tempDir()
+    val rel = "https/repo1.maven.org/maven2/org/example/a/1/a-1.jar"
+    write(new File(cache, rel), "artifact")
+    write(new File(cache, rel.replace("a-1.jar", ".a-1.jar__sha1")), "header hash")
+    write(new File(cache, rel + ".pom"), "pre-seeded artifact without headers")
+    val mirror = "https://mirror.example/maven2/"
+    var downloads = Vector.empty[String]
+    def fetch(url: String, file: File): Unit = {
+      downloads :+= url
+      write(file, "published checksum\n")
+    }
+    LockGeneration.materializeCentralChecksums(cache, Some(mirror), fetch)
+    assertEquals(downloads, Vector(mirror + "org/example/a/1/a-1.jar.sha1", mirror + "org/example/a/1/a-1.jar.pom.sha1"))
+    assertEquals(new String(Files.readAllBytes(new File(cache, rel + ".sha1").toPath), StandardCharsets.UTF_8),
+      "published checksum\n")
+    val files = CachePaths.downloadedFiles(cache)
+    downloads = Vector.empty
+    LockGeneration.materializeCentralChecksums(cache, Some(mirror), fetch)
+    assertEquals(downloads, Vector.empty)
+    assertEquals(CachePaths.downloadedFiles(cache), files)
+  }
+
   test("writing is deterministic") {
     val d = tempDir()
     lock.write(new File(d, "1.json"))

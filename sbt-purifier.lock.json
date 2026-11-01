@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "contentHash": "e2565e2fa0dbd94c498eab744cafa23045a254b587291f628d84eb7c60511b06",
+  "contentHash": "4d979d3b715aec2048d226c7fd04b1268e5cedafeff0741d8604ce7d75918f13",
   "sbtVersion": "1.11.7",
   "javaVersion": "21",
   "launcher": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar",
@@ -7283,6 +7283,14 @@
       "hash": "sha256-+Soglax1AIdk/jsreT/+YkxPvvW/2bACLkvC2vZoxlE="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar.sha1"
+      ],
+      "hash": "sha256-FLIzHtGeKvSztXJK+h00fyChN/KOhmOyrSvPcSG8ZAw="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/sbt/1.11.7/sbt-1.11.7-javadoc.jar",
       "url": "https://repo1.maven.org/maven2/org/scala-sbt/sbt/1.11.7/sbt-1.11.7-javadoc.jar",
       "mirrors": [
@@ -8187,12 +8195,28 @@
       "hash": "sha256-H8lQqeGjU4XnkxbiPBINT9GE9qevAnTgCnA7Dcdjdq8="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/util-interface/1.11.5/util-interface-1.11.5.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/util-interface/1.11.5/util-interface-1.11.5.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/util-interface/1.11.5/util-interface-1.11.5.jar.sha1"
+      ],
+      "hash": "sha256-R2HMlfjNY2bJorbgV3o4iMCYH1VBTVwS4Bgk0aJ6PxY="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/util-interface/1.11.5/util-interface-1.11.5.pom",
       "url": "https://repo1.maven.org/maven2/org/scala-sbt/util-interface/1.11.5/util-interface-1.11.5.pom",
       "mirrors": [
         "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/util-interface/1.11.5/util-interface-1.11.5.pom"
       ],
       "hash": "sha256-Dfzt1IFPO4eivD9g6BA3V7P1Qkxcct35EPsr5u4A4lk="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/util-interface/1.11.5/util-interface-1.11.5.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/util-interface/1.11.5/util-interface-1.11.5.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/util-interface/1.11.5/util-interface-1.11.5.pom.sha1"
+      ],
+      "hash": "sha256-Wnvim9/fXvf9oNJ9NTkvJ06No7C+iHIb9/bb0yXnjkk="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/util-interface/1.11.7/util-interface-1.11.7-javadoc.jar",

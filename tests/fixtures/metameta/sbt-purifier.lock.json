@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "contentHash": "681ff9078c4d5c14d2626d56d8979f11fb545546562d034a9f716aa9f6b078da",
+  "contentHash": "ca22a8eab7ae64206fe2049be847a42f889f63354eb30576080fe54117cab29d",
   "sbtVersion": "1.11.7",
   "javaVersion": "21",
   "launcher": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar",
@@ -6612,6 +6612,14 @@
         "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar"
       ],
       "hash": "sha256-+Soglax1AIdk/jsreT/+YkxPvvW/2bACLkvC2vZoxlE="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar.sha1"
+      ],
+      "hash": "sha256-FLIzHtGeKvSztXJK+h00fyChN/KOhmOyrSvPcSG8ZAw="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/sbt/1.11.7/sbt-1.11.7-sources.jar",
