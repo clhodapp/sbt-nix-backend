@@ -31,6 +31,7 @@ through the store. The README describes what it does for a user.
 
 ## Not in scope
 
-The Nix outputs are Maven repositories, so Ivy-style publishing is out of
-scope. A repository that needs credentials works only through a fetcher the
-caller supplies.
+The plugin rewrites the resolvers sbt declares, so a build that names its
+resolvers in an Ivy settings file (`externalIvySettings`) is refused. A
+repository that needs credentials works only through a fetcher the caller
+supplies.

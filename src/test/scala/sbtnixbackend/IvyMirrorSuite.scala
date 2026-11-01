@@ -29,6 +29,20 @@ class IvyMirrorSuite extends munit.FunSuite {
     )
   }
 
+  test("the local repository stays in the user's Ivy home") {
+    val local = Resolver.defaultLocal
+    val pinned = IvyMirror.pinIvyHome(local, new java.io.File("/home/user/.ivy2")).asInstanceOf[sbt.librarymanagement.FileRepository]
+    assert(pinned.patterns.ivyPatterns.forall(_.startsWith("/home/user/.ivy2/local/")), pinned.patterns.ivyPatterns.toString)
+  }
+
+  test("each set of local repositories has an Ivy home of its own") {
+    val setup = IvyMirror.Setup(None, new java.io.File("/homes"), "lock")
+    def home(dir: String) = IvyMirror.home(setup, Seq(MavenRepository("plugin", s"file:$dir/")))
+    assertNotEquals(home("/nix/store/a-plugin"), home("/nix/store/b-plugin"))
+    assertEquals(home("/nix/store/a-plugin"), home("/nix/store/a-plugin"))
+    assertNotEquals(home("/nix/store/a-plugin"), IvyMirror.home(setup.copy(key = "other lock"), Seq(MavenRepository("plugin", "file:/nix/store/a-plugin/"))))
+  }
+
   test("a local repository is read where it is") {
     val local = MavenRepository("local", "file:/home/user/.m2/repository/")
     assertEquals(IvyMirror.rewrite(local, base), local: Resolver)

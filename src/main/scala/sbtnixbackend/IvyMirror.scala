@@ -6,7 +6,7 @@ import java.nio.file.{Files, StandardCopyOption}
 import java.util.concurrent.Executors
 
 import com.sun.net.httpserver.{HttpExchange, HttpHandler, HttpServer}
-import sbt.librarymanagement.{MavenRepository, Patterns, Resolver, URLRepository}
+import sbt.librarymanagement.{FileRepository, MavenRepository, Patterns, Resolver, URLRepository}
 
 /** Dependency resolution through Apache Ivy (`useCoursier := false`, sbt 1
   * only) on the locked downloads.
@@ -25,6 +25,45 @@ object IvyMirror {
 
   /** The environment variable that names the mirror in the lock run. */
   val Variable = "SBT_NIX_IVY_MIRROR"
+
+  /** How a project that resolves with Ivy reads: through the mirror at
+    * `base` when there is one (in a Nix build, the lock run, and
+    * interactively with a usable lock), and always with an Ivy home of its
+    * own under `homes`.
+    *
+    * Ivy keeps every module it resolves in the cache of its home, and reads
+    * a module from a local repository where it first found it, by version.
+    * A rebuilt plugin repository or flake repository is a new Nix store
+    * path that holds new files under the same version, and a new lock may
+    * hold other files under the same URLs. The home is therefore named by a
+    * digest of `key` (the lockfile) and of every local repository the
+    * project reads, so each of those has a cache of its own.
+    */
+  final case class Setup(base: Option[String], homes: File, key: String)
+
+  /** The Ivy home of a project with `setup` that reads `resolvers`. */
+  def home(setup: Setup, resolvers: Seq[Resolver]): File = {
+    val local = resolvers.flatMap {
+      case m: MavenRepository if m.root.startsWith("file:") => Seq(m.root)
+      case f: FileRepository                                => f.patterns.ivyPatterns ++ f.patterns.artifactPatterns
+      case _                                                => Nil
+    }
+    val digest = java.security.MessageDigest.getInstance("SHA-256")
+    (setup.key +: local.distinct.sorted).foreach(s => digest.update((s + "\n").getBytes("UTF-8")))
+    new File(setup.homes, digest.digest().take(10).map(b => f"${b & 0xff}%02x").mkString)
+  }
+
+  /** `resolver` with `${ivy.home}` in its patterns replaced by `ivyHome`:
+    * sbt's `local` repository (where `publishLocal` writes) stays in the
+    * user's Ivy home when the project's Ivy home moves.
+    */
+  def pinIvyHome(resolver: Resolver, ivyHome: File): Resolver = resolver match {
+    case f: FileRepository if (f.patterns.ivyPatterns ++ f.patterns.artifactPatterns).exists(_.contains("${ivy.home}")) =>
+      def pin(ps: Vector[String]) = ps.map(_.replace("${ivy.home}", ivyHome.getAbsolutePath))
+      val p = f.patterns
+      f.withPatterns(Patterns(pin(p.ivyPatterns), pin(p.artifactPatterns), p.isMavenCompatible, p.descriptorOptional, p.skipConsistencyCheck))
+    case other => other
+  }
 
   /** The mirror path of a URL prefix: `https://host:8080/a/` becomes
     * `<base>/https/host%3A8080/a/`. A prefix that is not an absolute
