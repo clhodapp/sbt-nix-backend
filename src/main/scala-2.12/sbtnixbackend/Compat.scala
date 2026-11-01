@@ -143,6 +143,18 @@ object Compat {
   ): Def.Initialize[Task[Unit]] =
     Classpaths.publishOrSkip(config, skipKey).dependsOn(makeIvyXmlConfiguration)
 
+  /** `ref / publish / packagedArtifacts` as the files the Nix build made.
+    * Ivy's publisher delivers an Ivy-style module's ivy.xml from Ivy's
+    * resolution of the project, so the resolution runs first; it reads the
+    * locked downloads and compiles nothing.
+    */
+  def publishFromNix(ref: ProjectRef): Seq[Setting[_]] = Seq(
+    ref / publish / packagedArtifacts := {
+      Def.unit((ref / update).value)
+      (ref / NixBackendPlugin.autoImport.nixPackagedArtifacts).value
+    }
+  )
+
   /** sbt 1 does not cache task results, so every task runs. */
   def uncached[A](a: A): A = a
 }

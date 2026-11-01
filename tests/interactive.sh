@@ -229,6 +229,78 @@ expect "metameta through the wrapper: the meta-meta-build has one plugin jar, fr
 runner=wrapper
 network=off
 
+# nixPublish publishes what the Nix sandbox built, through sbt's own
+# publish, with sbt's network cut off. Each project publishes into one
+# directory, a Maven-style project with a Maven repository and an
+# Ivy-style one with an Ivy repository; `set` keeps the build definition,
+# and so the lockfile, as they are.
+# nixpublish_suite <fixture> <ivy-style project>... -- <sbt command>...
+nixpublish_suite() {
+  local fixture=$1
+  shift
+  local ivy_projects=()
+  while [[ $1 != -- ]]; do
+    ivy_projects+=("$1")
+    shift
+  done
+  shift
+  use_fixture "$fixture"
+  published="$work/$fixture-published"
+  local sets=("set ThisBuild / publishTo := Some(MavenCache(\"nix-publish-test\", file(\"$published\")))")
+  for p in "${ivy_projects[@]}"; do
+    sets+=("set $p / publishTo := Some(Resolver.file(\"nix-publish-test\", file(\"$published\"))(Resolver.ivyStylePatterns))")
+  done
+  echo "== $fixture: nixPublish"
+  output=$(run_sbt "${sets[@]}" "$@") || fail "$fixture: nixPublish failed"
+  classes=$(find "$build" -path '*/target/*' -name '*.class' -not -path '*/project/*' | head -3)
+  expect "$fixture: nixPublish compiles nothing outside the sandbox (found: ${classes:-nothing})" test -z "$classes"
+}
+
+# same_as_nix <published file> <description>: the file has the bytes of a
+# file in a Nix package output.
+same_as_nix() {
+  local file=$1 description=$2 digest
+  if [[ ! -f $file ]]; then
+    fail "$description: $file was not published"
+    return
+  fi
+  digest=$(sha256sum "$file" | cut -d' ' -f1)
+  if grep -qx "$digest" <<<"$nix_digests"; then pass "$description"; else fail "$description: $file differs from the Nix build"; fi
+}
+
+# The digests of every file in the Nix package outputs nixPackagedArtifacts
+# names, for the projects given.
+nix_outputs() {
+  local outputs
+  outputs=$(run_sbt "$@" | grep -o '/nix/store/[a-z0-9]*-[^/ ]*' | sort -u) || true
+  nix_digests=$(for o in $outputs; do find "$o/" -type f -exec sha256sum {} + | cut -d' ' -f1; done)
+}
+
+nixpublish_suite multi -- nixPublish
+nix_outputs 'show app/nixPackagedArtifacts' 'show core/nixPackagedArtifacts' 'show javalib/nixPackagedArtifacts'
+same_as_nix "$published/example/app_3/1.0.0/app_3-1.0.0.jar" "multi: nixPublish publishes the app jar Nix built"
+same_as_nix "$published/example/app_3/1.0.0/app_3-1.0.0.pom" "multi: nixPublish publishes the app POM Nix built"
+same_as_nix "$published/example/javalib/1.0.0/javalib-1.0.0.jar" "multi: nixPublish publishes the Java library jar Nix built"
+
+nixpublish_suite sbt2 lib ivyplugin2 -- nixPublish
+nix_outputs 'show app/nixPackagedArtifacts' 'show lib/nixPackagedArtifacts' 'show ivyplugin2/nixPackagedArtifacts'
+same_as_nix "$published/example/app_3/2.0.0/app_3-2.0.0.jar" "sbt2: nixPublish publishes the app jar Nix built"
+same_as_nix "$published/example/lib_3/2.0.0/jars/lib_3.jar" "sbt2: nixPublish publishes the Ivy-style lib jar Nix built"
+expect "sbt2: the Ivy-style lib has its ivy.xml" test -f "$published/example/lib_3/2.0.0/ivys/ivy.xml"
+same_as_nix "$published/example/ivyplugin2_sbt2_3/2.0.0/jars/ivyplugin2_sbt2_3.jar" \
+  "sbt2: nixPublish publishes the Ivy-style plugin jar Nix built"
+
+nixpublish_suite ivy lib ivyplugin ivyjava crosslib -- nixPublish 'project crosslib' '+nixPublish'
+nix_outputs 'show app/nixPackagedArtifacts' 'show lib/nixPackagedArtifacts' 'show ivyplugin/nixPackagedArtifacts' \
+  'show crosslib/nixPackagedArtifacts'
+same_as_nix "$published/example/app_2.13/4.0.0/app_2.13-4.0.0.jar" "ivy: nixPublish publishes the app jar Nix built"
+same_as_nix "$published/example/lib_2.13/4.0.0/jars/lib_2.13.jar" "ivy: nixPublish publishes the Ivy-style lib jar Nix built"
+expect "ivy: the Ivy-style lib has its ivy.xml" test -f "$published/example/lib_2.13/4.0.0/ivys/ivy.xml"
+same_as_nix "$published/example/ivyplugin/scala_2.12/sbt_1.0/4.0.0/jars/ivyplugin.jar" \
+  "ivy: nixPublish publishes the Ivy-style sbt plugin jar Nix built"
+same_as_nix "$published/example/crosslib_2.13/4.0.0/jars/crosslib_2.13.jar" "ivy: +nixPublish publishes crosslib for Scala 2.13"
+same_as_nix "$published/example/crosslib_3/4.0.0/jars/crosslib_3.jar" "ivy: +nixPublish publishes crosslib for Scala 3"
+
 if ((failures > 0)); then
   echo "$failures failure(s); the sbt output is in $work/sbt.log (kept)" >&2
   trap - EXIT
