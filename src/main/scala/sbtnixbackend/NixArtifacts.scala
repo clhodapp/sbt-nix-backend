@@ -5,30 +5,61 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.security.MessageDigest
 
-import sbt.librarymanagement.{Artifact, ConfigRef}
+import sbt.librarymanagement.{Artifact, ConfigRef, CrossVersion}
 
-/** The artifacts of a package output, by Scala version.
+/** The artifacts of a package output, by variant.
   *
   * The Nix build publishes a project into its output through the publisher
   * of sbt, which lays the files out by its own patterns, the version of the
   * project in every path. After that publish, [[record]] finds, for each
   * artifact the publish was given, the output file with the same bytes, and
   * links it at a name that does not depend on the version:
-  * `nix-support/artifacts/<Scala version>/<key>`, beside the link
-  * `nix-support/artifacts/<Scala version>/descriptor` to the POM or
-  * ivy.xml. A manifest in the output keeps where each file is.
+  * `nix-support/artifacts/<variant>/<key>`, beside the link
+  * `nix-support/artifacts/<variant>/descriptor` to the POM or ivy.xml.
+  * The variant is named for the cross version of the publish (see
+  * [[variantName]]). A manifest in the output keeps where each file is.
   *
   * The lock run runs the same build, and the lock takes the [[Variant]]s
-  * from those manifests (see LockGeneration): each Scala version of a
-  * project with the identity of its artifacts and no path. The Nix library
+  * from those manifests (see LockGeneration): each variant of a project
+  * with the identity of its artifacts and no path. The Nix library
   * knows every artifact file of a package from the lock alone, before it
   * builds it, and `nixPackagedArtifacts` and `nixPublish` find the files by
   * their links.
   */
 object NixArtifacts {
 
-  /** The artifacts of one Scala version of a project. */
-  final case class Variant(scalaVersion: String, artifacts: Vector[Artifact])
+  /** The artifacts of one Scala version of a project, under the variant
+    * name [[variantName]] gives it.
+    */
+  final case class Variant(name: String, scalaVersion: String, artifacts: Vector[Artifact])
+
+  /** The name of the variant of a project for Scala `scalaFull`: a Nix
+    * identifier made from the cross version sbt publishes the module with.
+    *
+    * For a project other than an sbt plugin, it is the suffix that
+    * `crossVersion` appends to the module name, split at `_`. A token that
+    * starts with a digit is a Scala version and gets the prefix `scala`,
+    * and every character other than a letter or a digit becomes `_`:
+    * `_3` gives `scala3`, `_2.13.16` gives `scala2_13_16`, and `_sjs1_3`
+    * gives `sjs1_scala3`. A module without a suffix gives `default`.
+    *
+    * An sbt plugin is published for a Scala and an sbt binary version,
+    * in its name or in extra attributes, and gives `scala<Scala>_sbt<sbt>`:
+    * `scala2_12_sbt1_0` for sbt 1 and `scala3_sbt2` for sbt 2.
+    */
+  def variantName(crossVersion: CrossVersion, plugin: Boolean, sbtBinary: String, scalaFull: String): String = {
+    val scalaBinary = CrossVersion.binaryScalaVersion(scalaFull)
+    def token(t: String): String = {
+      val clean = t.replaceAll("[^A-Za-z0-9]", "_")
+      if (clean.headOption.exists(_.isDigit)) "scala" + clean else clean
+    }
+    if (plugin) Seq(scalaBinary, "sbt" + sbtBinary).map(token).mkString("_")
+    else {
+      val suffix = CrossVersion(crossVersion, scalaFull, scalaBinary).fold("")(f => f(""))
+      val tokens = suffix.split('_').toVector.filter(_.nonEmpty).map(token)
+      if (tokens.isEmpty) "default" else tokens.mkString("_")
+    }
+  }
 
   /** The name an artifact is linked at in its variant:
     * `<name>(-<classifier>).<extension>`, such as `core-sources.jar`.
@@ -47,13 +78,17 @@ object NixArtifacts {
   private val checksumSuffixes = Vector(".sha1", ".md5", ".sha256", ".sha512")
 
   /** Records the artifacts `published` for `scalaVersion` in the output
-    * `dir`: links each artifact and the module descriptor at their names,
-    * and adds the variant to the manifest.
+    * `dir` as the variant `name`: links each artifact and the module
+    * descriptor at their names, and adds the variant to the manifest.
     */
-  def record(dir: File, scalaVersion: String, published: Seq[(Artifact, File)]): Unit = {
+  def record(dir: File, name: String, scalaVersion: String, published: Seq[(Artifact, File)]): Unit = {
     val keys = published.map(p => key(p._1))
     keys.diff(keys.distinct).headOption.foreach { k =>
-      sys.error(s"sbt-nix-backend: two artifacts of Scala $scalaVersion would both be linked as $k")
+      sys.error(s"sbt-nix-backend: two artifacts of variant $name would both be linked as $k")
+    }
+    val existing = readManifest(dir)
+    existing.find(v => v.name == name && v.scalaVersion != scalaVersion).foreach { v =>
+      sys.error(conflict(name, Seq(v.scalaVersion, scalaVersion)))
     }
     val byDigest = files(dir).groupBy(digest)
     def rel(f: File) = dir.toPath.relativize(f.toPath).toString.replace(File.separatorChar, '/')
@@ -77,9 +112,9 @@ object NixArtifacts {
         paths.headOption.map(_._2.split('/').dropRight(2).mkString("/") + "/ivys/ivy.xml")
       }
       .filter(p => new File(dir, p).isFile)
-      .getOrElse(sys.error(s"sbt-nix-backend: the output $dir holds no POM or ivy.xml for Scala $scalaVersion"))
+      .getOrElse(sys.error(s"sbt-nix-backend: the output $dir holds no POM or ivy.xml for variant $name"))
 
-    val links = new File(new File(dir, LinkDirectory), scalaVersion)
+    val links = new File(new File(dir, LinkDirectory), name)
     links.mkdirs()
     def link(name: String, target: String): Unit = {
       val l = new File(links, name).toPath
@@ -89,8 +124,7 @@ object NixArtifacts {
     paths.foreach { case (a, p) => link(key(a), p) }
     link(Descriptor, descriptor)
 
-    val variants = (readManifest(dir).filterNot(_.scalaVersion == scalaVersion) :+ Variant(scalaVersion, paths.map(_._1)))
-      .sortBy(_.scalaVersion)
+    val variants = (existing.filterNot(_.name == name) :+ Variant(name, scalaVersion, paths.map(_._1))).sortBy(_.name)
     Files.write(
       new File(dir, FileName).toPath,
       (Json.obj("variants" -> Json.Arr(variants.map(variantJson))).render + "\n").getBytes(StandardCharsets.UTF_8)
@@ -111,9 +145,16 @@ object NixArtifacts {
         .map(parseVariant)
   }
 
+  /** The message for Scala versions `scalaVersions` of a project that all
+    * have the variant name `name`.
+    */
+  def conflict(name: String, scalaVersions: Seq[String]): String =
+    s"sbt-nix-backend: Scala ${scalaVersions.mkString(" and ")} would publish the same variant, $name, of the project: " +
+      "the lockfile cannot tell their artifacts apart. Build the project for one of them."
+
   /** The files of `variant` in the package output `out`, by their links. */
   def files(out: File, variant: Variant): Map[Artifact, File] = {
-    val links = new File(new File(out, LinkDirectory), variant.scalaVersion)
+    val links = new File(new File(out, LinkDirectory), variant.name)
     variant.artifacts.map { a =>
       val f = new File(links, key(a))
       if (!f.isFile) sys.error(s"sbt-nix-backend: the Nix build in $out has no file for $a (looked for $f)")
@@ -123,6 +164,7 @@ object NixArtifacts {
 
   def variantJson(v: Variant): Json =
     Json.obj(
+      "name" -> Json.str(v.name),
       "scalaVersion" -> Json.str(v.scalaVersion),
       "artifacts" -> Json.Arr(v.artifacts.map { a =>
         Json.obj(
@@ -140,6 +182,7 @@ object NixArtifacts {
   def parseVariant(j: Json): Variant = {
     val v = j.asObject
     Variant(
+      v("name").asString,
       v("scalaVersion").asString,
       v("artifacts").asArray.map { a =>
         val o = a.asObject

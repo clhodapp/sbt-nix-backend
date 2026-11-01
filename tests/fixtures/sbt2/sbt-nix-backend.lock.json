@@ -20,6 +20,7 @@
       "name": "app_3",
       "variants": [
         {
+          "name": "scala3",
           "scalaVersion": "3.8.4",
           "artifacts": [
             {
@@ -76,6 +77,7 @@
       "name": "ivyplugin2_sbt2_3",
       "variants": [
         {
+          "name": "scala3_sbt2",
           "scalaVersion": "3.8.4",
           "artifacts": [
             {
@@ -121,6 +123,7 @@
       "name": "lib_3",
       "variants": [
         {
+          "name": "scala3",
           "scalaVersion": "3.8.4",
           "artifacts": [
             {

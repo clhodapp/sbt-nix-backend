@@ -20,6 +20,7 @@ class LockSuite extends munit.FunSuite {
         "a_3",
         Vector(
           NixArtifacts.Variant(
+            "scala3",
             "3.3.6",
             Vector(
               sbt.librarymanagement.Artifact("a", "jar", "jar"),

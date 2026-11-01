@@ -20,6 +20,7 @@
       "name": "app_3",
       "variants": [
         {
+          "name": "scala3",
           "scalaVersion": "3.3.6",
           "artifacts": [
             {

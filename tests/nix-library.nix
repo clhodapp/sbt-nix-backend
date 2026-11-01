@@ -31,6 +31,7 @@ let
               name = "core_3";
               variants = [
                 {
+                  name = "scala3";
                   scalaVersion = "3.3.6";
                   artifacts = [
                     {
@@ -252,34 +253,35 @@ let
         lib.mapAttrs (_: builtins.attrNames)
           (build { lockFile = lockJson { }; }).packages.core.artifacts;
       expected = {
-        "3.3.6" = [
+        scala3 = [
           "core-sources.jar"
           "core.jar"
         ];
       };
     };
-    testAnArtifactIsLinkedByScalaVersionAndKey = {
+    testAnArtifactIsLinkedByVariantAndKey = {
       expr =
         let
           core = (build { lockFile = lockJson { }; }).packages.core;
         in
-        core.artifacts."3.3.6"."core-sources.jar" == "${core}/nix-support/artifacts/3.3.6/core-sources.jar";
+        core.artifacts.scala3."core-sources.jar" == "${core}/nix-support/artifacts/scala3/core-sources.jar";
       expected = true;
     };
     testTheVariantsKeepWhatTheLockRecords = {
       expr = map (v: {
-        inherit (v) scalaVersion;
+        inherit (v) name scalaVersion;
         classifiers = map (a: a.classifier) v.artifacts;
         descriptor = lib.removePrefix "${(build { lockFile = lockJson { }; }).packages.core}/" v.descriptorFile;
       }) (build { lockFile = lockJson { }; }).packages.core.variants;
       expected = [
         {
+          name = "scala3";
           scalaVersion = "3.3.6";
           classifiers = [
             null
             "sources"
           ];
-          descriptor = "nix-support/artifacts/3.3.6/descriptor";
+          descriptor = "nix-support/artifacts/scala3/descriptor";
         }
       ];
     };

@@ -205,15 +205,16 @@ let
       ${lib.escapeShellArg command} </dev/null
   '';
 
-  # The build links each artifact of a Scala version, and its module
-  # descriptor, at names without the version of the project:
-  # <linkDirectory>/<Scala version>/<key> and …/descriptor.
+  # The build links each artifact of a variant, and its module descriptor,
+  # at names without the version of the project:
+  # <linkDirectory>/<variant>/<key> and …/descriptor. The variant is named
+  # for the cross version of the publish, such as scala3, scala2_13 or
+  # scala2_12_sbt1_0.
   linkDirectory = "nix-support/artifacts";
   artifactFile =
-    package: scalaVersion: key:
-    "${package}/${linkDirectory}/${scalaVersion}/${key}";
-  linksOf =
-    v: [ "${v.scalaVersion}/descriptor" ] ++ map (a: "${v.scalaVersion}/${a.key}") v.artifacts;
+    package: variant: key:
+    "${package}/${linkDirectory}/${variant}/${key}";
+  linksOf = v: [ "${v.name}/descriptor" ] ++ map (a: "${v.name}/${a.key}") v.artifacts;
 
   mkPackage =
     project:
@@ -252,31 +253,29 @@ let
       passthru = {
         inherit dependencies lock;
         sbtProject = project;
-        # For each Scala version the lock builds the project for, its
-        # artifacts as the lock records them (key, name, type, extension,
-        # classifier, configurations, extra attributes), each with `file`,
-        # its file in `out`, and `descriptorFile`, the file of its POM or
-        # ivy.xml. They are known from the lock alone, before the package
-        # is built.
+        # For each variant the lock builds the project in, its name, its
+        # Scala version, and its artifacts as the lock records them (key,
+        # name, type, extension, classifier, configurations, extra
+        # attributes), each with `file`, its file in `out`, and
+        # `descriptorFile`, the file of its POM or ivy.xml. They are known
+        # from the lock alone, before the package is built.
         variants = map (
           v:
           v
           // {
-            artifacts = map (
-              a: a // { file = artifactFile finalAttrs.finalPackage v.scalaVersion a.key; }
-            ) v.artifacts;
-            descriptorFile = artifactFile finalAttrs.finalPackage v.scalaVersion "descriptor";
+            artifacts = map (a: a // { file = artifactFile finalAttrs.finalPackage v.name a.key; }) v.artifacts;
+            descriptorFile = artifactFile finalAttrs.finalPackage v.name "descriptor";
           }
         ) project.variants;
-        # The artifact files of the package by Scala version and key, such
-        # as artifacts."3.3.6"."core-sources.jar".
+        # The artifact files of the package by variant and key, such as
+        # artifacts.scala3."core-sources.jar".
         artifacts = builtins.listToAttrs (
           map (v: {
-            name = v.scalaVersion;
+            inherit (v) name;
             value = builtins.listToAttrs (
               map (a: {
                 name = a.key;
-                value = artifactFile finalAttrs.finalPackage v.scalaVersion a.key;
+                value = artifactFile finalAttrs.finalPackage v.name a.key;
               }) v.artifacts
             );
           }) project.variants

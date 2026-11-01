@@ -411,7 +411,15 @@ object NixBackendPlugin extends AutoPlugin {
       if (!nixPackaged.value) Nil
       else {
         val id = projectID.value
-        lockScalaVersions.value.map(v => publishedName(id, sbtPlugin.value, publishMavenStyle.value, sbtBinaryVersion.value, v))
+        val versions = lockScalaVersions.value
+        // The lockfile keys the artifacts of a project by variant, so two
+        // Scala versions with one variant name cannot both be locked.
+        versions.groupBy(v => NixArtifacts.variantName(id.crossVersion, sbtPlugin.value, sbtBinaryVersion.value, v)).foreach {
+          case (name, vs) if vs.size > 1 =>
+            sys.error(NixArtifacts.conflict(name, vs) + s" (project ${thisProject.value.id})")
+          case _ =>
+        }
+        versions.map(v => publishedName(id, sbtPlugin.value, publishMavenStyle.value, sbtBinaryVersion.value, v))
       }
     },
     resolvers := {
@@ -458,7 +466,8 @@ object NixBackendPlugin extends AutoPlugin {
         )
         .value
       val dir = Mode.output / thisProject.value.id / "artifacts"
-      NixArtifacts.record(dir, scalaVersion.value, Compat.publishedArtifacts.value)
+      val name = NixArtifacts.variantName(projectID.value.crossVersion, sbtPlugin.value, sbtBinaryVersion.value, scalaVersion.value)
+      NixArtifacts.record(dir, name, scalaVersion.value, Compat.publishedArtifacts.value)
       dir
     },
     nixPublishRepository := Compat.uncached(publishRepositoryTask.value),

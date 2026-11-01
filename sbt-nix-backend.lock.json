@@ -15,6 +15,7 @@
       "name": "sbt-nix-backend_2.12_1.0",
       "variants": [
         {
+          "name": "scala2_12_sbt1_0",
           "scalaVersion": "2.12.20",
           "artifacts": [
             {
@@ -64,6 +65,7 @@
           ]
         },
         {
+          "name": "scala3_sbt1_0",
           "scalaVersion": "3.8.4",
           "artifacts": [
             {

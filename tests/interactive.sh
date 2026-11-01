@@ -126,13 +126,13 @@ maven=https/repo1.maven.org/maven2
 
 interactive_suite multi \
   "$maven/com/eed3si9n/sbt-buildinfo_2.12_1.0/0.13.1/sbt-buildinfo_2.12_1.0-0.13.1.jar" \
-  '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/3\.[0-9.]+/app\.jar' \
+  '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/scala3/app\.jar' \
   'app/runMain example.Main' \
   '\{"hello":"Nix World"\}' 'version 1\.0\.0'
 
 interactive_suite sbt2 \
   "$maven/com/eed3si9n/sbt-buildinfo_sbt2_3/0.13.2/sbt-buildinfo_sbt2_3-0.13.2.jar" \
-  '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/3\.[0-9.]+/app\.jar' \
+  '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/scala3/app\.jar' \
   'app/runMain example2.Main' \
   '\{"sbt":2\}' 'version 2\.0\.0' 'interface xsbti\.Logger'
 
@@ -153,7 +153,7 @@ expect "sbt2: the stamp names the plugin file of the wrapper" grep -qx '/nix/sto
 # meta-build; Ivy reads the locked downloads through a file: mirror.
 interactive_suite ivy \
   "$maven/com/eed3si9n/sbt-buildinfo_2.12_1.0/0.13.1/sbt-buildinfo_2.12_1.0-0.13.1.jar" \
-  '/nix/store/[a-z0-9]+-app_2\.13/nix-support/artifacts/2\.13\.[0-9]+/app\.jar' \
+  '/nix/store/[a-z0-9]+-app_2\.13/nix-support/artifacts/scala2_13/app\.jar' \
   'app/runMain ivyexample.Main' \
   '\{"resolvedWith":"ivy"\}' 'version 4\.0\.0' 'interface xsbti\.Logger'
 
@@ -207,7 +207,7 @@ runner=plain
 network=on
 interactive_suite metameta \
   "$maven/com/eed3si9n/sbt-buildinfo_2.12_1.0/0.13.1/sbt-buildinfo_2.12_1.0-0.13.1.jar" \
-  '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/3\.[0-9.]+/app\.jar' \
+  '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/scala3/app\.jar' \
   'app/runMain metameta.Main' \
   '\{"installed":"project/project"\}' 'version 3\.0\.0'
 
@@ -231,7 +231,7 @@ expect "metameta through the wrapper: the app runs" has '\{"installed":"project/
 expect "metameta through the wrapper: the lockfile records the injected plugin" \
   grep -q '"via": "global-plugin"' "$build/sbt-nix-backend.lock.json"
 expect "metameta through the wrapper: the Nix build of that lockfile succeeds" \
-  has '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/3\.[0-9.]+/app\.jar'
+  has '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/scala3/app\.jar'
 # project/project resolves the plugin from the repository the wrapper
 # injects it from, so one plugin build runs at every level.
 output=$(run_sbt 'reload plugins' 'reload plugins' 'export Runtime/fullClasspath' 'reload return' 'reload return') ||

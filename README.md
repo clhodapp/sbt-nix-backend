@@ -120,18 +120,34 @@ package, so the sbt project needs no Nix file of its own: `buildSbtProject`
 takes the top-level directory of the project, which holds the lockfile,
 and Nix knows what each package holds before it builds it.
 
-- `packages.<project>.artifacts` maps each Scala version the project is
-  built for, and each artifact key, to the artifact's file in the package.
-  The key is `<name>[-<classifier>].<extension>`, so the sources jar of
-  `core` for Scala 3.3.6 is `artifacts."3.3.6"."core-sources.jar"`.
-- `packages.<project>.variants` has, for each Scala version, its artifacts
-  as the lockfile records them (key, name, type, extension, classifier,
-  configurations, and `file`), and `descriptorFile`, its POM or `ivy.xml`.
+- `packages.<project>.artifacts` maps each variant of the project, and
+  each artifact key, to the artifact's file in the package. The key is
+  `<name>[-<classifier>].<extension>`, so the sources jar of `core` built
+  for Scala 3 is `artifacts.scala3."core-sources.jar"`.
+- `packages.<project>.variants` has, for each variant, its name, its Scala
+  version, its artifacts as the lockfile records them (key, name, type,
+  extension, classifier, configurations, and `file`), and
+  `descriptorFile`, its POM or `ivy.xml`.
+
+A project has one variant for each Scala version it is built for, named
+for the cross version its module is published with:
+
+| Published as | Variant |
+| --- | --- |
+| `core_3` | `scala3` |
+| `core_2.13` | `scala2_13` |
+| `core_2.13.16` (`CrossVersion.full`) | `scala2_13_16` |
+| `core_sjs1_3` (Scala.js) | `sjs1_scala3` |
+| `core` (`crossPaths := false`) | `default` |
+| an sbt 1 plugin, Maven or Ivy style | `scala2_12_sbt1_0` |
+| an sbt 2 plugin (`_sbt2_3`) | `scala3_sbt2` |
+
+The lock fails when two Scala versions of a project would have the same
+variant, such as 2.13.15 and 2.13.16 with a binary cross version.
 
 The package build links each artifact into the package at
-`nix-support/artifacts/<Scala version>/<key>`, and the module descriptor
-at `nix-support/artifacts/<Scala version>/descriptor`, beside the
-published files. These names leave out the version of the project, and
+`nix-support/artifacts/<variant>/<key>`, and the module descriptor at
+`nix-support/artifacts/<variant>/descriptor`, beside the published files. These names leave out the version of the project, and
 the lockfile records no version either: the package build takes it from
 the sbt build. The lockfile is stale after any edit to the root `*.sbt`
 files or to `project/`, so a version set there makes it stale like any

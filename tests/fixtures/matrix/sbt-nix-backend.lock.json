@@ -20,6 +20,7 @@
       "name": "app_2.13",
       "variants": [
         {
+          "name": "scala2_13",
           "scalaVersion": "2.13.16",
           "artifacts": [
             {
@@ -76,6 +77,7 @@
       "name": "app_3",
       "variants": [
         {
+          "name": "scala3",
           "scalaVersion": "3.3.6",
           "artifacts": [
             {
@@ -132,6 +134,7 @@
       "name": "core_2.13",
       "variants": [
         {
+          "name": "scala2_13",
           "scalaVersion": "2.13.16",
           "artifacts": [
             {
@@ -188,6 +191,7 @@
       "name": "core_3",
       "variants": [
         {
+          "name": "scala3",
           "scalaVersion": "3.3.6",
           "artifacts": [
             {
