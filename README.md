@@ -113,6 +113,21 @@ version the lock was made with), `fetchurl` (for credentials or mirrors),
 `doCheck` (runs `test`), `srcFilter`, `pluginRepository` and
 `flakeRepositories`.
 
+### From the Maven repository
+
+Each release is in a Maven repository on GitHub Pages, which sbt reads
+without credentials. Install it in the meta-most build, as below, with the
+version of the newest [release](https://github.com/clhodapp/sbt-nix-backend/releases):
+
+```scala
+resolvers += "sbt-nix-backend" at "https://clhodapp.github.io/sbt-nix-backend/maven"
+addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % "<version>")
+```
+
+sbt downloads the plugin like any other plugin, so the lockfile records it
+with everything else, and a Nix build of the lockfile needs neither the
+wrapper nor the flake's plugin repository: only `buildSbtProject`.
+
 ### Without the wrapper
 
 A build whose `.sbt` files use the plugin's keys needs the plugin in its

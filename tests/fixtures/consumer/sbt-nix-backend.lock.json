@@ -24,18 +24,18 @@
   "flakeRepositories": [
     {
       "name": "ivy",
-      "ref": "github:clhodapp/sbt-nix-backend/a834bbd2c94b542f22ba6034872bb684b9432dbd?dir=tests/producers#ivy-ivyjava",
-      "locked": "github:clhodapp/sbt-nix-backend/a834bbd2c94b542f22ba6034872bb684b9432dbd?dir=tests/producers&narHash=sha256-bOVJ76KEJ0d%2B%2B0XsbbHbZdm92HZd1DI43U/JFnH9yb0%3D",
+      "ref": "github:clhodapp/sbt-nix-backend/53722f8e6b5ef7f4b21e3f222fc34ffd9ad17282?dir=tests/producers#ivy-ivyjava",
+      "locked": "github:clhodapp/sbt-nix-backend/53722f8e6b5ef7f4b21e3f222fc34ffd9ad17282?dir=tests/producers&narHash=sha256-K52mLK/pA5%2BWYsDtFr2aVCJqW1WnHWPlhqXuOQ38t5k%3D",
       "attribute": "ivy-ivyjava"
     },
     {
       "name": "multi",
-      "ref": "github:clhodapp/sbt-nix-backend/a834bbd2c94b542f22ba6034872bb684b9432dbd?dir=tests/producers#multi-app",
-      "locked": "github:clhodapp/sbt-nix-backend/a834bbd2c94b542f22ba6034872bb684b9432dbd?dir=tests/producers&narHash=sha256-bOVJ76KEJ0d%2B%2B0XsbbHbZdm92HZd1DI43U/JFnH9yb0%3D",
+      "ref": "github:clhodapp/sbt-nix-backend/53722f8e6b5ef7f4b21e3f222fc34ffd9ad17282?dir=tests/producers#multi-app",
+      "locked": "github:clhodapp/sbt-nix-backend/53722f8e6b5ef7f4b21e3f222fc34ffd9ad17282?dir=tests/producers&narHash=sha256-K52mLK/pA5%2BWYsDtFr2aVCJqW1WnHWPlhqXuOQ38t5k%3D",
       "attribute": "multi-app"
     }
   ],
-  "inputsHash": "sha256-nzi1QhQRpPt3dNguvH3BzJDR86uJF+NSUT7K+Woo9N8=",
+  "inputsHash": "sha256-y5RxIPmtzpsFhoDB5OGXiC/vPlE85pUqERrHYN1orLc=",
   "definitionHash": "sha256-ccQf+fxGUBzksVIBLkTM3AYECxhhVi3UUWAeyNRMy7g=",
   "artifacts": [
     {

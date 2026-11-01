@@ -115,7 +115,11 @@ let
       case "$cp" in ${repository}/*) ;; *) cat sbt-output >&2; echo "no classpath from the repository" >&2; exit 1 ;; esac
       tr ':' '\n' <<<"$cp" | grep -v '^${repository}/' && { echo "classpath entries outside the repository" >&2; exit 1; }
       ${check}
-      touch $out
+      # The output references what the check read, so a CI cache that
+      # roots the checks keeps those builds.
+      mkdir -p $out
+      ln -s ${repository} $out/repository
+      ln -s ${multi.dependencies} $out/sbt-downloads
     '';
 
   # Resolves `module` (organization:name:version) from `repository` alone
@@ -142,7 +146,8 @@ let
     pkgs.runCommand name { } ''
       cd ${repository}
       ls ${lib.escapeShellArgs files}
-      touch $out
+      mkdir -p $out
+      ln -s ${repository} $out/repository
     '';
 
   # The `out` output of a package holds the project's own artifacts, under
@@ -162,7 +167,8 @@ let
       test -d ${dir} || { echo "${package} does not hold ${dir}" >&2; exit 1; }
       test -z "$others" || { echo "${package} holds more than ${dir}: $others" >&2; exit 1; }
       ls ${lib.concatMapStringsSep " " (f: "${dir}/${f}") files}
-      touch $out
+      mkdir -p $out
+      ln -s ${package} $out/package
     '';
 
 in

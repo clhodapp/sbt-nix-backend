@@ -1,0 +1,89 @@
+# SPDX-License-Identifier: MIT
+#
+# Tracks sbt. Every day it moves the repository to the newest sbt 1 and
+# sbt 2 releases (.github/update/sbt.sh): the sbt and Scala versions the
+# plugin compiles against, the sbt of its own build, and the sbt of the
+# test fixtures. It relocks what that made stale, runs every flake check,
+# and pushes the result to main only if all of them pass; a failure leaves
+# main as it is and turns this run red.
+#
+# The pins of the flake (nixpkgs, caisson) move through the convergence of
+# the workspace, as a push to main that check.yml checks and release.yml
+# releases. A push from this workflow, made with its own token, starts no
+# workflow, so it starts check.yml (to cache and publish the new builds)
+# and release.yml itself; the checks of that commit already passed here.
+# The workspace picks the commit up at its next scheduled convergence.
+name: update
+
+on:
+  schedule:
+    - cron: "43 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  sbt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            sandbox = true
+
+      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: clhodapp
+          skipPush: true
+          extraPullNames: nix-community,numtide
+
+      - name: Move to the newest sbt releases
+        id: move
+        run: |
+          set -euo pipefail
+          summary=$(.github/update/sbt.sh)
+          if [[ -z $summary ]]; then
+            echo "sbt is current."
+            echo "moved=false" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$summary"
+          echo "moved=true" >>"$GITHUB_OUTPUT"
+          echo "title=$(head -n 1 <<<"$summary")" >>"$GITHUB_OUTPUT"
+
+      # The consumer fixture stays as it is: its lockfile pins a pushed
+      # commit, and the other fixtures do not change it.
+      - name: Relock
+        if: steps.move.outputs.moved == 'true'
+        run: nix develop --command tests/relock-fixtures.sh --skip-consumer
+
+      - name: Run the flake checks
+        if: steps.move.outputs.moved == 'true'
+        run: nix flake check --print-build-logs
+
+      - name: Push to main
+        if: steps.move.outputs.moved == 'true'
+        env:
+          TITLE: ${{ steps.move.outputs.title }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -q -m "maint(sbt): $TITLE"
+          git push origin HEAD:main
+          gh workflow run check.yml --ref main
+          gh workflow run release.yml --ref main -f sha="$(git rev-parse HEAD)"
