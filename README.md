@@ -192,8 +192,7 @@ addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % "0.1.0")
 `nix develop github:nix-purifiers/sbt-purifier` gives plain nixpkgs sbt
 with `SBT_NIX_BACKEND_REPOSITORY` naming the plugin repository. In a
 meta-build, the plugin adds itself to the build the meta-build defines,
-so `project/` and the build both have it. `tests/fixtures/metameta` is
-such a build.
+so `project/` and the build both have it.
 
 ### Keys
 
@@ -241,9 +240,8 @@ runs `updateClassifiers`). The lock run resolves what a
 `dependencySources` request needs: it runs `updateClassifiers` for every
 project at its default Scala version, unpublished projects included, and
 `updateSbtClassifiers` for the sources of sbt and of the build's plugins.
-`tests/interactive.sh` checks that `updateClassifiers` resolves from the
-lock with the network cut off. An import by Metals itself is not yet part
-of the tests.
+An editor that imports the build then resolves those sources from the
+lock, with the network cut off.
 
 ## Errors and fixes
 
@@ -339,11 +337,40 @@ externalResolvers := Seq(
 
 ## Examples
 
-[pureconfig](https://github.com/pureconfig/pureconfig) at `7c2efae` locks
-with `sbt-purifier lock` in about four minutes: sbt 1.13.0, 36 projects
-for Scala 2.12, 2.13 and 3, with sbt-boilerplate, scalafix, scalafmt,
-mdoc, microsites and scoverage, and 6,798 downloads in its lockfile. Its
-Nix build and a CI job that locks and builds it are in progress.
+[pureconfig](https://github.com/pureconfig/pureconfig) is a multi-module
+sbt build, cross-built for Scala 2.12, 2.13 and 3, with plugins such as
+scalafix, scalafmt and mdoc. Lock it from its root:
+
+```zsh
+git clone https://github.com/pureconfig/pureconfig
+cd pureconfig
+nix run github:nix-purifiers/sbt-purifier -- lock
+```
+
+and build its `core` module with a flake beside the build, or in a flake
+of your own that keeps the lockfile:
+
+```nix
+{
+  inputs.sbt-purifier.url = "github:nix-purifiers/sbt-purifier";
+  inputs.nixpkgs.follows = "sbt-purifier/nixpkgs";
+
+  outputs = { nixpkgs, sbt-purifier, ... }:
+    let
+      system = "x86_64-linux";
+      build = sbt-purifier.lib.sbt-purifier.buildSbtProject {
+        pkgs = nixpkgs.legacyPackages.${system};
+        src = ./.;
+      };
+    in
+    {
+      packages.${system}.pureconfig-core = build.packages.core;
+    };
+}
+```
+
+From then on, `sbt test` in the clone runs on the locked downloads, and
+`sbt-purifier lock` follows a change to its build.
 
 ## Credits
 
