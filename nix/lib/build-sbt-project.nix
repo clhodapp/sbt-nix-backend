@@ -3,15 +3,16 @@
 # contract (CONTRACT.md of the purifier library).
 #
 # The file is a package for callPackage: the first argument set is what it
-# takes from the package set, and the result is the builder. The
-# sbt-purifier overlay (`overlays.default`) adds it to the package set as
-# `buildSbtProject`, and passes it the purifier library and readLock, so a
-# package written for callPackage takes it like any other dependency:
+# takes from the package set, and the result is the builder. It lives in
+# the `sbt-purifier` scope that the overlay (`overlays.default`) adds to
+# the package set, beside the plugin, which passes it the purifier library
+# and readLock, so a package written for callPackage takes the scope:
 #
-#   { buildSbtProject }: (buildSbtProject { src = ./.; }).packages.app
+#   { sbt-purifier }: (sbt-purifier.buildSbtProject { src = ./.; }).packages.app
 #
-# and `buildSbtProject.override` replaces what it takes from the set. The
-# builder returns
+# `sbt-purifier.buildSbtProject.override` replaces what the builder takes,
+# and `sbt-purifier.overrideScope` what the scope shares. The builder
+# returns
 #
 #   packages.<id>     the published artifacts of sbt project <id>, in Maven
 #                     or Ivy layout; its `repository` output holds them
@@ -26,21 +27,26 @@
 #                     for other builds to reference
 {
   lib,
-  pkgs,
   stdenvNoCC,
   runCommand,
   writeText,
+  # The packages fetchEntry of the purifier library takes by name, for the
+  # downloads of the lock.
+  fetchurl,
+  unzip,
+  zstd,
+  python3,
   # The JDKs a build can run on; the default JDK of a build is the headless
   # one of the major version its lock was made with.
   javaPackages,
-  # The purifier library (`lib.purifier`), which the overlay passes.
+  # The purifier library (`lib.purifier`), which the scope passes.
   purifier,
-  # lib.sbt-purifier.readLock, which the overlay passes.
+  # lib.sbt-purifier.readLock, which the scope passes.
   readLock,
-  # The sbt-purifier package scope, whose `plugin-repository` is the
-  # default plugin repository. It is null where the overlay is not applied;
-  # a lock that needs the plugin then needs `pluginRepository`.
-  sbt-purifier ? null,
+  # The default plugin repository: the scope's plugin with its runtime
+  # dependencies. It is null outside the scope; a lock that needs the
+  # plugin then needs `pluginRepository`.
+  plugin-repository ? null,
 }:
 {
   # The root of the sbt build.
@@ -58,7 +64,7 @@
   # plugin, or through SBT_NIX_BACKEND_REPOSITORY for a build that installs
   # the plugin in its project/project/plugins.sbt. The default is the
   # scope's `plugin-repository`: the plugin built from the sbt-purifier
-  # revision whose overlay added this builder.
+  # revision whose scope holds this builder.
   pluginRepository ? null,
   # Repository paths that replace flake repositories of the lock, by
   # resolver name. A flake that has the producing flake as an input can
@@ -112,7 +118,14 @@ let
   # coursier path.
   dependencies = purifier.tree (
     {
-      inherit pkgs;
+      inherit
+        fetchurl
+        runCommand
+        unzip
+        zstd
+        python3
+        writeText
+        ;
       name = "sbt-coursier-cache";
       entries = purifier.entriesFor system read;
     }
@@ -143,8 +156,8 @@ let
         repo =
           if pluginRepository != null then
             pluginRepository
-          else if sbt-purifier != null then
-            sbt-purifier.plugin-repository
+          else if plugin-repository != null then
+            plugin-repository
           else
             throw "sbt-purifier: the lock takes the plugin (${p.organization}:${p.name}:${p.version}) from a repository the Nix build supplies; apply the sbt-purifier overlay or pass `pluginRepository`.";
         orgPath = lib.replaceStrings [ "." ] [ "/" ] p.organization;

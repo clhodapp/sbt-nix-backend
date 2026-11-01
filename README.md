@@ -9,9 +9,10 @@ shared library it builds on.
 - **A lockfile.** `sbt-purifier lock` writes `sbt-purifier.lock.json` at
   the build root, with every file the build downloads (by URL, mirrors and
   SHA-256), the sbt launcher, the JVM options, and the projects to build.
-- **Sandboxed builds.** `buildSbtProject`, which the flake's
-  `overlays.default` adds to the package set, turns a build and its
-  lockfile into derivations, one package per project.
+- **Sandboxed builds.** `buildSbtProject`, which lives in the
+  `sbt-purifier` scope that the flake's `overlays.default` adds to the
+  package set, turns a build and its lockfile into derivations, one
+  package per project.
 - **Interactive sbt on the locked downloads.** With a lockfile present,
   `compile`, `run` and `test` stay incremental, but resolution reads only
   the locked files, through Nix, offline. That holds at every level of the
@@ -38,7 +39,9 @@ own lockfile. sbt has no lockfile of its own, so sbt-purifier writes
 `sbt-purifier.lock.json` at the build root, beside `build.sbt`, and every
 command reads it there.
 
-Commit `sbt-purifier.lock.json`. Then build a project with Nix, here
+Commit `sbt-purifier.lock.json` to the repository: we recommend that
+setup, and the builder and the commands find the lockfile there by
+default. Then build a project with Nix, here
 `core`, from the same directory, with no Nix file in the build:
 
 ```zsh
@@ -50,7 +53,7 @@ nix build --impure --expr '
       overlays = [ sbt-purifier.overlays.default ];
     };
   in
-  (pkgs.buildSbtProject { src = ./.; }).packages.core'
+  (pkgs.sbt-purifier.buildSbtProject { src = ./.; }).packages.core'
 ```
 
 A flake applies the overlay to its package set and builds it the same way:
@@ -67,7 +70,7 @@ A flake applies the overlay to its package set and builds it the same way:
         inherit system;
         overlays = [ sbt-purifier.overlays.default ];
       };
-      build = pkgs.buildSbtProject { src = ./.; };
+      build = pkgs.sbt-purifier.buildSbtProject { src = ./.; };
     in
     {
       packages.${system}.core = build.packages.core;
@@ -80,19 +83,21 @@ A flake applies the overlay to its package set and builds it the same way:
 
 ### The builder
 
-`buildSbtProject` is a package for `callPackage`. `overlays.default` adds
-it to the package set, beside the builders of nixpkgs, so a package in an
-overlay takes it by name:
+`overlays.default` adds one attribute to the package set, the scope
+`pkgs.sbt-purifier`. The scope holds `buildSbtProject`, the plugin,
+`plugin-repository` and the `sbt` wrapper, so a package written for
+`callPackage` takes the scope by name:
 
 ```nix
 # package.nix
-{ buildSbtProject }:
-(buildSbtProject { src = ./.; }).packages.core
+{ sbt-purifier }:
+(sbt-purifier.buildSbtProject { src = ./.; }).packages.core
 ```
 
-It takes the packages it needs from the package set by name, such as
-`javaPackages` and the `sbt-purifier` scope, and
-`buildSbtProject.override` replaces any of them.
+`buildSbtProject` is itself a package for `callPackage`. It takes the
+packages it needs by name, such as `javaPackages` and `fetchurl`.
+`sbt-purifier.buildSbtProject.override` replaces any of them, and
+`sbt-purifier.overrideScope` replaces what the scope shares.
 `buildSbtProject { src, lockFile ? src + "/sbt-purifier.lock.json", fetchers ? { }, ... }`
 returns:
 
@@ -114,7 +119,8 @@ major the lock records), `doCheck` (runs `test` in every package build),
 `lib.sbt-purifier.readLock { src, lockFile ? ... }` reads the lockfile
 into the purifier library's lock in memory, which other tools read.
 
-A build kept external keeps its lockfile outside the sbt project: the
+A build can also be kept external, for a repository that should not
+hold the lockfile. The lockfile then lies outside the sbt project: the
 calling flake passes it as `lockFile`, and the commands take
 `--lockfile <path>` or `SBT_PURIFIER_LOCKFILE`. A lockfile outside `src`
 takes the place of any lockfile in it.
@@ -397,7 +403,7 @@ of your own that keeps the lockfile:
         inherit system;
         overlays = [ sbt-purifier.overlays.default ];
       };
-      build = pkgs.buildSbtProject { src = ./.; };
+      build = pkgs.sbt-purifier.buildSbtProject { src = ./.; };
     in
     {
       packages.${system}.pureconfig-core = build.packages.core;

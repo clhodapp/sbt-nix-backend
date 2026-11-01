@@ -1,13 +1,19 @@
 # SPDX-License-Identifier: MIT
 #
-# The packages of the `sbt-purifier` scope.
-{ callPackage, ... }:
+# The packages of the `sbt-purifier` scope. `lib` is the composed library,
+# with `lib.purifier` and `lib.sbt-purifier`.
+{ callPackage, lib, ... }:
 let
+  # The builder of the purifier contract (nix/lib/build-sbt-project.nix).
+  buildSbtProject = callPackage ../nix/lib/build-sbt-project.nix {
+    inherit (lib) purifier;
+    inherit (lib.sbt-purifier) readLock;
+  };
   # The plugin's published artifacts, in Maven layout (nix/lib/plugin.nix).
   plugin = callPackage ../nix/lib/plugin.nix { };
 in
 {
-  inherit plugin;
+  inherit buildSbtProject plugin;
   # The plugin with its runtime dependencies, as a Maven repository: what
   # the `sbt` wrapper and a sandboxed build of an injected lock resolve the
   # plugin from.

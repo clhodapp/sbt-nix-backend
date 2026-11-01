@@ -18,7 +18,7 @@
         system:
         let
           pkgs = sbt-purifier.inputs.nixpkgs.legacyPackages.${system}.extend sbt-purifier.overlays.default;
-          build = src: pkgs.buildSbtProject { inherit src; };
+          build = src: pkgs.sbt-purifier.buildSbtProject { inherit src; };
           multi = build ../fixtures/multi;
           ivy = build ../fixtures/ivy;
         in

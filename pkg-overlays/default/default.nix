@@ -1,24 +1,13 @@
 # SPDX-License-Identifier: MIT
 #
-# The default package overlay. It adds the packages of pkgs/ under
-# `pkgs.sbt-purifier` (`.plugin`, `.plugin-repository`, `.sbt`,
-# `.sbt-purifier`), and the builder `pkgs.buildSbtProject`
-# (nix/lib/build-sbt-project.nix) beside them, where nixpkgs keeps its own
-# builders, so a package written for callPackage takes it by name. A
-# consumer that lists this flake in `projects` holds it as
-# `sbt-purifier/default`, which its package sets apply by default.
+# The default package overlay. It adds one attribute, the scope
+# `pkgs.sbt-purifier` made with lib.makeScope, which holds the packages of
+# pkgs/: the builder `buildSbtProject`, `plugin`, `plugin-repository`,
+# `sbt` and the commands `sbt-purifier`. A package written for callPackage
+# takes the scope by name. A consumer that lists this flake in `projects`
+# holds the overlay as `sbt-purifier/default`, which its package sets apply
+# by default.
 { closure-lib, ... }:
-let
-  packages = closure-lib.caisson.nixpkgs.mkPackagesOverlay ../../pkgs "sbt-purifier";
-in
 {
-  overlay =
-    final: prev:
-    packages final prev
-    // {
-      buildSbtProject = final.callPackage ../../nix/lib/build-sbt-project.nix {
-        inherit (closure-lib) purifier;
-        inherit (closure-lib.sbt-purifier) readLock;
-      };
-    };
+  overlay = closure-lib.caisson.nixpkgs.mkPackagesOverlay ../../pkgs "sbt-purifier";
 }

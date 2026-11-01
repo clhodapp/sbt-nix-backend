@@ -16,12 +16,14 @@
       inherit (libOverlays) default;
     };
 
-    # The packages are the `default` entry of this flake's package overlay
-    # registry (pkg-overlays/): the package set applies it by default, and
-    # the flake exports it as `pkgOverlays` and as the plain
-    # `overlays.default`.
+    # The `default` entry of this flake's package overlay registry
+    # (pkg-overlays/) is the `sbt-purifier` scope: the package set applies
+    # it by default, and the flake exports it as `pkgOverlays` and as the
+    # plain `overlays.default`. The scope holds the builder, a function, so
+    # the flake exports only its derivations as `packages` (see
+    # perSystem).
     nixpkgs = {
-      packages.export.enabled = true;
+      packages.export.enabled = false;
     };
   };
 
@@ -40,7 +42,9 @@
   perSystem =
     { config, pkgs, ... }:
     {
-      packages.default = config.packages.sbt-purifier;
+      packages = lib.filterAttrs (_: lib.isDerivation) pkgs.sbt-purifier // {
+        default = config.packages.sbt-purifier;
+      };
       devShells.default = pkgs.mkShell {
         packages = [ pkgs.sbt ];
         JAVA_HOME = pkgs.jdk.home;

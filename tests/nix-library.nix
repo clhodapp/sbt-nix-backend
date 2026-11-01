@@ -114,7 +114,7 @@ let
 
   buildWith =
     pkgs': args:
-    (pkgs'.extend overlay).buildSbtProject (
+    (pkgs'.extend overlay).sbt-purifier.buildSbtProject (
       {
         inherit src;
         fetchers.fetchurl = fakeFetchurl;

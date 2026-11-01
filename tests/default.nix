@@ -17,7 +17,7 @@ let
   # Every fixture builds the way a consumer's package does: through
   # buildSbtProject of a package set the overlay applies to.
   withOverlay = pkgs.extend overlay;
-  inherit (withOverlay) buildSbtProject;
+  inherit (withOverlay.sbt-purifier) buildSbtProject;
 
   # For the conformance checks: whether readLock reports exactly one
   # problem, which says `infix` and names the command that fixes it.
