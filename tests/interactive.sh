@@ -94,6 +94,9 @@ interactive_suite() {
   output=$(run_sbt compile app/test "$run") || fail "$fixture: the offline build failed"
   for line in "$@"; do expect "$fixture: the output has $line" has "$line"; done
   expect "$fixture: the tests run" has 'Passed: Total [1-9]'
+  # An editor's build server resolves the sources of every dependency
+  # (dependencySources runs updateClassifiers); the lock holds them.
+  output=$(run_sbt app/updateClassifiers) || fail "$fixture: the sources of the dependencies did not resolve offline"
 
   if [[ $network == off ]]; then
     downloads=$(find "$COURSIER_CACHE" -type f -not -name '.*' 2>/dev/null | head -5 || true)
