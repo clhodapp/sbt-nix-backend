@@ -24,19 +24,19 @@
   "flakeRepositories": [
     {
       "name": "ivy",
-      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.3nIlbF3LzV#ivyjava",
-      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.3nIlbF3LzV?lastModified=1793501246&narHash=sha256-u7zOV32HnNbQYUxbRYUMI0bBhdplmUSVJ/w7uWqtdEQ%3D",
-      "attribute": "ivyjava"
+      "ref": "github:clhodapp/sbt-nix-backend/a834bbd2c94b542f22ba6034872bb684b9432dbd?dir=tests/producers#ivy-ivyjava",
+      "locked": "github:clhodapp/sbt-nix-backend/a834bbd2c94b542f22ba6034872bb684b9432dbd?dir=tests/producers&narHash=sha256-bOVJ76KEJ0d%2B%2B0XsbbHbZdm92HZd1DI43U/JFnH9yb0%3D",
+      "attribute": "ivy-ivyjava"
     },
     {
       "name": "multi",
-      "ref": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.M4W4gxh6bh#app",
-      "locked": "path:/tmp/claude-60432/sbtnix/dev/jtmp/tmp.M4W4gxh6bh?lastModified=1793501246&narHash=sha256-YBDkuWD/qcarGTDImppw534Ocq9lUXNwPhn618TJSN4%3D",
-      "attribute": "app"
+      "ref": "github:clhodapp/sbt-nix-backend/a834bbd2c94b542f22ba6034872bb684b9432dbd?dir=tests/producers#multi-app",
+      "locked": "github:clhodapp/sbt-nix-backend/a834bbd2c94b542f22ba6034872bb684b9432dbd?dir=tests/producers&narHash=sha256-bOVJ76KEJ0d%2B%2B0XsbbHbZdm92HZd1DI43U/JFnH9yb0%3D",
+      "attribute": "multi-app"
     }
   ],
-  "inputsHash": "sha256-IYkvxZXWpjwXC6LgLdn5S/4nINjU91zk6RzuI3j7fs4=",
-  "definitionHash": "sha256-z74zB5/fODmrFBpJKFDePaVcBjnOBSz7LZDDJNNBrL4=",
+  "inputsHash": "sha256-nzi1QhQRpPt3dNguvH3BzJDR86uJF+NSUT7K+Woo9N8=",
+  "definitionHash": "sha256-ccQf+fxGUBzksVIBLkTM3AYECxhhVi3UUWAeyNRMy7g=",
   "artifacts": [
     {
       "path": "https/repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_2.12/0.9.3/gigahorse-apache-http_2.12-0.9.3.jar",

@@ -37,10 +37,14 @@ final class Nix(log: String => Unit) {
     }
   }
 
-  /** Builds `installable` and returns its output path, rooted at `outLink`. */
+  /** Builds `installable`, a locked flake reference with an attribute, and
+    * returns its output path, rooted at `outLink`. A flake without a lock
+    * file of its own takes the pins of the flakes it reaches, and Nix
+    * cannot write one into a remote flake.
+    */
   def build(installable: String, outLink: File): File = {
     Option(outLink.getParentFile).foreach(_.mkdirs())
-    val out = nix("build", "--print-out-paths", "--out-link", outLink.getAbsolutePath, installable).trim
+    val out = nix("build", "--no-write-lock-file", "--print-out-paths", "--out-link", outLink.getAbsolutePath, installable).trim
     new File(out.linesIterator.toSeq.head)
   }
 
