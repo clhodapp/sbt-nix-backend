@@ -43,7 +43,8 @@ The workflows under `.github/workflows` run on GitHub:
   The release is a GitHub release that carries the artifacts as a zip in
   Maven layout. The workflow then rebuilds the Maven repository that
   GitHub Pages serves from the zips of every release, and deploys it as a
-  Pages artifact. Builds from source keep the version in `build.sbt`.
+  Pages artifact. Builds from source have the version in `version.txt`,
+  which `build.sbt` and the `sbt` package read.
 - `update.yml` moves the repository to the newest sbt 1 and sbt 2
   releases every day (`.github/update/sbt.sh`), relocks, runs the
   checks, and pushes to main when they pass.

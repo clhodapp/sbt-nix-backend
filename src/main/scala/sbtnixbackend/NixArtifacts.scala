@@ -7,41 +7,54 @@ import java.security.MessageDigest
 
 import sbt.librarymanagement.{Artifact, ConfigRef}
 
-/** What a package output holds: for each Scala version the project was
-  * built for, the artifacts `publish` publishes and the path in the output
-  * of the file that holds each.
+/** The artifacts of a package output, by Scala version.
   *
   * The Nix build publishes a project into its output through the publisher
-  * of sbt, which lays the files out by its own patterns. After that
-  * publish, [[record]] finds, for each artifact the publish was given, the
-  * output file with the same bytes, and writes the [[Variant]] to a
-  * manifest in the output. The lock run runs the same build, and the lock
-  * takes the variants from those manifests (see LockGeneration), so the
-  * Nix library knows every artifact file of a package before it builds it,
-  * and `nixPackagedArtifacts` and `nixPublish` find the files in the output
-  * by the paths the lock records.
+  * of sbt, which lays the files out by its own patterns, the version of the
+  * project in every path. After that publish, [[record]] finds, for each
+  * artifact the publish was given, the output file with the same bytes, and
+  * links it at a name that does not depend on the version:
+  * `nix-support/artifacts/<Scala version>/<key>`, beside the link
+  * `nix-support/artifacts/<Scala version>/descriptor` to the POM or
+  * ivy.xml. A manifest in the output keeps where each file is.
+  *
+  * The lock run runs the same build, and the lock takes the [[Variant]]s
+  * from those manifests (see LockGeneration): each Scala version of a
+  * project with the identity of its artifacts and no path. The Nix library
+  * knows every artifact file of a package from the lock alone, before it
+  * builds it, and `nixPackagedArtifacts` and `nixPublish` find the files by
+  * their links.
   */
 object NixArtifacts {
 
-  /** An artifact `publish` publishes and its path in the package output. */
-  final case class Entry(artifact: Artifact, path: String)
+  /** The artifacts of one Scala version of a project. */
+  final case class Variant(scalaVersion: String, artifacts: Vector[Artifact])
 
-  /** The artifacts of one Scala version of a project, and the path of its
-    * module descriptor: the POM of a Maven-style module, which is one of
-    * its artifacts, or the ivy.xml that the publisher of sbt delivers for
-    * an Ivy-style module beside them.
+  /** The name an artifact is linked at in its variant:
+    * `<name>(-<classifier>).<extension>`, such as `core-sources.jar`.
     */
-  final case class Variant(scalaVersion: String, entries: Vector[Entry], descriptor: String)
+  def key(a: Artifact): String = a.name + a.classifier.fold("")("-" + _) + "." + a.extension
+
+  /** The name the module descriptor (POM or ivy.xml) is linked at. */
+  val Descriptor = "descriptor"
+
+  /** The directory of the links of the variants. */
+  val LinkDirectory = "nix-support/artifacts"
 
   /** The manifest file at the root of a package output. */
   val FileName = "sbt-nix-artifacts.json"
 
   private val checksumSuffixes = Vector(".sha1", ".md5", ".sha256", ".sha512")
 
-  /** Records the artifacts `published` for `scalaVersion` in the manifest of
-    * the output `dir`, beside the variants already there.
+  /** Records the artifacts `published` for `scalaVersion` in the output
+    * `dir`: links each artifact and the module descriptor at their names,
+    * and adds the variant to the manifest.
     */
   def record(dir: File, scalaVersion: String, published: Seq[(Artifact, File)]): Unit = {
+    val keys = published.map(p => key(p._1))
+    keys.diff(keys.distinct).headOption.foreach { k =>
+      sys.error(s"sbt-nix-backend: two artifacts of Scala $scalaVersion would both be linked as $k")
+    }
     val byDigest = files(dir).groupBy(digest)
     def rel(f: File) = dir.toPath.relativize(f.toPath).toString.replace(File.separatorChar, '/')
     val candidates = published.toVector.map { case (a, f) =>
@@ -55,21 +68,29 @@ object NixArtifacts {
     // an artifact, it takes the one nearest those.
     val placed = candidates.collect { case (_, Vector(only)) => only }
     def shared(a: String, b: String) = a.split('/').zip(b.split('/')).takeWhile { case (x, y) => x == y }.length
-    val entries = candidates.map { case (a, held) =>
-      Entry(a, held.maxBy(p => placed.map(shared(p, _)).foldLeft(0)(math.max)))
-    }
-    val descriptor = entries
-      .collectFirst { case e if e.artifact.`type` == "pom" => e.path }
+    val paths = candidates.map { case (a, held) => a -> held.maxBy(p => placed.map(shared(p, _)).foldLeft(0)(math.max)) }
+    val descriptor = paths
+      .collectFirst { case (a, p) if a.`type` == "pom" => p }
       .orElse {
         // Ivy-style, an artifact is at <module>/<type>s/<file>, and the
         // descriptor at <module>/ivys/ivy.xml.
-        entries.headOption.map(e => e.path.split('/').dropRight(2).mkString("/") + "/ivys/ivy.xml")
+        paths.headOption.map(_._2.split('/').dropRight(2).mkString("/") + "/ivys/ivy.xml")
       }
       .filter(p => new File(dir, p).isFile)
       .getOrElse(sys.error(s"sbt-nix-backend: the output $dir holds no POM or ivy.xml for Scala $scalaVersion"))
-    val variants =
-      (readManifest(dir).filterNot(_.scalaVersion == scalaVersion) :+ Variant(scalaVersion, entries, descriptor))
-        .sortBy(_.scalaVersion)
+
+    val links = new File(new File(dir, LinkDirectory), scalaVersion)
+    links.mkdirs()
+    def link(name: String, target: String): Unit = {
+      val l = new File(links, name).toPath
+      Files.deleteIfExists(l)
+      Files.createSymbolicLink(l, links.toPath.relativize(new File(dir, target).toPath))
+    }
+    paths.foreach { case (a, p) => link(key(a), p) }
+    link(Descriptor, descriptor)
+
+    val variants = (readManifest(dir).filterNot(_.scalaVersion == scalaVersion) :+ Variant(scalaVersion, paths.map(_._1)))
+      .sortBy(_.scalaVersion)
     Files.write(
       new File(dir, FileName).toPath,
       (Json.obj("variants" -> Json.Arr(variants.map(variantJson))).render + "\n").getBytes(StandardCharsets.UTF_8)
@@ -90,28 +111,28 @@ object NixArtifacts {
         .map(parseVariant)
   }
 
-  /** The files of `variant` in the package output `out`. */
-  def files(out: File, variant: Variant): Map[Artifact, File] =
-    variant.entries.map { e =>
-      val f = new File(out, e.path)
-      if (!f.isFile) sys.error(s"sbt-nix-backend: the Nix build in $out has no file ${e.path} for ${e.artifact}")
-      e.artifact -> f
+  /** The files of `variant` in the package output `out`, by their links. */
+  def files(out: File, variant: Variant): Map[Artifact, File] = {
+    val links = new File(new File(out, LinkDirectory), variant.scalaVersion)
+    variant.artifacts.map { a =>
+      val f = new File(links, key(a))
+      if (!f.isFile) sys.error(s"sbt-nix-backend: the Nix build in $out has no file for $a (looked for $f)")
+      a -> f
     }.toMap
+  }
 
   def variantJson(v: Variant): Json =
     Json.obj(
       "scalaVersion" -> Json.str(v.scalaVersion),
-      "descriptor" -> Json.str(v.descriptor),
-      "artifacts" -> Json.Arr(v.entries.map { e =>
-        val a = e.artifact
+      "artifacts" -> Json.Arr(v.artifacts.map { a =>
         Json.obj(
+          "key" -> Json.str(key(a)),
           "name" -> Json.str(a.name),
           "type" -> Json.str(a.`type`),
           "extension" -> Json.str(a.extension),
           "classifier" -> a.classifier.fold[Json](Json.Null)(Json.str),
           "configurations" -> Json.Arr(a.configurations.map(c => Json.str(c.name))),
-          "extraAttributes" -> Json.Obj(a.extraAttributes.toVector.sorted.map { case (k, v) => k -> Json.str(v) }),
-          "path" -> Json.str(e.path)
+          "extraAttributes" -> Json.Obj(a.extraAttributes.toVector.sorted.map { case (k, v) => k -> Json.str(v) })
         )
       })
     )
@@ -122,31 +143,29 @@ object NixArtifacts {
       v("scalaVersion").asString,
       v("artifacts").asArray.map { a =>
         val o = a.asObject
-        Entry(
-          Artifact(
-            o("name").asString,
-            o("type").asString,
-            o("extension").asString,
-            o.get("classifier").collect { case s: Json.Str => s.value },
-            o("configurations").asArray.map(c => ConfigRef(c.asString)),
-            None,
-            o("extraAttributes").asObject.fields.map { case (k, v) => k -> v.asString }.toMap,
-            None,
-            false
-          ),
-          o("path").asString
+        Artifact(
+          o("name").asString,
+          o("type").asString,
+          o("extension").asString,
+          o.get("classifier").collect { case s: Json.Str => s.value },
+          o("configurations").asArray.map(c => ConfigRef(c.asString)),
+          None,
+          o("extraAttributes").asObject.fields.map { case (k, v) => k -> v.asString }.toMap,
+          None,
+          false
         )
-      },
-      v("descriptor").asString
+      }
     )
   }
 
   /** Whether `f` is the manifest file. */
   def isManifest(f: File): Boolean = f.getName == FileName
 
+  // The published files: neither the manifest, the checksums, nor the links.
   private def files(dir: File): Vector[File] =
     Option(dir.listFiles()).getOrElse(Array.empty[File]).toVector.flatMap { f =>
-      if (f.isDirectory) files(f)
+      if (f.getName == "nix-support") Vector.empty
+      else if (f.isDirectory) files(f)
       else if (isManifest(f) || checksumSuffixes.exists(f.getName.endsWith)) Vector.empty
       else Vector(f)
     }

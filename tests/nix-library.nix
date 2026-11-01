@@ -29,29 +29,27 @@ let
               id = "core";
               organization = "example";
               name = "core_3";
-              version = "1.0.0";
               variants = [
                 {
                   scalaVersion = "3.3.6";
-                  descriptor = "example/core_3/1.0.0/core_3-1.0.0.pom";
                   artifacts = [
                     {
+                      key = "core.jar";
                       name = "core";
                       type = "jar";
                       extension = "jar";
                       classifier = null;
                       configurations = [ "compile" ];
                       extraAttributes = { };
-                      path = "example/core_3/1.0.0/core_3-1.0.0.jar";
                     }
                     {
+                      key = "core-sources.jar";
                       name = "core";
-                      type = "pom";
-                      extension = "pom";
-                      classifier = null;
-                      configurations = [ "pom" ];
+                      type = "src";
+                      extension = "jar";
+                      classifier = "sources";
+                      configurations = [ "compile" ];
                       extraAttributes = { };
-                      path = "example/core_3/1.0.0/core_3-1.0.0.pom";
                     }
                   ];
                 }
@@ -250,34 +248,46 @@ let
     # The lock names the artifacts of a package, so evaluating them builds
     # nothing: the empty source tree here builds no sbt project at all.
     testTheArtifactsOfAPackageAreKnownBeforeItIsBuilt = {
-      expr = builtins.attrNames (build { lockFile = lockJson { }; }).packages.core.artifacts;
-      expected = [
-        "core_3-1.0.0.jar"
-        "core_3-1.0.0.pom"
-      ];
+      expr =
+        lib.mapAttrs (_: builtins.attrNames)
+          (build { lockFile = lockJson { }; }).packages.core.artifacts;
+      expected = {
+        "3.3.6" = [
+          "core-sources.jar"
+          "core.jar"
+        ];
+      };
     };
-    testAnArtifactIsItsPathInTheOutput = {
+    testAnArtifactIsLinkedByScalaVersionAndKey = {
       expr =
         let
           core = (build { lockFile = lockJson { }; }).packages.core;
         in
-        core.artifacts."core_3-1.0.0.jar" == "${core}/example/core_3/1.0.0/core_3-1.0.0.jar";
+        core.artifacts."3.3.6"."core-sources.jar" == "${core}/nix-support/artifacts/3.3.6/core-sources.jar";
       expected = true;
     };
     testTheVariantsKeepWhatTheLockRecords = {
       expr = map (v: {
         inherit (v) scalaVersion;
-        types = map (a: a.type) v.artifacts;
+        classifiers = map (a: a.classifier) v.artifacts;
+        descriptor = lib.removePrefix "${(build { lockFile = lockJson { }; }).packages.core}/" v.descriptorFile;
       }) (build { lockFile = lockJson { }; }).packages.core.variants;
       expected = [
         {
           scalaVersion = "3.3.6";
-          types = [
-            "jar"
-            "pom"
+          classifiers = [
+            null
+            "sources"
           ];
+          descriptor = "nix-support/artifacts/3.3.6/descriptor";
         }
       ];
+    };
+    # The derivation of a package is named after the project, without its
+    # version, so a version bump renames nothing.
+    testAPackageIsNamedAfterItsProject = {
+      expr = (build { lockFile = lockJson { }; }).packages.core.name;
+      expected = "core_3";
     };
     testTheScopePluginRepositoryIsTheDefault = {
       expr =

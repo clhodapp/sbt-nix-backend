@@ -20,17 +20,14 @@ final case class LockedArtifact(path: String, url: String, hash: String)
   * @param organization the published organization
   * @param name         the published artifact name for the first Scala
   *                     version, cross-version suffix included
-  * @param version      the published version
   * @param variants     for each Scala version the project is built for,
-  *                     the artifacts its package output holds and their
-  *                     paths, which the lock run's build of the project
-  *                     published
+  *                     the artifacts its package output holds, as the
+  *                     build of the project in the lock run published them
   */
 final case class LockedProject(
     id: String,
     organization: String,
     name: String,
-    version: String,
     variants: Vector[NixArtifacts.Variant] = Vector.empty
 )
 
@@ -110,7 +107,6 @@ final case class Lock(
           "id" -> str(p.id),
           "organization" -> str(p.organization),
           "name" -> str(p.name),
-          "version" -> str(p.version),
           "variants" -> Arr(p.variants.map(NixArtifacts.variantJson))
         )
       }),
@@ -167,7 +163,6 @@ object Lock {
           p("id").asString,
           p("organization").asString,
           p("name").asString,
-          p("version").asString,
           p("variants").asArray.map(NixArtifacts.parseVariant)
         )
       },

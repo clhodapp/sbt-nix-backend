@@ -120,12 +120,23 @@ package, so the sbt project needs no Nix file of its own: `buildSbtProject`
 takes the top-level directory of the project, which holds the lockfile,
 and Nix knows what each package holds before it builds it.
 
-- `packages.<project>.artifacts` maps each artifact file name to its file
-  in the package, such as `artifacts."core_3-1.0.0.jar"`.
-- `packages.<project>.variants` has, for each Scala version the project is
-  built for, its artifacts as the lockfile records them (name, type,
-  extension, classifier, configurations, path, and `file`), and
-  `descriptorFile`, its POM or `ivy.xml`.
+- `packages.<project>.artifacts` maps each Scala version the project is
+  built for, and each artifact key, to the artifact's file in the package.
+  The key is `<name>[-<classifier>].<extension>`, so the sources jar of
+  `core` for Scala 3.3.6 is `artifacts."3.3.6"."core-sources.jar"`.
+- `packages.<project>.variants` has, for each Scala version, its artifacts
+  as the lockfile records them (key, name, type, extension, classifier,
+  configurations, and `file`), and `descriptorFile`, its POM or `ivy.xml`.
+
+The package build links each artifact into the package at
+`nix-support/artifacts/<Scala version>/<key>`, and the module descriptor
+at `nix-support/artifacts/<Scala version>/descriptor`, beside the
+published files. These names leave out the version of the project, and
+the lockfile records no version either: the package build takes it from
+the sbt build. The lockfile is stale after any edit to the root `*.sbt`
+files or to `project/`, so a version set there makes it stale like any
+other edit, while a version the build reads from another file keeps it
+up to date.
 
 The expression that calls `buildSbtProject` can live anywhere: in a flake
 of another repository, in a flake whose input is the sbt project, or on

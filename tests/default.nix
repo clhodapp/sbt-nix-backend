@@ -143,10 +143,11 @@ let
   # A build defined outside its sbt project: buildSbtProject of the
   # top-level directory of the project, which holds the build and its
   # lockfile and no Nix file. The lockfile names every artifact of every
-  # package, and its descriptor (POM or ivy.xml), before anything is
-  # built; the check builds each package, requires its output to hold
-  # exactly those files besides their checksums, and links every artifact
-  # by its file name.
+  # package, by Scala version and key, before anything is built. The check
+  # builds each package and requires that its link directory holds exactly
+  # the links the lockfile names, and that their targets are exactly the
+  # files the build published besides checksums. It links every artifact
+  # as <project>/<Scala version>/<key>.
   externalizedBuild =
     name: build:
     pkgs.runCommand name { } ''
@@ -155,21 +156,37 @@ let
         lib.mapAttrsToList (
           id: package:
           let
-            named = lib.concatMap (v: [ v.descriptor ] ++ map (a: a.path) v.artifacts) package.variants;
+            named = lib.concatMap (
+              v: [ "${v.scalaVersion}/descriptor" ] ++ map (a: "${v.scalaVersion}/${a.key}") v.artifacts
+            ) package.variants;
           in
           ''
-            expected=$(printf '%s\n' ${lib.escapeShellArgs named} | sort -u)
-            actual=$(cd ${package} && find . -type f -not -name '*.sha1' -not -name '*.md5' -printf '%P\n' | sort)
-            if [ "$expected" != "$actual" ]; then
-              echo "${id}: the output holds other files than the lockfile names" >&2
-              diff <(echo "$expected") <(echo "$actual") >&2 || true
-              exit 1
-            fi
-            mkdir -p $out/${id}
+            check() {
+              if [ "$1" != "$2" ]; then
+                echo "${id}: $3" >&2
+                diff <(echo "$1") <(echo "$2") >&2 || true
+                exit 1
+              fi
+            }
+            links=${package}/nix-support/artifacts
+            check "$(printf '%s\n' ${lib.escapeShellArgs named} | sort)" \
+              "$(cd $links && find . -mindepth 2 -printf '%P\n' | sort)" \
+              "the link directory holds other links than the lockfile names"
+            check "$(cd ${package} && find . -path ./nix-support -prune -o -type f -not -name '*.sha1' -not -name '*.md5' -printf '%P\n' | sort)" \
+              "$(cd $links && find . -mindepth 2 -exec realpath --relative-to=${package} {} \; | sort -u)" \
+              "the links reach other files than the build published"
             ${lib.concatStrings (
-              lib.mapAttrsToList (file: path: ''
-                ln -s ${path} $out/${id}/${lib.escapeShellArg file}
-              '') package.artifacts
+              lib.mapAttrsToList (
+                scalaVersion: files:
+                ''
+                  mkdir -p $out/${id}/${scalaVersion}
+                ''
+                + lib.concatStrings (
+                  lib.mapAttrsToList (key: file: ''
+                    ln -s ${file} $out/${id}/${scalaVersion}/${lib.escapeShellArg key}
+                  '') files
+                )
+              ) package.artifacts
             )}
           ''
         ) build.packages

@@ -3,9 +3,12 @@
 ThisBuild / organization := "io.github.clhodapp"
 ThisBuild / organizationName := "io.github.clhodapp"
 // A release build names its version in SBT_NIX_BACKEND_RELEASE_VERSION
-// (.github/release/build.sh); every other build, and every lockfile made
-// with this plugin from source, has the version below.
-ThisBuild / version := sys.env.get("SBT_NIX_BACKEND_RELEASE_VERSION").filter(_.nonEmpty).getOrElse("0.1.0")
+// (.github/release/build.sh); every other build has the version in
+// version.txt, which the Nix packaging of the plugin reads too.
+ThisBuild / version := sys.env
+  .get("SBT_NIX_BACKEND_RELEASE_VERSION")
+  .filter(_.nonEmpty)
+  .getOrElse(IO.read((ThisBuild / baseDirectory).value / "version.txt").trim)
 ThisBuild / licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
 ThisBuild / homepage := Some(url("https://github.com/clhodapp/sbt-nix-backend"))
 

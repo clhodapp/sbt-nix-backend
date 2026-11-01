@@ -13,23 +13,18 @@ class LockSuite extends munit.FunSuite {
     javaOptions = Vector("-Xmx2g"),
     plugin = Some(LockedPlugin("io.github.clhodapp", "sbt-nix-backend", "0.1.0", LockedPlugin.Environment)),
     projects = Vector(
-      LockedProject("b", "o", "b_3", "1"),
+      LockedProject("b", "o", "b_3"),
       LockedProject(
         "a",
         "o",
         "a_3",
-        "1",
         Vector(
           NixArtifacts.Variant(
             "3.3.6",
             Vector(
-              NixArtifacts.Entry(sbt.librarymanagement.Artifact("a", "jar", "jar"), "o/a_3/1/a_3-1.jar"),
-              NixArtifacts.Entry(
-                sbt.librarymanagement.Artifact("a", "src", "jar", "sources"),
-                "o/a_3/1/a_3-1-sources.jar"
-              )
-            ),
-            "o/a_3/1/a_3-1.pom"
+              sbt.librarymanagement.Artifact("a", "jar", "jar"),
+              sbt.librarymanagement.Artifact("a", "src", "jar", "sources")
+            )
           )
         )
       )

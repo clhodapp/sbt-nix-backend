@@ -404,7 +404,7 @@ object NixBackendPlugin extends AutoPlugin {
       else {
         val id = projectID.value
         val name = publishedName(id, sbtPlugin.value, publishMavenStyle.value, sbtBinaryVersion.value, lockScalaVersions.value.head)
-        Some(LockedProject(thisProject.value.id, id.organization, name, id.revision))
+        Some(LockedProject(thisProject.value.id, id.organization, name))
       }
     },
     nixLockedNames := Compat.uncached {
@@ -712,7 +712,7 @@ object NixBackendPlugin extends AutoPlugin {
       Seq("plugin=" + plugin.fold("none")(p => s"${p.organization}:${p.name}:${p.version} via ${p.via}"), "launcher=" + launcherUrl) ++
         javaOptions.map("javaOption=" + _) ++ urls.map("url=" + _) ++
         lockedRepos.map(r => s"flake=${r.name}=${r.locked}#${r.attribute}") ++
-        projects.map(p => s"project=${p.id}=${p.organization}:${p.name}:${p.version}") ++
+        projects.map(p => s"project=${p.id}=${p.organization}:${p.name}") ++
         crossNames.map("published=" + _)
     )
     LockGeneration.Inputs(
@@ -906,8 +906,10 @@ object NixBackendPlugin extends AutoPlugin {
       closure.foreach(r => run(r / nixPublishArtifacts))
       val repository = Mode.output / id / "repository"
       closure.foreach(r => IO.copyDirectory(Mode.output / r.project / "artifacts", repository, overwrite = true))
-      // Each manifest describes the output of its own project.
+      // The manifest and the links of each project describe the output of
+      // that project, not the repository.
       IO.delete(repository / NixArtifacts.FileName)
+      IO.delete(repository / "nix-support")
       run(ref / nixPublishRepository)
     }
     state

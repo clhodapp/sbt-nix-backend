@@ -15,6 +15,7 @@ let
   # wiring do not change it.
   parts = [
     "build.sbt"
+    "version.txt"
     "project"
     "src"
     "nix"

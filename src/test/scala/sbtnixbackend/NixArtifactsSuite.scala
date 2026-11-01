@@ -32,10 +32,11 @@ class NixArtifactsSuite extends munit.FunSuite {
       Seq(Artifact("crosslib", "jar", "jar") -> jar, Artifact("crosslib", "src", "jar", "sources") -> sources)
     )
     val Vector(variant) = NixArtifacts.readManifest(out)
-    assertEquals(
-      variant.entries.map(_.path),
-      Vector("example/crosslib_3/1.0/jars/crosslib_3.jar", "example/crosslib_3/1.0/srcs/crosslib_3-sources.jar")
-    )
-    assertEquals(variant.descriptor, "example/crosslib_3/1.0/ivys/ivy.xml")
+    val links = new File(out, "nix-support/artifacts/3.3.6").toPath
+    def target(link: String) = out.toPath.relativize(links.resolve(link).toRealPath()).toString
+    assertEquals(variant.artifacts.map(NixArtifacts.key), Vector("crosslib.jar", "crosslib-sources.jar"))
+    assertEquals(target("crosslib.jar"), "example/crosslib_3/1.0/jars/crosslib_3.jar")
+    assertEquals(target("crosslib-sources.jar"), "example/crosslib_3/1.0/srcs/crosslib_3-sources.jar")
+    assertEquals(target("descriptor"), "example/crosslib_3/1.0/ivys/ivy.xml")
   }
 }
