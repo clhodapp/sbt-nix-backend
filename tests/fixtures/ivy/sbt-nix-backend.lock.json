@@ -18,13 +18,12 @@
       "id": "app",
       "organization": "example",
       "name": "app_2.13",
-      "version": "4.0.0",
       "variants": [
         {
           "scalaVersion": "2.13.16",
-          "descriptor": "example/app_2.13/4.0.0/app_2.13-4.0.0.pom",
           "artifacts": [
             {
+              "key": "app.pom",
               "name": "app",
               "type": "pom",
               "extension": "pom",
@@ -32,10 +31,10 @@
               "configurations": [
                 "pom"
               ],
-              "extraAttributes": {},
-              "path": "example/app_2.13/4.0.0/app_2.13-4.0.0.pom"
+              "extraAttributes": {}
             },
             {
+              "key": "app.jar",
               "name": "app",
               "type": "jar",
               "extension": "jar",
@@ -43,10 +42,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/app_2.13/4.0.0/app_2.13-4.0.0.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "app-sources.jar",
               "name": "app",
               "type": "src",
               "extension": "jar",
@@ -54,10 +53,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/app_2.13/4.0.0/app_2.13-4.0.0-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "app-javadoc.jar",
               "name": "app",
               "type": "doc",
               "extension": "jar",
@@ -65,8 +64,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/app_2.13/4.0.0/app_2.13-4.0.0-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -76,13 +74,12 @@
       "id": "crosslib",
       "organization": "example",
       "name": "crosslib_2.13",
-      "version": "4.0.0",
       "variants": [
         {
           "scalaVersion": "2.13.16",
-          "descriptor": "example/crosslib_2.13/4.0.0/ivys/ivy.xml",
           "artifacts": [
             {
+              "key": "crosslib.jar",
               "name": "crosslib",
               "type": "jar",
               "extension": "jar",
@@ -90,10 +87,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/crosslib_2.13/4.0.0/jars/crosslib_2.13.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "crosslib-sources.jar",
               "name": "crosslib",
               "type": "src",
               "extension": "jar",
@@ -101,10 +98,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/crosslib_2.13/4.0.0/srcs/crosslib_2.13-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "crosslib-javadoc.jar",
               "name": "crosslib",
               "type": "doc",
               "extension": "jar",
@@ -112,16 +109,15 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/crosslib_2.13/4.0.0/docs/crosslib_2.13-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         },
         {
           "scalaVersion": "3.3.6",
-          "descriptor": "example/crosslib_3/4.0.0/ivys/ivy.xml",
           "artifacts": [
             {
+              "key": "crosslib.jar",
               "name": "crosslib",
               "type": "jar",
               "extension": "jar",
@@ -129,10 +125,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/crosslib_3/4.0.0/jars/crosslib_3.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "crosslib-sources.jar",
               "name": "crosslib",
               "type": "src",
               "extension": "jar",
@@ -140,10 +136,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/crosslib_3/4.0.0/srcs/crosslib_3-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "crosslib-javadoc.jar",
               "name": "crosslib",
               "type": "doc",
               "extension": "jar",
@@ -151,8 +147,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/crosslib_3/4.0.0/docs/crosslib_3-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -162,13 +157,12 @@
       "id": "ivyjava",
       "organization": "example",
       "name": "ivyjava",
-      "version": "4.0.0",
       "variants": [
         {
           "scalaVersion": "2.13.16",
-          "descriptor": "example/ivyjava/4.0.0/ivys/ivy.xml",
           "artifacts": [
             {
+              "key": "ivyjava.jar",
               "name": "ivyjava",
               "type": "jar",
               "extension": "jar",
@@ -176,10 +170,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/ivyjava/4.0.0/jars/ivyjava.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "ivyjava-sources.jar",
               "name": "ivyjava",
               "type": "src",
               "extension": "jar",
@@ -187,10 +181,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/ivyjava/4.0.0/srcs/ivyjava-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "ivyjava-javadoc.jar",
               "name": "ivyjava",
               "type": "doc",
               "extension": "jar",
@@ -198,8 +192,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/ivyjava/4.0.0/docs/ivyjava-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -209,13 +202,12 @@
       "id": "ivyplugin",
       "organization": "example",
       "name": "ivyplugin",
-      "version": "4.0.0",
       "variants": [
         {
           "scalaVersion": "2.12.20",
-          "descriptor": "example/ivyplugin/scala_2.12/sbt_1.0/4.0.0/ivys/ivy.xml",
           "artifacts": [
             {
+              "key": "ivyplugin.jar",
               "name": "ivyplugin",
               "type": "jar",
               "extension": "jar",
@@ -223,10 +215,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/ivyplugin/scala_2.12/sbt_1.0/4.0.0/jars/ivyplugin.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "ivyplugin-sources.jar",
               "name": "ivyplugin",
               "type": "src",
               "extension": "jar",
@@ -234,10 +226,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/ivyplugin/scala_2.12/sbt_1.0/4.0.0/srcs/ivyplugin-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "ivyplugin-javadoc.jar",
               "name": "ivyplugin",
               "type": "doc",
               "extension": "jar",
@@ -245,8 +237,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/ivyplugin/scala_2.12/sbt_1.0/4.0.0/docs/ivyplugin-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -256,13 +247,12 @@
       "id": "legacy",
       "organization": "example",
       "name": "legacy_2.12",
-      "version": "4.0.0",
       "variants": [
         {
           "scalaVersion": "2.12.20",
-          "descriptor": "example/legacy_2.12/4.0.0/legacy_2.12-4.0.0.pom",
           "artifacts": [
             {
+              "key": "legacy.pom",
               "name": "legacy",
               "type": "pom",
               "extension": "pom",
@@ -270,10 +260,10 @@
               "configurations": [
                 "pom"
               ],
-              "extraAttributes": {},
-              "path": "example/legacy_2.12/4.0.0/legacy_2.12-4.0.0.pom"
+              "extraAttributes": {}
             },
             {
+              "key": "legacy.jar",
               "name": "legacy",
               "type": "jar",
               "extension": "jar",
@@ -281,10 +271,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/legacy_2.12/4.0.0/legacy_2.12-4.0.0.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "legacy-sources.jar",
               "name": "legacy",
               "type": "src",
               "extension": "jar",
@@ -292,10 +282,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/legacy_2.12/4.0.0/legacy_2.12-4.0.0-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "legacy-javadoc.jar",
               "name": "legacy",
               "type": "doc",
               "extension": "jar",
@@ -303,8 +293,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/legacy_2.12/4.0.0/legacy_2.12-4.0.0-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -314,13 +303,12 @@
       "id": "lib",
       "organization": "example",
       "name": "lib_2.13",
-      "version": "4.0.0",
       "variants": [
         {
           "scalaVersion": "2.13.16",
-          "descriptor": "example/lib_2.13/4.0.0/ivys/ivy.xml",
           "artifacts": [
             {
+              "key": "lib.jar",
               "name": "lib",
               "type": "jar",
               "extension": "jar",
@@ -328,10 +316,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/lib_2.13/4.0.0/jars/lib_2.13.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "lib-sources.jar",
               "name": "lib",
               "type": "src",
               "extension": "jar",
@@ -339,10 +327,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/lib_2.13/4.0.0/srcs/lib_2.13-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "lib-javadoc.jar",
               "name": "lib",
               "type": "doc",
               "extension": "jar",
@@ -350,8 +338,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/lib_2.13/4.0.0/docs/lib_2.13-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -361,13 +348,12 @@
       "id": "settingsfile",
       "organization": "example",
       "name": "settingsfile_2.13",
-      "version": "4.0.0",
       "variants": [
         {
           "scalaVersion": "2.13.16",
-          "descriptor": "example/settingsfile_2.13/4.0.0/settingsfile_2.13-4.0.0.pom",
           "artifacts": [
             {
+              "key": "settingsfile.pom",
               "name": "settingsfile",
               "type": "pom",
               "extension": "pom",
@@ -375,10 +361,10 @@
               "configurations": [
                 "pom"
               ],
-              "extraAttributes": {},
-              "path": "example/settingsfile_2.13/4.0.0/settingsfile_2.13-4.0.0.pom"
+              "extraAttributes": {}
             },
             {
+              "key": "settingsfile.jar",
               "name": "settingsfile",
               "type": "jar",
               "extension": "jar",
@@ -386,10 +372,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/settingsfile_2.13/4.0.0/settingsfile_2.13-4.0.0.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "settingsfile-sources.jar",
               "name": "settingsfile",
               "type": "src",
               "extension": "jar",
@@ -397,10 +383,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/settingsfile_2.13/4.0.0/settingsfile_2.13-4.0.0-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "settingsfile-javadoc.jar",
               "name": "settingsfile",
               "type": "doc",
               "extension": "jar",
@@ -408,8 +394,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/settingsfile_2.13/4.0.0/settingsfile_2.13-4.0.0-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -417,7 +402,7 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-O2HsQfnRlukyHpdg7V4K4rZoDpB1yEOaUwCTlXcw9MU=",
+  "inputsHash": "sha256-C+wSwile7hW9/3lSrfost0HeuUj3nzWMyVkEB1vIoMw=",
   "definitionHash": "sha256-b04qhQMuKUxcr25maSOmpXWmgmqn0LkciN5DvNxpIis=",
   "artifacts": [
     {

@@ -18,13 +18,12 @@
       "id": "app",
       "organization": "example",
       "name": "app_3",
-      "version": "2.0.0",
       "variants": [
         {
           "scalaVersion": "3.8.4",
-          "descriptor": "example/app_3/2.0.0/app_3-2.0.0.pom",
           "artifacts": [
             {
+              "key": "app.pom",
               "name": "app",
               "type": "pom",
               "extension": "pom",
@@ -32,10 +31,10 @@
               "configurations": [
                 "pom"
               ],
-              "extraAttributes": {},
-              "path": "example/app_3/2.0.0/app_3-2.0.0.pom"
+              "extraAttributes": {}
             },
             {
+              "key": "app.jar",
               "name": "app",
               "type": "jar",
               "extension": "jar",
@@ -43,10 +42,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/app_3/2.0.0/app_3-2.0.0.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "app-sources.jar",
               "name": "app",
               "type": "src",
               "extension": "jar",
@@ -54,10 +53,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/app_3/2.0.0/app_3-2.0.0-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "app-javadoc.jar",
               "name": "app",
               "type": "doc",
               "extension": "jar",
@@ -65,8 +64,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/app_3/2.0.0/app_3-2.0.0-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -76,13 +74,12 @@
       "id": "ivyplugin2",
       "organization": "example",
       "name": "ivyplugin2_sbt2_3",
-      "version": "2.0.0",
       "variants": [
         {
           "scalaVersion": "3.8.4",
-          "descriptor": "example/ivyplugin2_sbt2_3/2.0.0/ivys/ivy.xml",
           "artifacts": [
             {
+              "key": "ivyplugin2.jar",
               "name": "ivyplugin2",
               "type": "jar",
               "extension": "jar",
@@ -90,10 +87,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/ivyplugin2_sbt2_3/2.0.0/jars/ivyplugin2_sbt2_3.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "ivyplugin2-sources.jar",
               "name": "ivyplugin2",
               "type": "src",
               "extension": "jar",
@@ -101,10 +98,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/ivyplugin2_sbt2_3/2.0.0/srcs/ivyplugin2_sbt2_3-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "ivyplugin2-javadoc.jar",
               "name": "ivyplugin2",
               "type": "doc",
               "extension": "jar",
@@ -112,8 +109,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/ivyplugin2_sbt2_3/2.0.0/docs/ivyplugin2_sbt2_3-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -123,13 +119,12 @@
       "id": "lib",
       "organization": "example",
       "name": "lib_3",
-      "version": "2.0.0",
       "variants": [
         {
           "scalaVersion": "3.8.4",
-          "descriptor": "example/lib_3/2.0.0/ivys/ivy.xml",
           "artifacts": [
             {
+              "key": "lib.jar",
               "name": "lib",
               "type": "jar",
               "extension": "jar",
@@ -137,10 +132,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/lib_3/2.0.0/jars/lib_3.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "lib-sources.jar",
               "name": "lib",
               "type": "src",
               "extension": "jar",
@@ -148,10 +143,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/lib_3/2.0.0/srcs/lib_3-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "lib-javadoc.jar",
               "name": "lib",
               "type": "doc",
               "extension": "jar",
@@ -159,8 +154,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/lib_3/2.0.0/docs/lib_3-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -168,7 +162,7 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-Sb+ztMpWnglovdToeMHoZBrSnAu9OoRDs8WHz1HkUyk=",
+  "inputsHash": "sha256-pawa51zRMxoRtyGSC4iOvzvTZvZWCEQ2NIV7oio5Y3U=",
   "definitionHash": "sha256-uWmO9oW2J424Tl9zNYWsG65ZO2Z+hlqtexkBh2OkAHg=",
   "artifacts": [
     {

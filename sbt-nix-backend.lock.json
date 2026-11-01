@@ -13,13 +13,12 @@
       "id": "root",
       "organization": "io.github.clhodapp",
       "name": "sbt-nix-backend_2.12_1.0",
-      "version": "0.1.0",
       "variants": [
         {
           "scalaVersion": "2.12.20",
-          "descriptor": "io/github/clhodapp/sbt-nix-backend_2.12_1.0/0.1.0/sbt-nix-backend_2.12_1.0-0.1.0.pom",
           "artifacts": [
             {
+              "key": "sbt-nix-backend_2.12_1.0.pom",
               "name": "sbt-nix-backend_2.12_1.0",
               "type": "pom",
               "extension": "pom",
@@ -27,10 +26,10 @@
               "configurations": [
                 "pom"
               ],
-              "extraAttributes": {},
-              "path": "io/github/clhodapp/sbt-nix-backend_2.12_1.0/0.1.0/sbt-nix-backend_2.12_1.0-0.1.0.pom"
+              "extraAttributes": {}
             },
             {
+              "key": "sbt-nix-backend_2.12_1.0.jar",
               "name": "sbt-nix-backend_2.12_1.0",
               "type": "jar",
               "extension": "jar",
@@ -38,10 +37,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "io/github/clhodapp/sbt-nix-backend_2.12_1.0/0.1.0/sbt-nix-backend_2.12_1.0-0.1.0.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "sbt-nix-backend_2.12_1.0-sources.jar",
               "name": "sbt-nix-backend_2.12_1.0",
               "type": "src",
               "extension": "jar",
@@ -49,10 +48,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "io/github/clhodapp/sbt-nix-backend_2.12_1.0/0.1.0/sbt-nix-backend_2.12_1.0-0.1.0-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "sbt-nix-backend_2.12_1.0-javadoc.jar",
               "name": "sbt-nix-backend_2.12_1.0",
               "type": "doc",
               "extension": "jar",
@@ -60,16 +59,15 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "io/github/clhodapp/sbt-nix-backend_2.12_1.0/0.1.0/sbt-nix-backend_2.12_1.0-0.1.0-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         },
         {
           "scalaVersion": "3.8.4",
-          "descriptor": "io/github/clhodapp/sbt-nix-backend_sbt2_3/0.1.0/sbt-nix-backend_sbt2_3-0.1.0.pom",
           "artifacts": [
             {
+              "key": "sbt-nix-backend.pom",
               "name": "sbt-nix-backend",
               "type": "pom",
               "extension": "pom",
@@ -77,10 +75,10 @@
               "configurations": [
                 "pom"
               ],
-              "extraAttributes": {},
-              "path": "io/github/clhodapp/sbt-nix-backend_sbt2_3/0.1.0/sbt-nix-backend_sbt2_3-0.1.0.pom"
+              "extraAttributes": {}
             },
             {
+              "key": "sbt-nix-backend.jar",
               "name": "sbt-nix-backend",
               "type": "jar",
               "extension": "jar",
@@ -88,10 +86,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "io/github/clhodapp/sbt-nix-backend_sbt2_3/0.1.0/sbt-nix-backend_sbt2_3-0.1.0.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "sbt-nix-backend-sources.jar",
               "name": "sbt-nix-backend",
               "type": "src",
               "extension": "jar",
@@ -99,10 +97,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "io/github/clhodapp/sbt-nix-backend_sbt2_3/0.1.0/sbt-nix-backend_sbt2_3-0.1.0-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "sbt-nix-backend-javadoc.jar",
               "name": "sbt-nix-backend",
               "type": "doc",
               "extension": "jar",
@@ -110,8 +108,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "io/github/clhodapp/sbt-nix-backend_sbt2_3/0.1.0/sbt-nix-backend_sbt2_3-0.1.0-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -119,8 +116,8 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-XkCMlOTC5vlbBfKyhKwbFkQ0SHwH+3P0tuUzo/6P5Tk=",
-  "definitionHash": "sha256-eHU31SGvusCgZTkviTK9J7k79AmNbMOHqXonJjSnaIE=",
+  "inputsHash": "sha256-/1ClFddq1l9/SiwBKT4pLFmrdRSj4T/Q0PPMSCkHdvA=",
+  "definitionHash": "sha256-QACWJh5URSLm373NhRRO2huZBsZ1L05oFXQ5LI6t0Gc=",
   "artifacts": [
     {
       "path": "https/repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_2.12/0.9.3/gigahorse-apache-http_2.12-0.9.3.jar",

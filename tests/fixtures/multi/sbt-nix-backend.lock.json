@@ -18,13 +18,12 @@
       "id": "app",
       "organization": "example",
       "name": "app_3",
-      "version": "1.0.0",
       "variants": [
         {
           "scalaVersion": "3.3.6",
-          "descriptor": "example/app_3/1.0.0/app_3-1.0.0.pom",
           "artifacts": [
             {
+              "key": "app.pom",
               "name": "app",
               "type": "pom",
               "extension": "pom",
@@ -32,10 +31,10 @@
               "configurations": [
                 "pom"
               ],
-              "extraAttributes": {},
-              "path": "example/app_3/1.0.0/app_3-1.0.0.pom"
+              "extraAttributes": {}
             },
             {
+              "key": "app.jar",
               "name": "app",
               "type": "jar",
               "extension": "jar",
@@ -43,10 +42,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/app_3/1.0.0/app_3-1.0.0.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "app-sources.jar",
               "name": "app",
               "type": "src",
               "extension": "jar",
@@ -54,10 +53,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/app_3/1.0.0/app_3-1.0.0-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "app-javadoc.jar",
               "name": "app",
               "type": "doc",
               "extension": "jar",
@@ -65,8 +64,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/app_3/1.0.0/app_3-1.0.0-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -76,13 +74,12 @@
       "id": "core",
       "organization": "example",
       "name": "core_3",
-      "version": "1.0.0",
       "variants": [
         {
           "scalaVersion": "3.3.6",
-          "descriptor": "example/core_3/1.0.0/core_3-1.0.0.pom",
           "artifacts": [
             {
+              "key": "core.pom",
               "name": "core",
               "type": "pom",
               "extension": "pom",
@@ -90,10 +87,10 @@
               "configurations": [
                 "pom"
               ],
-              "extraAttributes": {},
-              "path": "example/core_3/1.0.0/core_3-1.0.0.pom"
+              "extraAttributes": {}
             },
             {
+              "key": "core.jar",
               "name": "core",
               "type": "jar",
               "extension": "jar",
@@ -101,10 +98,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/core_3/1.0.0/core_3-1.0.0.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "core-sources.jar",
               "name": "core",
               "type": "src",
               "extension": "jar",
@@ -112,10 +109,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/core_3/1.0.0/core_3-1.0.0-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "core-javadoc.jar",
               "name": "core",
               "type": "doc",
               "extension": "jar",
@@ -123,8 +120,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/core_3/1.0.0/core_3-1.0.0-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -134,13 +130,12 @@
       "id": "javalib",
       "organization": "example",
       "name": "javalib",
-      "version": "1.0.0",
       "variants": [
         {
           "scalaVersion": "3.3.6",
-          "descriptor": "example/javalib/1.0.0/javalib-1.0.0.pom",
           "artifacts": [
             {
+              "key": "javalib.pom",
               "name": "javalib",
               "type": "pom",
               "extension": "pom",
@@ -148,10 +143,10 @@
               "configurations": [
                 "pom"
               ],
-              "extraAttributes": {},
-              "path": "example/javalib/1.0.0/javalib-1.0.0.pom"
+              "extraAttributes": {}
             },
             {
+              "key": "javalib.jar",
               "name": "javalib",
               "type": "jar",
               "extension": "jar",
@@ -159,10 +154,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/javalib/1.0.0/javalib-1.0.0.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "javalib-sources.jar",
               "name": "javalib",
               "type": "src",
               "extension": "jar",
@@ -170,10 +165,10 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/javalib/1.0.0/javalib-1.0.0-sources.jar"
+              "extraAttributes": {}
             },
             {
+              "key": "javalib-javadoc.jar",
               "name": "javalib",
               "type": "doc",
               "extension": "jar",
@@ -181,8 +176,7 @@
               "configurations": [
                 "compile"
               ],
-              "extraAttributes": {},
-              "path": "example/javalib/1.0.0/javalib-1.0.0-javadoc.jar"
+              "extraAttributes": {}
             }
           ]
         }
@@ -190,7 +184,7 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-reXQeLz/JTu2lzirVSA5FcE/JTpKK+9Wym3yuQeJYw0=",
+  "inputsHash": "sha256-Sqbe1AdYw8YbWm0A9b9FXoXGtCQoNoknVvWUyld8ZiE=",
   "definitionHash": "sha256-wxw+VJyFhIwvZvcDlBRyoo/uXLjXBS2VUI1B576sJ0U=",
   "artifacts": [
     {
