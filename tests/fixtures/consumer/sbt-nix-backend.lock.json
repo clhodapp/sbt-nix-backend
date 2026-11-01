@@ -20,6 +20,7 @@
       "name": "consumer_3",
       "variants": [
         {
+          "name": "scala3",
           "scalaVersion": "3.3.6",
           "artifacts": [
             {
@@ -74,18 +75,18 @@
   "flakeRepositories": [
     {
       "name": "ivy",
-      "ref": "github:clhodapp/sbt-nix-backend/efab0860f3a58a4e3faf05afe89be4a67dc0ec80?dir=tests/producers#ivy-ivyjava",
-      "locked": "github:clhodapp/sbt-nix-backend/efab0860f3a58a4e3faf05afe89be4a67dc0ec80?dir=tests/producers&narHash=sha256-A85OpYOb8xQfLgfQ9Slm3/xpNxVLEyYxHPYdtKjx%2Bxc%3D",
+      "ref": "github:clhodapp/sbt-nix-backend/dae1dec8f1a4620dec21a767c4fc1a848dec4016?dir=tests/producers#ivy-ivyjava",
+      "locked": "github:clhodapp/sbt-nix-backend/dae1dec8f1a4620dec21a767c4fc1a848dec4016?dir=tests/producers&narHash=sha256-ANNq1VbzlHVoP7%2BkEZIHBRR%2BnkQv%2Bgoa0KRLjDHMZ/4%3D",
       "attribute": "ivy-ivyjava"
     },
     {
       "name": "multi",
-      "ref": "github:clhodapp/sbt-nix-backend/efab0860f3a58a4e3faf05afe89be4a67dc0ec80?dir=tests/producers#multi-app",
-      "locked": "github:clhodapp/sbt-nix-backend/efab0860f3a58a4e3faf05afe89be4a67dc0ec80?dir=tests/producers&narHash=sha256-A85OpYOb8xQfLgfQ9Slm3/xpNxVLEyYxHPYdtKjx%2Bxc%3D",
+      "ref": "github:clhodapp/sbt-nix-backend/dae1dec8f1a4620dec21a767c4fc1a848dec4016?dir=tests/producers#multi-app",
+      "locked": "github:clhodapp/sbt-nix-backend/dae1dec8f1a4620dec21a767c4fc1a848dec4016?dir=tests/producers&narHash=sha256-ANNq1VbzlHVoP7%2BkEZIHBRR%2BnkQv%2Bgoa0KRLjDHMZ/4%3D",
       "attribute": "multi-app"
     }
   ],
-  "inputsHash": "sha256-EKEbpBNxpyTL/GZBgLNc+v1UIlxahz847Uws50i+Wus=",
+  "inputsHash": "sha256-vvuX9UiwjcjN2IrwqFliR3Te9M4AsgR9k34gpNTfyTU=",
   "definitionHash": "sha256-ccQf+fxGUBzksVIBLkTM3AYECxhhVi3UUWAeyNRMy7g=",
   "artifacts": [
     {
