@@ -25,20 +25,25 @@
     };
   };
 
-  # `nix run github:nix-purifiers/sbt-purifier` starts sbt with the plugin
-  # injected, which is how a build without the plugin in its
-  # project/plugins.sbt locks and exports itself.
+  # `nix run github:nix-purifiers/sbt-purifier -- lock` runs the
+  # sbt-purifier commands, which run sbt with the plugin injected, which is
+  # how a build without the plugin in its project/plugins.sbt locks and
+  # exports itself.
   #
   # `nix develop github:nix-purifiers/sbt-purifier` is the other way in: plain
   # nixpkgs sbt, with SBT_NIX_BACKEND_REPOSITORY naming the plugin
   # repository, for a build that installs the plugin in its
-  # project/project/plugins.sbt (see the README).
+  # project/project/plugins.sbt (see the README). It sets JAVA_HOME to
+  # nixpkgs' default JDK, the Java major this repository's lockfiles
+  # record, so a relock from it records the same major whatever JAVA_HOME
+  # the caller has, as a CI runner sets one of its own.
   perSystem =
     { config, pkgs, ... }:
     {
       packages.default = config.packages.sbt-purifier;
       devShells.default = pkgs.mkShell {
         packages = [ pkgs.sbt ];
+        JAVA_HOME = pkgs.jdk.home;
         SBT_NIX_BACKEND_REPOSITORY = config.packages.plugin-repository;
       };
     };
