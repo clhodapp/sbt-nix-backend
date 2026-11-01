@@ -152,6 +152,17 @@ output=$(run_sbt 'show app/version') || fail "sbt2: sbt did not load"
 expect "sbt2: the wrapper removes the target made with another plugin" test ! -e "$stale/made-by-another-plugin"
 expect "sbt2: the stamp names the plugin file of the wrapper" grep -qx '/nix/store/[a-z0-9]*-sbt-nix-backend-plugin.sbt' "$stamp"
 
+# sbt 1 keeps it in the targets of the meta-builds.
+echo "== multi: a meta-build target made with another plugin"
+use_fixture multi
+stamp="$build/target/sbt-nix-backend/global-plugins-inject"
+mkdir -p "$build/project/target" "$(dirname "$stamp")"
+touch "$build/project/target/made-by-another-plugin"
+echo /nix/store/another-sbt-nix-backend-plugin.sbt >"$stamp"
+output=$(run_sbt 'show app/version') || fail "multi: sbt did not load"
+expect "multi: the wrapper removes the meta-build target made with another plugin" \
+  test ! -e "$build/project/target/made-by-another-plugin"
+
 # ivy resolves with Ivy (useCoursier := false) in the build and its
 # meta-build; Ivy reads the locked downloads through a file: mirror.
 interactive_suite ivy \

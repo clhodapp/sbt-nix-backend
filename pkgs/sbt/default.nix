@@ -116,16 +116,18 @@ writeTextFile {
     # variable names; naming the wrapper's own repository there gives that
     # build the jar the wrapper injects, so one plugin build runs.
     export SBT_NIX_BACKEND_REPOSITORY=${pluginRepository}
-    # sbt 2 keeps the target of the global plugins project in the build's
-    # own target/out/jvm/<Scala version>/global-plugins, and its update
-    # cache there names the plugin repository it resolved the plugin from.
+    # sbt caches the resolution of the global plugin by its module and
+    # version, which a plugin built from newer sources shares with the
+    # one before it. sbt 2 keeps it in the build's own
+    # target/out/jvm/<Scala version>/global-plugins, and sbt 1 in the
+    # targets of the meta-builds, project/target and project/project/target.
     # A stamp records the plugin file this wrapper injects; when it names
-    # another, the wrapper removes those targets, so sbt 2 resolves the
+    # another, the wrapper removes those targets, so sbt resolves the
     # plugin of this wrapper.
     if [ -f build.sbt ] || [ -d project ]; then
       stamp=target/sbt-nix-backend/global-plugins-inject
       if [ "$(cat "$stamp" 2>/dev/null)" != ${inject} ]; then
-        for target in target/out/jvm/*/global-plugins; do
+        for target in target/out/jvm/*/global-plugins project/target project/project/target; do
           if [ -d "$target" ]; then rm -rf "$target"; fi
         done
         mkdir -p target/sbt-nix-backend
