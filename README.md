@@ -113,6 +113,33 @@ version the lock was made with), `fetchurl` (for credentials or mirrors),
 `doCheck` (runs `test`), `srcFilter`, `pluginRepository` and
 `flakeRepositories`.
 
+### A build without Nix files
+
+The lockfile names every package of the build and every artifact of each
+package, so the sbt project needs no Nix file of its own: `buildSbtProject`
+takes the top-level directory of the project, which holds the lockfile,
+and Nix knows what each package holds before it builds it.
+
+- `packages.<project>.artifacts` maps each artifact file name to its file
+  in the package, such as `artifacts."core_3-1.0.0.jar"`.
+- `packages.<project>.variants` has, for each Scala version the project is
+  built for, its artifacts as the lockfile records them (name, type,
+  extension, classifier, configurations, path, and `file`), and
+  `descriptorFile`, its POM or `ivy.xml`.
+
+The expression that calls `buildSbtProject` can live anywhere: in a flake
+of another repository, in a flake whose input is the sbt project, or on
+the command line. From the top-level directory of an sbt project:
+
+```zsh
+nix build --impure --expr '
+  let
+    backend = builtins.getFlake "github:clhodapp/sbt-nix-backend";
+    pkgs = import backend.inputs.nixpkgs { overlays = [ backend.overlays.default ]; };
+  in
+  (pkgs.buildSbtProject { src = ./.; }).packages.core'
+```
+
 ### From the Maven repository
 
 Each release is in a Maven repository on GitHub Pages, which sbt reads

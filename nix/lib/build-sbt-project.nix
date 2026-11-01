@@ -205,9 +205,12 @@ let
       ${lib.escapeShellArg command} </dev/null
   '';
 
+  # The file of an artifact of the lock in the `out` output of `package`.
+  artifactFile = package: artifact: "${package}/${artifact.path}";
+
   mkPackage =
     project:
-    stdenvNoCC.mkDerivation {
+    stdenvNoCC.mkDerivation (finalAttrs: {
       pname = project.name;
       inherit (project) version;
       src = filteredSrc;
@@ -229,14 +232,51 @@ let
         runHook preInstall
         cp -r "$SBT_NIX_OUTPUT/${project.id}/artifacts" "$out"
         cp -r "$SBT_NIX_OUTPUT/${project.id}/repository" "$repository"
+        # The lock names the artifacts; the manifest it took them from
+        # stays out of the output.
+        rm -f "$out/sbt-nix-artifacts.json"
+        for path in ${
+          lib.escapeShellArgs (
+            lib.concatMap (v: [ v.descriptor ] ++ map (a: a.path) v.artifacts) project.variants
+          )
+        }; do
+          if [ ! -f "$out/$path" ]; then
+            echo "sbt-nix-backend: the lock names $path, which this build of ${project.id} did not publish; run nixLock" >&2
+            exit 1
+          fi
+        done
         runHook postInstall
       '';
       passthru = {
         inherit dependencies lock;
         sbtProject = project;
+        # For each Scala version the lock builds the project for, its
+        # artifacts as the lock records them (name, type, extension,
+        # classifier, configurations, extra attributes, path), each with
+        # `file`, its file in `out`, and `descriptorFile`, the file of its
+        # POM or ivy.xml. They are known from the lock alone, before the
+        # package is built.
+        variants = map (
+          v:
+          v
+          // {
+            artifacts = map (a: a // { file = artifactFile finalAttrs.finalPackage a; }) v.artifacts;
+            descriptorFile = artifactFile finalAttrs.finalPackage { path = v.descriptor; };
+          }
+        ) project.variants;
+        # Every artifact file of the package, by file name.
+        artifacts = builtins.listToAttrs (
+          lib.concatMap (
+            v:
+            map (a: {
+              name = builtins.baseNameOf a.path;
+              value = artifactFile finalAttrs.finalPackage a;
+            }) v.artifacts
+          ) project.variants
+        );
       };
       meta.description = "${project.organization}:${project.name}:${project.version}, built by sbt-nix-backend";
-    };
+    });
 
   packages = builtins.mapAttrs (_: mkPackage) lock.projectsById;
   repositories = builtins.mapAttrs (_: p: p.repository) packages;

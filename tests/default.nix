@@ -140,6 +140,42 @@ let
         '') expected}
       '';
 
+  # A build defined outside its sbt project: buildSbtProject of the
+  # top-level directory of the project, which holds the build and its
+  # lockfile and no Nix file. The lockfile names every artifact of every
+  # package, and its descriptor (POM or ivy.xml), before anything is
+  # built; the check builds each package, requires its output to hold
+  # exactly those files besides their checksums, and links every artifact
+  # by its file name.
+  externalizedBuild =
+    name: build:
+    pkgs.runCommand name { } ''
+      mkdir $out
+      ${lib.concatStrings (
+        lib.mapAttrsToList (
+          id: package:
+          let
+            named = lib.concatMap (v: [ v.descriptor ] ++ map (a: a.path) v.artifacts) package.variants;
+          in
+          ''
+            expected=$(printf '%s\n' ${lib.escapeShellArgs named} | sort -u)
+            actual=$(cd ${package} && find . -type f -not -name '*.sha1' -not -name '*.md5' -printf '%P\n' | sort)
+            if [ "$expected" != "$actual" ]; then
+              echo "${id}: the output holds other files than the lockfile names" >&2
+              diff <(echo "$expected") <(echo "$actual") >&2 || true
+              exit 1
+            fi
+            mkdir -p $out/${id}
+            ${lib.concatStrings (
+              lib.mapAttrsToList (file: path: ''
+                ln -s ${path} $out/${id}/${lib.escapeShellArg file}
+              '') package.artifacts
+            )}
+          ''
+        ) build.packages
+      )}
+    '';
+
   # A repository holds every one of `files`.
   repositoryLayouts =
     name: repository: files:
@@ -399,6 +435,15 @@ in
         tr ':' '\n' <<<"$cp" | grep -qx '${ivy.repositories.ivyplugin}/example/ivyplugin/scala_2.12/sbt_1.0/4.0.0/jars/ivyplugin.jar' ||
           { echo "the plugin jar is not on the classpath: $cp" >&2; exit 1; }
       '';
+
+  # Builds defined outside their sbt projects know every artifact before
+  # they build: Maven-style on sbt 1 (multi), Ivy-style with Ivy-style
+  # plugins and a library for two Scala versions (ivy), sbt 2 with both
+  # styles (sbt2), and a projectMatrix build (matrix2).
+  externalized-multi = externalizedBuild "externalized-multi" multi;
+  externalized-ivy = externalizedBuild "externalized-ivy" ivy;
+  externalized-sbt2 = externalizedBuild "externalized-sbt2" sbt2;
+  externalized-matrix2 = externalizedBuild "externalized-matrix2" matrix2;
 
   # The plugin repository holds the plugin for sbt 1 and for sbt 2, each
   # with its API documentation.

@@ -464,7 +464,18 @@ object NixBackendPlugin extends AutoPlugin {
     nixPublishRepository := Compat.uncached(publishRepositoryTask.value),
     nixPackagedArtifacts := Compat.uncached {
       val out = nixBuildPackage("out").value
-      NixArtifacts.read(out, scalaVersion.value)
+      val id = thisProject.value.id
+      val version = scalaVersion.value
+      val project = Lock.read((ThisBuild / nixLockFile).value).projects.find(_.id == id)
+      val variant = project
+        .flatMap(_.variants.find(_.scalaVersion == version))
+        .getOrElse(
+          sys.error(
+            s"sbt-nix-backend: the lockfile builds $id for Scala ${project.fold("")(_.variants.map(_.scalaVersion).mkString(", "))}, " +
+              s"not $version"
+          )
+        )
+      NixArtifacts.files(out, variant)
     },
     nixRuntimeRepository := Compat.uncached(nixBuildPackage("repository").value),
     // Feature 3: interactive resolution reads the locked downloads, offline.

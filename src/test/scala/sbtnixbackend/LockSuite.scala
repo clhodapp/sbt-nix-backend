@@ -12,7 +12,28 @@ class LockSuite extends munit.FunSuite {
     launcher = "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar",
     javaOptions = Vector("-Xmx2g"),
     plugin = Some(LockedPlugin("io.github.clhodapp", "sbt-nix-backend", "0.1.0", LockedPlugin.Environment)),
-    projects = Vector(LockedProject("b", "o", "b_3", "1"), LockedProject("a", "o", "a_3", "1")),
+    projects = Vector(
+      LockedProject("b", "o", "b_3", "1"),
+      LockedProject(
+        "a",
+        "o",
+        "a_3",
+        "1",
+        Vector(
+          NixArtifacts.Variant(
+            "3.3.6",
+            Vector(
+              NixArtifacts.Entry(sbt.librarymanagement.Artifact("a", "jar", "jar"), "o/a_3/1/a_3-1.jar"),
+              NixArtifacts.Entry(
+                sbt.librarymanagement.Artifact("a", "src", "jar", "sources"),
+                "o/a_3/1/a_3-1-sources.jar"
+              )
+            ),
+            "o/a_3/1/a_3-1.pom"
+          )
+        )
+      )
+    ),
     flakeRepositories = Vector(LockedFlakeRepository("r", "github:x/y#z", "github:x/y/abc?narHash=h", "z")),
     artifacts = Vector(
       LockedArtifact("https/h/z.jar", "https://h/z.jar", "sha256-z"),
@@ -50,7 +71,7 @@ class LockSuite extends munit.FunSuite {
 
   test("another format version is refused, and readOption treats it as no lock") {
     val f = new File(tempDir(), "lock.json")
-    write(f, lock.toJson.render.replace("\"version\": 1", "\"version\": 99"))
+    write(f, lock.toJson.render.replace("\"version\": " + Lock.FormatVersion, "\"version\": 99"))
     intercept[IllegalStateException](Lock.read(f))
     assertEquals(Lock.readOption(f), None)
     assertEquals(Lock.readOption(new File(tempDir(), "absent.json")), None)

@@ -18,7 +18,7 @@ let
     builtins.toFile "lock.json" (
       builtins.toJSON (
         {
-          version = 1;
+          version = 2;
           sbtVersion = "1.11.7";
           javaVersion = "17.0.9";
           launcher = "https/repo.example/sbt-launch-1.11.7.jar";
@@ -30,6 +30,32 @@ let
               organization = "example";
               name = "core_3";
               version = "1.0.0";
+              variants = [
+                {
+                  scalaVersion = "3.3.6";
+                  descriptor = "example/core_3/1.0.0/core_3-1.0.0.pom";
+                  artifacts = [
+                    {
+                      name = "core";
+                      type = "jar";
+                      extension = "jar";
+                      classifier = null;
+                      configurations = [ "compile" ];
+                      extraAttributes = { };
+                      path = "example/core_3/1.0.0/core_3-1.0.0.jar";
+                    }
+                    {
+                      name = "core";
+                      type = "pom";
+                      extension = "pom";
+                      classifier = null;
+                      configurations = [ "pom" ];
+                      extraAttributes = { };
+                      path = "example/core_3/1.0.0/core_3-1.0.0.pom";
+                    }
+                  ];
+                }
+              ];
             }
           ];
           flakeRepositories = [ ];
@@ -129,7 +155,7 @@ let
       expected = 200;
     };
     testUnsupportedLockVersionFails = {
-      expr = failsToEvaluate (lockOf { version = 2; }).artifacts;
+      expr = failsToEvaluate (lockOf { version = 1; }).artifacts;
       expected = true;
     };
     testPackagesAreNamedByProjectId = {
@@ -220,6 +246,38 @@ let
           lockFile = lockJson { };
         }).jdk.outPath;
       expected = markerJdk.outPath;
+    };
+    # The lock names the artifacts of a package, so evaluating them builds
+    # nothing: the empty source tree here builds no sbt project at all.
+    testTheArtifactsOfAPackageAreKnownBeforeItIsBuilt = {
+      expr = builtins.attrNames (build { lockFile = lockJson { }; }).packages.core.artifacts;
+      expected = [
+        "core_3-1.0.0.jar"
+        "core_3-1.0.0.pom"
+      ];
+    };
+    testAnArtifactIsItsPathInTheOutput = {
+      expr =
+        let
+          core = (build { lockFile = lockJson { }; }).packages.core;
+        in
+        core.artifacts."core_3-1.0.0.jar" == "${core}/example/core_3/1.0.0/core_3-1.0.0.jar";
+      expected = true;
+    };
+    testTheVariantsKeepWhatTheLockRecords = {
+      expr = map (v: {
+        inherit (v) scalaVersion;
+        types = map (a: a.type) v.artifacts;
+      }) (build { lockFile = lockJson { }; }).packages.core.variants;
+      expected = [
+        {
+          scalaVersion = "3.3.6";
+          types = [
+            "jar"
+            "pom"
+          ];
+        }
+      ];
     };
     testTheScopePluginRepositoryIsTheDefault = {
       expr =

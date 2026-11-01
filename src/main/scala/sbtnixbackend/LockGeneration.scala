@@ -163,7 +163,13 @@ object LockGeneration {
       launcher = launcherPath,
       javaOptions = in.javaOptions,
       plugin = in.plugin,
-      projects = in.projects,
+      // The fork published every project for each of its Scala versions,
+      // as a Nix build does; the manifests of its outputs name the files.
+      projects = in.projects.map { p =>
+        val variants = NixArtifacts.readManifest(new File(new File(output, p.id), "artifacts"))
+        if (variants.isEmpty) throw new LockFailed(s"the lock run published nothing for project ${p.id}")
+        p.copy(variants = variants)
+      },
       flakeRepositories = in.flakeRepositories,
       artifacts = artifacts,
       inputsHash = in.inputsHash,
