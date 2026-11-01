@@ -16,6 +16,51 @@ let
   # lib.sbt-purifier.buildSbtProject with a package set.
   buildSbtProject = args: flakeLib.sbt-purifier.buildSbtProject ({ inherit pkgs; } // args);
 
+  # For the conformance checks: whether readLock reports exactly one
+  # problem, which says `infix` and names the command that fixes it.
+  problemOf =
+    infix: args:
+    let
+      problems = (flakeLib.sbt-purifier.readLock args).problems;
+    in
+    builtins.length problems == 1
+    && lib.hasInfix infix (builtins.head problems)
+    && lib.hasInfix "run `sbt-purifier lock`" (builtins.head problems);
+  # Whether the builder fails evaluation on the lock.
+  evaluationFails =
+    args:
+    !(builtins.tryEval (
+      builtins.deepSeq (buildSbtProject args).packages (buildSbtProject args).packages
+    )).success;
+  conformance =
+    name: ok:
+    assert ok || throw "${name}: the lockfile problem is not reported as the contract says";
+    pkgs.runCommand name { } "touch $out";
+  multiLockText = builtins.readFile ./fixtures/multi/sbt-purifier.lock.json;
+  editedLock = builtins.toFile "sbt-purifier.lock.json" (
+    builtins.replaceStrings [ ''"sbtVersion": "1.11.7"'' ] [ ''"sbtVersion": "1.11.8"'' ] multiLockText
+  );
+  # The multi lockfile without the downloads whose paths `drop` matches,
+  # written as the plugin writes a lockfile: the version line, the content
+  # hash of the text without its line, and the rest.
+  lockWithout =
+    drop:
+    let
+      lock = builtins.fromJSON multiLockText;
+      fields = builtins.removeAttrs lock [
+        "version"
+        "contentHash"
+      ];
+      json = builtins.toJSON (
+        fields // { artifacts = builtins.filter (a: !(drop a.path)) lock.artifacts; }
+      );
+      rest = builtins.substring 1 (builtins.stringLength json) json;
+      head = "{\n  \"version\": ${toString lock.version},\n";
+    in
+    builtins.toFile "sbt-purifier.lock.json" "${head}  \"contentHash\": \"${
+      builtins.hashString "sha256" (head + rest)
+    }\",\n${rest}";
+
   # The fixtures were locked with the plugin injected (see
   # tests/relock-fixtures.sh), so their builds inject a plugin. multi takes
   # the builder's default, the plugin built from this revision.
@@ -492,6 +537,97 @@ in
     core = [ "scala3" ];
     core2_13 = [ "scala2_13" ];
   };
+
+  # The checks of the purifier contract (CONTRACT.md of the purifier
+  # library) that the sandbox can run; conformance-relock,
+  # conformance-update and conformance-offline need the network or the Nix
+  # daemon, and run as CI jobs of those names.
+  conformance-stale = conformance "conformance-stale" (
+    problemOf "is stale" {
+      src = ./fixtures/multi;
+      lockFile = ./fixtures/sbt2/sbt-purifier.lock.json;
+    }
+    && evaluationFails {
+      src = ./fixtures/multi;
+      lockFile = ./fixtures/sbt2/sbt-purifier.lock.json;
+    }
+  );
+  conformance-tampered = conformance "conformance-tampered" (
+    problemOf "does not match its content hash" {
+      src = ./fixtures/multi;
+      lockFile = editedLock;
+    }
+    && evaluationFails {
+      src = ./fixtures/multi;
+      lockFile = editedLock;
+    }
+  );
+  conformance-malformed = conformance "conformance-malformed" (
+    builtins.all
+      (
+        text:
+        let
+          lockFile = builtins.toFile "sbt-purifier.lock.json" text;
+        in
+        problemOf "is not a lockfile that sbt-purifier wrote" {
+          src = ./fixtures/multi;
+          inherit lockFile;
+        }
+        && evaluationFails {
+          src = ./fixtures/multi;
+          inherit lockFile;
+        }
+      )
+      [
+        "{ not json"
+        (builtins.substring 0 40 multiLockText)
+      ]
+  );
+  # A lockfile without the downloads of upickle, which app needs, and with
+  # its content hash recomputed: the Nix build of app fails and names the
+  # command that fixes it.
+  conformance-missing =
+    pkgs.runCommand "conformance-missing"
+      {
+        failure =
+          pkgs.testers.testBuildFailure
+            (buildSbtProject {
+              src = ./fixtures/multi;
+              lockFile = lockWithout (path: lib.hasInfix "/upickle_3/" path);
+            }).packages.app;
+      }
+      ''
+        grep -q 'run `sbt-purifier lock`' "$failure/testBuildFailure.log" ||
+          { echo "the failed build does not name the command that fixes it" >&2; cat "$failure/testBuildFailure.log" >&2; exit 1; }
+        touch $out
+      '';
+  # A second build of app, as a derivation of its own, gives the same bytes.
+  conformance-rebuild =
+    let
+      again = multi.packages.app.overrideAttrs { SBT_PURIFIER_REBUILD = "1"; };
+    in
+    pkgs.runCommand "conformance-rebuild" { } ''
+      diff -r ${multi.packages.app} ${again}
+      diff -r ${multi.packages.app.repository} ${again.repository}
+      touch $out
+    '';
+  # A build kept external: its source holds no lockfile, and the lockfile
+  # comes from outside it.
+  conformance-external =
+    let
+      external = buildSbtProject {
+        src = builtins.path {
+          name = "multi-without-lockfile";
+          path = ./fixtures/multi;
+          filter = path: _: baseNameOf path != "sbt-purifier.lock.json";
+        };
+        lockFile = ./fixtures/multi/sbt-purifier.lock.json;
+      };
+    in
+    pkgs.runCommand "conformance-external" { } ''
+      test -f ${external.packages.app}/nix-support/artifacts/scala3/app.jar
+      ln -s ${external.packages.app} $out
+    '';
 
   # The plugin repository holds the plugin for sbt 1 and for sbt 2, each
   # with its API documentation.
