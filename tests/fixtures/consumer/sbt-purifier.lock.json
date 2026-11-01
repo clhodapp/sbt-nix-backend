@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "contentHash": "317c33cd6ce3e9586bbd3656435de743de476ad4f1140d90f709f2a9ade08249",
+  "contentHash": "ce702414e3686e6c408bd5d73f8a5b88d9313fe629c5d1d77b307100602b4f81",
   "sbtVersion": "1.11.7",
   "javaVersion": "21",
   "launcher": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar",
@@ -76,18 +76,18 @@
   "flakeRepositories": [
     {
       "name": "ivy",
-      "ref": "github:nix-purifiers/sbt-purifier/73815c16c9680d0e948113586102ae1ef02c818f?dir=tests/producers#ivy-ivyjava",
-      "locked": "github:nix-purifiers/sbt-purifier/73815c16c9680d0e948113586102ae1ef02c818f?dir=tests/producers&narHash=sha256-JmgJ/If8HU%2BjUireh7Z34XfgctWN/EPKCskdZ5ucnGQ%3D",
+      "ref": "github:nix-purifiers/sbt-purifier/97f4def09aa431bb4fc9078002172585ce63f6ac?dir=tests/producers#ivy-ivyjava",
+      "locked": "github:nix-purifiers/sbt-purifier/97f4def09aa431bb4fc9078002172585ce63f6ac?dir=tests/producers&narHash=sha256-ToOUbQCUGfvOqCWpxwVOgS%2Bvg1SAiBDvW6mbsRvzPWQ%3D",
       "attribute": "ivy-ivyjava"
     },
     {
       "name": "multi",
-      "ref": "github:nix-purifiers/sbt-purifier/73815c16c9680d0e948113586102ae1ef02c818f?dir=tests/producers#multi-app",
-      "locked": "github:nix-purifiers/sbt-purifier/73815c16c9680d0e948113586102ae1ef02c818f?dir=tests/producers&narHash=sha256-JmgJ/If8HU%2BjUireh7Z34XfgctWN/EPKCskdZ5ucnGQ%3D",
+      "ref": "github:nix-purifiers/sbt-purifier/97f4def09aa431bb4fc9078002172585ce63f6ac?dir=tests/producers#multi-app",
+      "locked": "github:nix-purifiers/sbt-purifier/97f4def09aa431bb4fc9078002172585ce63f6ac?dir=tests/producers&narHash=sha256-ToOUbQCUGfvOqCWpxwVOgS%2Bvg1SAiBDvW6mbsRvzPWQ%3D",
       "attribute": "multi-app"
     }
   ],
-  "inputsHash": "4238520e26de025ce0b5d1a11cece3fa5d209c573f6c47f854c7d54f5ad20b43",
+  "inputsHash": "752f5310ae8cbc703ef80c3c0cb0d5dbc53f8f025703083c7e123ecc295b1891",
   "definitionHash": "51f57c57b654c67c2debeec0df59830fbdb4128a4394dabe5b4d3251a49dd84f",
   "artifacts": [
     {
