@@ -5,12 +5,14 @@
 # downloads. The check fails with the list of failed tests.
 {
   pkgs,
+  # The flake's default package overlay, which adds buildSbtProject.
+  overlay,
   # The library of the flake, with lib.sbt-purifier and lib.purifier.
   flakeLib,
 }:
 let
   inherit (pkgs) lib;
-  inherit (flakeLib.sbt-purifier) buildSbtProject readLock;
+  inherit (flakeLib.sbt-purifier) readLock;
 
   # The lock that the tests build from, without its version.
   lockFields = {
@@ -112,9 +114,8 @@ let
 
   buildWith =
     pkgs': args:
-    buildSbtProject (
+    (pkgs'.extend overlay).buildSbtProject (
       {
-        pkgs = pkgs';
         inherit src;
         fetchers.fetchurl = fakeFetchurl;
       }
@@ -372,7 +373,7 @@ let
     # The default plugin repository is the plugin built from this revision
     # for the same package set.
     testThePluginOfThisRevisionIsTheDefault = {
-      expr = builtins.elem (flakeLib.sbt-purifier.plugin pkgs).drvPath (
+      expr = builtins.elem (pkgs.extend overlay).sbt-purifier.plugin.drvPath (
         builtins.attrNames (
           builtins.getContext (build { lockFile = pluginLock "environment"; }).packages.core.buildPhase
         )

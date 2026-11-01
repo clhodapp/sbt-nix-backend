@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: MIT
 #
-# The packages of the `sbt-purifier` scope. `lib` is the composed library,
-# with `lib.sbt-purifier`.
-{ callPackage, lib, ... }:
+# The packages of the `sbt-purifier` scope.
+{ callPackage, ... }:
 let
   # The plugin's published artifacts, in Maven layout (nix/lib/plugin.nix).
-  plugin = callPackage ({ pkgs }: lib.sbt-purifier.plugin pkgs) { };
+  plugin = callPackage ../nix/lib/plugin.nix { };
 in
 {
   inherit plugin;

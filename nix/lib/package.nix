@@ -25,9 +25,12 @@ let
     else
       (builtins.getFlake nixpkgs).legacyPackages.${builtins.currentSystem};
   lib = import ./library.nix { inherit (pkgs) lib; };
-  build = lib.sbt-purifier.buildSbtProject (
+  buildSbtProject = pkgs.callPackage ./build-sbt-project.nix {
+    inherit (lib) purifier;
+    inherit (lib.sbt-purifier) readLock;
+  };
+  build = buildSbtProject (
     {
-      inherit pkgs;
       src = /. + src;
     }
     // lib.optionalAttrs (lockFile != "") { lockFile = /. + lockFile; }

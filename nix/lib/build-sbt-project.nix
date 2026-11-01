@@ -1,12 +1,17 @@
 # buildSbtProject: the sandboxed builds of an sbt build, from the lockfile
 # that `sbt-purifier lock` writes. It is the builder of the purifier
-# contract (CONTRACT.md of the purifier library), published as
-# `lib.sbt-purifier.buildSbtProject`:
+# contract (CONTRACT.md of the purifier library).
 #
-#   lib.sbt-purifier.buildSbtProject { inherit pkgs; src = ./.; }
+# The file is a package for callPackage: the first argument set is what it
+# takes from the package set, and the result is the builder. The
+# sbt-purifier overlay (`overlays.default`) adds it to the package set as
+# `buildSbtProject`, and passes it the purifier library and readLock, so a
+# package written for callPackage takes it like any other dependency:
 #
-# The first argument set is the composed library, which holds
-# `lib.purifier`. The builder returns
+#   { buildSbtProject }: (buildSbtProject { src = ./.; }).packages.app
+#
+# and `buildSbtProject.override` replaces what it takes from the set. The
+# builder returns
 #
 #   packages.<id>     the published artifacts of sbt project <id>, in Maven
 #                     or Ivy layout; its `repository` output holds them
@@ -19,10 +24,25 @@
 #   sbtRepositories   packages.<id>.repository by id, under the name a
 #                     flake exports it as (`sbtRepositories.<system>.<id>`)
 #                     for other builds to reference
-{ lib }:
 {
-  # The package set the build runs with.
+  lib,
   pkgs,
+  stdenvNoCC,
+  runCommand,
+  writeText,
+  # The JDKs a build can run on; the default JDK of a build is the headless
+  # one of the major version its lock was made with.
+  javaPackages,
+  # The purifier library (`lib.purifier`), which the overlay passes.
+  purifier,
+  # lib.sbt-purifier.readLock, which the overlay passes.
+  readLock,
+  # The sbt-purifier package scope, whose `plugin-repository` is the
+  # default plugin repository. It is null where the overlay is not applied;
+  # a lock that needs the plugin then needs `pluginRepository`.
+  sbt-purifier ? null,
+}:
+{
   # The root of the sbt build.
   src,
   # The lockfile. A lockfile outside `src` takes the place of any
@@ -37,7 +57,8 @@
   # lock says the Nix build supplies it (`plugin` in the lock): as a global
   # plugin, or through SBT_NIX_BACKEND_REPOSITORY for a build that installs
   # the plugin in its project/project/plugins.sbt. The default is the
-  # plugin built from this revision of sbt-purifier.
+  # scope's `plugin-repository`: the plugin built from the sbt-purifier
+  # revision whose overlay added this builder.
   pluginRepository ? null,
   # Repository paths that replace flake repositories of the lock, by
   # resolver name. A flake that has the producing flake as an input can
@@ -52,15 +73,11 @@
   srcFilter ? null,
 }:
 let
-  inherit (pkgs)
-    stdenvNoCC
-    runCommand
-    writeText
-    javaPackages
-    ;
   # The lock in memory; checkLock fails evaluation with its problems, each
   # naming `sbt-purifier lock`.
-  read = lib.purifier.checkLock (lib.sbt-purifier.readLock { inherit src lockFile; });
+  read = purifier.checkLock (readLock {
+    inherit src lockFile;
+  });
   inherit (read) lock;
   system = stdenvNoCC.hostPlatform.system;
 
@@ -93,11 +110,11 @@ let
 
   # The coursier cache: every download of the lock for this system, at its
   # coursier path.
-  dependencies = lib.purifier.tree (
+  dependencies = purifier.tree (
     {
       inherit pkgs;
       name = "sbt-coursier-cache";
-      entries = lib.purifier.entriesFor system read;
+      entries = purifier.entriesFor system read;
     }
     // fetchers
   );
@@ -124,7 +141,12 @@ let
       let
         p = lock.plugin;
         repo =
-          if pluginRepository != null then pluginRepository else (lib.sbt-purifier.plugin pkgs).repository;
+          if pluginRepository != null then
+            pluginRepository
+          else if sbt-purifier != null then
+            sbt-purifier.plugin-repository
+          else
+            throw "sbt-purifier: the lock takes the plugin (${p.organization}:${p.name}:${p.version}) from a repository the Nix build supplies; apply the sbt-purifier overlay or pass `pluginRepository`.";
         orgPath = lib.replaceStrings [ "." ] [ "/" ] p.organization;
       in
       assert

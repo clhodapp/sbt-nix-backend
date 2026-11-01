@@ -9,8 +9,9 @@ shared library it builds on.
 - **A lockfile.** `sbt-purifier lock` writes `sbt-purifier.lock.json` at
   the build root, with every file the build downloads (by URL, mirrors and
   SHA-256), the sbt launcher, the JVM options, and the projects to build.
-- **Sandboxed builds.** `lib.sbt-purifier.buildSbtProject` turns a build
-  and its lockfile into derivations, one package per project.
+- **Sandboxed builds.** `buildSbtProject`, which the flake's
+  `overlays.default` adds to the package set, turns a build and its
+  lockfile into derivations, one package per project.
 - **Interactive sbt on the locked downloads.** With a lockfile present,
   `compile`, `run` and `test` stay incremental, but resolution reads only
   the locked files, through Nix, offline. That holds at every level of the
@@ -38,13 +39,16 @@ Commit `sbt-purifier.lock.json`. Then build a project with Nix, here
 ```zsh
 nix build --impure --expr '
   let
-    purifier = builtins.getFlake "github:nix-purifiers/sbt-purifier";
-    pkgs = purifier.inputs.nixpkgs.legacyPackages.${builtins.currentSystem};
+    sbt-purifier = builtins.getFlake "github:nix-purifiers/sbt-purifier";
+    pkgs = import sbt-purifier.inputs.nixpkgs {
+      system = builtins.currentSystem;
+      overlays = [ sbt-purifier.overlays.default ];
+    };
   in
-  (purifier.lib.sbt-purifier.buildSbtProject { inherit pkgs; src = ./.; }).packages.core'
+  (pkgs.buildSbtProject { src = ./.; }).packages.core'
 ```
 
-A flake builds it the same way:
+A flake applies the overlay to its package set and builds it the same way:
 
 ```nix
 {
@@ -54,13 +58,16 @@ A flake builds it the same way:
   outputs = { nixpkgs, sbt-purifier, ... }:
     let
       system = "x86_64-linux";
-      pkgs = nixpkgs.legacyPackages.${system};
-      build = sbt-purifier.lib.sbt-purifier.buildSbtProject { inherit pkgs; src = ./.; };
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ sbt-purifier.overlays.default ];
+      };
+      build = pkgs.buildSbtProject { src = ./.; };
     in
     {
       packages.${system}.core = build.packages.core;
       checks.${system}.tests = build.tests;
-      # Other builds reference these (see "Sources supported and refused").
+      # Other builds reference these (see "Supported language repositories").
       sbtRepositories.${system} = build.sbtRepositories;
     };
 }
@@ -68,7 +75,20 @@ A flake builds it the same way:
 
 ### The builder
 
-`lib.sbt-purifier.buildSbtProject { pkgs, src, lockFile ? src + "/sbt-purifier.lock.json", fetchers ? { }, ... }`
+`buildSbtProject` is a package for `callPackage`. `overlays.default` adds
+it to the package set, beside the builders of nixpkgs, so a package in an
+overlay takes it by name:
+
+```nix
+# package.nix
+{ buildSbtProject }:
+(buildSbtProject { src = ./.; }).packages.core
+```
+
+It takes the packages it needs from the package set by name, such as
+`javaPackages` and the `sbt-purifier` scope, and
+`buildSbtProject.override` replaces any of them.
+`buildSbtProject { src, lockFile ? src + "/sbt-purifier.lock.json", fetchers ? { }, ... }`
 returns:
 
 - `packages.<project>`: the project's published artifacts, in the layout
@@ -121,7 +141,7 @@ package links each artifact at `nix-support/artifacts/<variant>/<key>`,
 and the module descriptor at `nix-support/artifacts/<variant>/descriptor`.
 Neither these names nor the lockfile hold the version of the project.
 
-## Everyday loop
+## Development loop
 
 The everyday loop goes through sbt itself, started through the flake's
 wrapper, which loads the plugin and boots sbt from the locked downloads:
@@ -213,7 +233,7 @@ so `project/` and the build both have it.
 | `nixNixpkgs` | The nixpkgs `nixPackagedArtifacts` builds with. |
 | `nixBackend` | Whether interactive resolution reads the lockfile. |
 
-## Offline work
+## Working offline
 
 ```zsh
 sbt-purifier prefetch
@@ -243,7 +263,7 @@ project at its default Scala version, unpublished projects included, and
 An editor that imports the build then resolves those sources from the
 lock, with the network cut off.
 
-## Errors and fixes
+## Troubleshooting
 
 Every problem with a lockfile stops the command, the sbt load or the Nix
 evaluation with a message that names the command that fixes it.
@@ -265,7 +285,7 @@ everything under `project/`, so a version set there makes the lockfile
 stale like any other edit, while a version the build reads from another
 file keeps it up to date.
 
-## Sources supported and refused
+## Supported language repositories
 
 ### How the lock is made
 
@@ -358,10 +378,11 @@ of your own that keeps the lockfile:
   outputs = { nixpkgs, sbt-purifier, ... }:
     let
       system = "x86_64-linux";
-      build = sbt-purifier.lib.sbt-purifier.buildSbtProject {
-        pkgs = nixpkgs.legacyPackages.${system};
-        src = ./.;
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ sbt-purifier.overlays.default ];
       };
+      build = pkgs.buildSbtProject { src = ./.; };
     in
     {
       packages.${system}.pureconfig-core = build.packages.core;

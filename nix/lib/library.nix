@@ -8,8 +8,6 @@ lib.extend (
     purifier = import (import ./purifier-source.nix) { lib = final; };
     sbt-purifier = {
       readLock = import ./read-lock.nix;
-      buildSbtProject = import ./build-sbt-project.nix { lib = final; };
-      plugin = import ./plugin.nix { lib = final; };
     };
   }
 )

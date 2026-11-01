@@ -17,8 +17,8 @@
       sbtRepositories = lib.genAttrs lib.systems.flakeExposed (
         system:
         let
-          pkgs = sbt-purifier.inputs.nixpkgs.legacyPackages.${system};
-          build = src: sbt-purifier.lib.sbt-purifier.buildSbtProject { inherit pkgs src; };
+          pkgs = sbt-purifier.inputs.nixpkgs.legacyPackages.${system}.extend sbt-purifier.overlays.default;
+          build = src: pkgs.buildSbtProject { inherit src; };
           multi = build ../fixtures/multi;
           ivy = build ../fixtures/ivy;
         in

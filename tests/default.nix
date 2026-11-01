@@ -4,6 +4,8 @@
 # access is the fixed-output fetches of locked artifacts.
 {
   pkgs,
+  # The flake's default package overlay, which adds buildSbtProject.
+  overlay,
   # The library of the flake, with lib.sbt-purifier and lib.purifier.
   flakeLib,
   plugin,
@@ -13,8 +15,9 @@ let
   inherit (pkgs) lib;
 
   # Every fixture builds the way a consumer's package does: through
-  # lib.sbt-purifier.buildSbtProject with a package set.
-  buildSbtProject = args: flakeLib.sbt-purifier.buildSbtProject ({ inherit pkgs; } // args);
+  # buildSbtProject of a package set the overlay applies to.
+  withOverlay = pkgs.extend overlay;
+  inherit (withOverlay) buildSbtProject;
 
   # For the conformance checks: whether readLock reports exactly one
   # problem, which says `infix` and names the command that fixes it.
@@ -283,7 +286,7 @@ in
   # The plugin built by itself from its lock, with its unit tests run.
   inherit plugin;
 
-  nix-library = import ./nix-library.nix { inherit pkgs flakeLib; };
+  nix-library = import ./nix-library.nix { inherit pkgs overlay flakeLib; };
 
   # Feature 1: the coursier cache of the multi fixture.
   multi-dependencies = multi.dependencies;
