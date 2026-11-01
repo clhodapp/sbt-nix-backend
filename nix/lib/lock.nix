@@ -6,7 +6,7 @@
 let
   lock = builtins.fromJSON (builtins.readFile lockFile);
 
-  supportedVersion = 1;
+  supportedVersion = import ./lock-version.nix;
 
   # A store path name from a file name. Store path names allow
   # [A-Za-z0-9+._?=-], must not start with a dot, and are at most 211

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "sbtVersion": "1.11.7",
   "javaVersion": "21.0.12.1",
   "launcher": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar",
@@ -18,11 +18,62 @@
       "id": "app",
       "organization": "example",
       "name": "app_3",
-      "version": "3.0.0"
+      "variants": [
+        {
+          "name": "scala3",
+          "scalaVersion": "3.3.6",
+          "artifacts": [
+            {
+              "key": "app.pom",
+              "name": "app",
+              "type": "pom",
+              "extension": "pom",
+              "classifier": null,
+              "configurations": [
+                "pom"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "app.jar",
+              "name": "app",
+              "type": "jar",
+              "extension": "jar",
+              "classifier": null,
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "app-sources.jar",
+              "name": "app",
+              "type": "src",
+              "extension": "jar",
+              "classifier": "sources",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "app-javadoc.jar",
+              "name": "app",
+              "type": "doc",
+              "extension": "jar",
+              "classifier": "javadoc",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            }
+          ]
+        }
+      ]
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-H794TBhihzvRqo0sB5LKZLDatWo80ySeC+DdI3cIHAs=",
+  "inputsHash": "sha256-mF/VHOk9tDcqn2PrfgLlvtXQYMxWhxCtDBtqHny/aHU=",
   "definitionHash": "sha256-hB3QreGAHVGQeA+FPD2qsdbqb1SW/okIpOJ/l8/L2mI=",
   "artifacts": [
     {

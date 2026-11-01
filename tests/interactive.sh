@@ -114,7 +114,7 @@ interactive_suite() {
   output=$(run_sbt 'show app/nixPackagedArtifacts' 'show app/nixRuntimeRepository') ||
     fail "$fixture: nixPackagedArtifacts failed"
   expect "$fixture: nixPackagedArtifacts returns the jar the Nix build made" has "$jar"
-  expect "$fixture: nixRuntimeRepository returns the repository output" has 'app_[0-9.]+-[0-9.]+-repository'
+  expect "$fixture: nixRuntimeRepository returns the repository output" has 'app_[0-9.]+-repository'
 
   echo "== $fixture: a lockfile made from another build definition"
   echo '// changed' >>"$build/build.sbt"
@@ -126,21 +126,34 @@ maven=https/repo1.maven.org/maven2
 
 interactive_suite multi \
   "$maven/com/eed3si9n/sbt-buildinfo_2.12_1.0/0.13.1/sbt-buildinfo_2.12_1.0-0.13.1.jar" \
-  '/nix/store/[a-z0-9]+-app_3-1\.0\.0/example/app_3/1\.0\.0/app_3-1\.0\.0\.jar' \
+  '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/scala3/app\.jar' \
   'app/runMain example.Main' \
   '\{"hello":"Nix World"\}' 'version 1\.0\.0'
 
 interactive_suite sbt2 \
   "$maven/com/eed3si9n/sbt-buildinfo_sbt2_3/0.13.2/sbt-buildinfo_sbt2_3-0.13.2.jar" \
-  '/nix/store/[a-z0-9]+-app_3-2\.0\.0/example/app_3/2\.0\.0/app_3-2\.0\.0\.jar' \
+  '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/scala3/app\.jar' \
   'app/runMain example2.Main' \
   '\{"sbt":2\}' 'version 2\.0\.0' 'interface xsbti\.Logger'
+
+# sbt 2 keeps the resolution of the global plugins in the build's target,
+# which the wrapper removes when another plugin file made it.
+echo "== sbt2: a global plugins target made with another plugin"
+use_fixture sbt2
+stale="$build/target/out/jvm/scala-3.8.4/global-plugins"
+stamp="$build/target/sbt-nix-backend/global-plugins-inject"
+mkdir -p "$stale" "$(dirname "$stamp")"
+touch "$stale/made-by-another-plugin"
+echo /nix/store/another-sbt-nix-backend-plugin.sbt >"$stamp"
+output=$(run_sbt 'show app/version') || fail "sbt2: sbt did not load"
+expect "sbt2: the wrapper removes the target made with another plugin" test ! -e "$stale/made-by-another-plugin"
+expect "sbt2: the stamp names the plugin file of the wrapper" grep -qx '/nix/store/[a-z0-9]*-sbt-nix-backend-plugin.sbt' "$stamp"
 
 # ivy resolves with Ivy (useCoursier := false) in the build and its
 # meta-build; Ivy reads the locked downloads through a file: mirror.
 interactive_suite ivy \
   "$maven/com/eed3si9n/sbt-buildinfo_2.12_1.0/0.13.1/sbt-buildinfo_2.12_1.0-0.13.1.jar" \
-  '/nix/store/[a-z0-9]+-app_2\.13-4\.0\.0/example/app_2\.13/4\.0\.0/app_2\.13-4\.0\.0\.jar' \
+  '/nix/store/[a-z0-9]+-app_2\.13/nix-support/artifacts/scala2_13/app\.jar' \
   'app/runMain ivyexample.Main' \
   '\{"resolvedWith":"ivy"\}' 'version 4\.0\.0' 'interface xsbti\.Logger'
 
@@ -181,7 +194,7 @@ sbt_wrapper=$other_wrapper
 output=$(run_sbt "$location") || fail "ivy: sbt did not load with the rebuilt plugin"
 sbt_wrapper=$saved_wrapper
 copy=$(grep -o '/nix/store/[a-z0-9]*-plugin-repository-copy' "$other_wrapper/bin/sbt" | head -1)
-expect "ivy: the first run loads the plugin from the flake's repository" grep -q 'ans: String = file:/nix/store/[a-z0-9]*-sbt-nix-backend_2.12_1.0-0.1.0-repository/' <<<"$first"
+expect "ivy: the first run loads the plugin from the flake's repository" grep -q 'ans: String = file:/nix/store/[a-z0-9]*-sbt-nix-backend_2.12_1.0-repository/' <<<"$first"
 expect "ivy: the second run loads the rebuilt plugin (${copy:-no copy found})" has "ans: String = file:$copy/"
 
 # metameta installs the plugin only in project/project/plugins.sbt and runs
@@ -194,7 +207,7 @@ runner=plain
 network=on
 interactive_suite metameta \
   "$maven/com/eed3si9n/sbt-buildinfo_2.12_1.0/0.13.1/sbt-buildinfo_2.12_1.0-0.13.1.jar" \
-  '/nix/store/[a-z0-9]+-app_3-3\.0\.0/example/app_3/3\.0\.0/app_3-3\.0\.0\.jar' \
+  '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/scala3/app\.jar' \
   'app/runMain metameta.Main' \
   '\{"installed":"project/project"\}' 'version 3\.0\.0'
 
@@ -218,7 +231,7 @@ expect "metameta through the wrapper: the app runs" has '\{"installed":"project/
 expect "metameta through the wrapper: the lockfile records the injected plugin" \
   grep -q '"via": "global-plugin"' "$build/sbt-nix-backend.lock.json"
 expect "metameta through the wrapper: the Nix build of that lockfile succeeds" \
-  has '/nix/store/[a-z0-9]+-app_3-3\.0\.0/example/app_3/3\.0\.0/app_3-3\.0\.0\.jar'
+  has '/nix/store/[a-z0-9]+-app_3/nix-support/artifacts/scala3/app\.jar'
 # project/project resolves the plugin from the repository the wrapper
 # injects it from, so one plugin build runs at every level.
 output=$(run_sbt 'reload plugins' 'reload plugins' 'export Runtime/fullClasspath' 'reload return' 'reload return') ||

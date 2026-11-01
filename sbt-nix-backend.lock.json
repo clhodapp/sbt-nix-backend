@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "sbtVersion": "1.11.7",
   "javaVersion": "21.0.12.1",
   "launcher": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar",
@@ -13,12 +13,113 @@
       "id": "root",
       "organization": "io.github.clhodapp",
       "name": "sbt-nix-backend_2.12_1.0",
-      "version": "0.1.0"
+      "variants": [
+        {
+          "name": "scala2_12_sbt1_0",
+          "scalaVersion": "2.12.20",
+          "artifacts": [
+            {
+              "key": "sbt-nix-backend_2.12_1.0.pom",
+              "name": "sbt-nix-backend_2.12_1.0",
+              "type": "pom",
+              "extension": "pom",
+              "classifier": null,
+              "configurations": [
+                "pom"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend_2.12_1.0.jar",
+              "name": "sbt-nix-backend_2.12_1.0",
+              "type": "jar",
+              "extension": "jar",
+              "classifier": null,
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend_2.12_1.0-sources.jar",
+              "name": "sbt-nix-backend_2.12_1.0",
+              "type": "src",
+              "extension": "jar",
+              "classifier": "sources",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend_2.12_1.0-javadoc.jar",
+              "name": "sbt-nix-backend_2.12_1.0",
+              "type": "doc",
+              "extension": "jar",
+              "classifier": "javadoc",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            }
+          ]
+        },
+        {
+          "name": "scala3_sbt1_0",
+          "scalaVersion": "3.8.4",
+          "artifacts": [
+            {
+              "key": "sbt-nix-backend.pom",
+              "name": "sbt-nix-backend",
+              "type": "pom",
+              "extension": "pom",
+              "classifier": null,
+              "configurations": [
+                "pom"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend.jar",
+              "name": "sbt-nix-backend",
+              "type": "jar",
+              "extension": "jar",
+              "classifier": null,
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend-sources.jar",
+              "name": "sbt-nix-backend",
+              "type": "src",
+              "extension": "jar",
+              "classifier": "sources",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend-javadoc.jar",
+              "name": "sbt-nix-backend",
+              "type": "doc",
+              "extension": "jar",
+              "classifier": "javadoc",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            }
+          ]
+        }
+      ]
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "sha256-XkCMlOTC5vlbBfKyhKwbFkQ0SHwH+3P0tuUzo/6P5Tk=",
-  "definitionHash": "sha256-eHU31SGvusCgZTkviTK9J7k79AmNbMOHqXonJjSnaIE=",
+  "inputsHash": "sha256-/1ClFddq1l9/SiwBKT4pLFmrdRSj4T/Q0PPMSCkHdvA=",
+  "definitionHash": "sha256-QACWJh5URSLm373NhRRO2huZBsZ1L05oFXQ5LI6t0Gc=",
   "artifacts": [
     {
       "path": "https/repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_2.12/0.9.3/gigahorse-apache-http_2.12-0.9.3.jar",

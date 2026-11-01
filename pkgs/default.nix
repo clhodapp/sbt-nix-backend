@@ -13,6 +13,7 @@ in
   # sbt with the plugin injected.
   sbt = callPackage ./sbt {
     pluginRepository = plugin.repository;
-    pluginVersion = plugin.sbtProject.version;
+    # The version of builds from source, which build.sbt reads too.
+    pluginVersion = builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ../version.txt);
   };
 }

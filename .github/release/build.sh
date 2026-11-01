@@ -23,7 +23,9 @@ out=$(nix build --no-link --print-out-paths --impure --expr "
 
 mkdir -p "$dir"
 cp -r --no-preserve=mode "$out/." "$dir/"
-rm -f "$dir/sbt-nix-artifacts.json"
+# The links the Nix library finds the artifacts by are no part of the
+# Maven repository.
+rm -rf "$dir/nix-support"
 sums=$(cd "$dir" && find . -type f -not -name '*.sha1' -not -name '*.md5' -not -name SHA256SUMS | sort | xargs sha256sum)
 printf '%s\n' "$sums" >"$dir/SHA256SUMS"
 echo "built $version into $dir"

@@ -404,14 +404,22 @@ object NixBackendPlugin extends AutoPlugin {
       else {
         val id = projectID.value
         val name = publishedName(id, sbtPlugin.value, publishMavenStyle.value, sbtBinaryVersion.value, lockScalaVersions.value.head)
-        Some(LockedProject(thisProject.value.id, id.organization, name, id.revision))
+        Some(LockedProject(thisProject.value.id, id.organization, name))
       }
     },
     nixLockedNames := Compat.uncached {
       if (!nixPackaged.value) Nil
       else {
         val id = projectID.value
-        lockScalaVersions.value.map(v => publishedName(id, sbtPlugin.value, publishMavenStyle.value, sbtBinaryVersion.value, v))
+        val versions = lockScalaVersions.value
+        // The lockfile keys the artifacts of a project by variant, so two
+        // Scala versions with one variant name cannot both be locked.
+        versions.groupBy(v => NixArtifacts.variantName(id.crossVersion, sbtPlugin.value, sbtBinaryVersion.value, v)).foreach {
+          case (name, vs) if vs.size > 1 =>
+            sys.error(NixArtifacts.conflict(name, vs) + s" (project ${thisProject.value.id})")
+          case _ =>
+        }
+        versions.map(v => publishedName(id, sbtPlugin.value, publishMavenStyle.value, sbtBinaryVersion.value, v))
       }
     },
     resolvers := {
@@ -458,13 +466,25 @@ object NixBackendPlugin extends AutoPlugin {
         )
         .value
       val dir = Mode.output / thisProject.value.id / "artifacts"
-      NixArtifacts.record(dir, scalaVersion.value, Compat.publishedArtifacts.value)
+      val name = NixArtifacts.variantName(projectID.value.crossVersion, sbtPlugin.value, sbtBinaryVersion.value, scalaVersion.value)
+      NixArtifacts.record(dir, name, scalaVersion.value, Compat.publishedArtifacts.value)
       dir
     },
     nixPublishRepository := Compat.uncached(publishRepositoryTask.value),
     nixPackagedArtifacts := Compat.uncached {
       val out = nixBuildPackage("out").value
-      NixArtifacts.read(out, scalaVersion.value)
+      val id = thisProject.value.id
+      val version = scalaVersion.value
+      val project = Lock.read((ThisBuild / nixLockFile).value).projects.find(_.id == id)
+      val variant = project
+        .flatMap(_.variants.find(_.scalaVersion == version))
+        .getOrElse(
+          sys.error(
+            s"sbt-nix-backend: the lockfile builds $id for Scala ${project.fold("")(_.variants.map(_.scalaVersion).mkString(", "))}, " +
+              s"not $version"
+          )
+        )
+      NixArtifacts.files(out, variant)
     },
     nixRuntimeRepository := Compat.uncached(nixBuildPackage("repository").value),
     // Feature 3: interactive resolution reads the locked downloads, offline.
@@ -701,7 +721,7 @@ object NixBackendPlugin extends AutoPlugin {
       Seq("plugin=" + plugin.fold("none")(p => s"${p.organization}:${p.name}:${p.version} via ${p.via}"), "launcher=" + launcherUrl) ++
         javaOptions.map("javaOption=" + _) ++ urls.map("url=" + _) ++
         lockedRepos.map(r => s"flake=${r.name}=${r.locked}#${r.attribute}") ++
-        projects.map(p => s"project=${p.id}=${p.organization}:${p.name}:${p.version}") ++
+        projects.map(p => s"project=${p.id}=${p.organization}:${p.name}") ++
         crossNames.map("published=" + _)
     )
     LockGeneration.Inputs(
@@ -895,8 +915,10 @@ object NixBackendPlugin extends AutoPlugin {
       closure.foreach(r => run(r / nixPublishArtifacts))
       val repository = Mode.output / id / "repository"
       closure.foreach(r => IO.copyDirectory(Mode.output / r.project / "artifacts", repository, overwrite = true))
-      // Each manifest describes the output of its own project.
+      // The manifest and the links of each project describe the output of
+      // that project, not the repository.
       IO.delete(repository / NixArtifacts.FileName)
+      IO.delete(repository / "nix-support")
       run(ref / nixPublishRepository)
     }
     state

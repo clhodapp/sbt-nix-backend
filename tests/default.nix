@@ -140,6 +140,68 @@ let
         '') expected}
       '';
 
+  # A build defined outside its sbt project: buildSbtProject of the
+  # top-level directory of the project, which holds the build and its
+  # lockfile and no Nix file. The lockfile names every artifact of every
+  # package, by variant and key, before anything is built. The check
+  # requires that the packages named in `variants` have exactly the
+  # variants given there. It builds each package and requires that its
+  # link directory holds exactly the links the lockfile names, and that
+  # their targets are exactly the files the build published besides
+  # checksums. It links every artifact as <project>/<variant>/<key>.
+  externalizedBuild =
+    name: build: variants:
+    let
+      actualVariants = builtins.mapAttrs (
+        id: _: builtins.attrNames build.packages.${id}.artifacts
+      ) variants;
+    in
+    assert
+      actualVariants == builtins.mapAttrs (_: lib.sort lib.lessThan) variants
+      || throw "${name}: the variants are ${builtins.toJSON actualVariants}";
+    pkgs.runCommand name { } ''
+      mkdir $out
+      ${lib.concatStrings (
+        lib.mapAttrsToList (
+          id: package:
+          let
+            named = lib.concatMap (
+              v: [ "${v.name}/descriptor" ] ++ map (a: "${v.name}/${a.key}") v.artifacts
+            ) package.variants;
+          in
+          ''
+            check() {
+              if [ "$1" != "$2" ]; then
+                echo "${id}: $3" >&2
+                diff <(echo "$1") <(echo "$2") >&2 || true
+                exit 1
+              fi
+            }
+            links=${package}/nix-support/artifacts
+            check "$(printf '%s\n' ${lib.escapeShellArgs named} | sort)" \
+              "$(cd $links && find . -mindepth 2 -printf '%P\n' | sort)" \
+              "the link directory holds other links than the lockfile names"
+            check "$(cd ${package} && find . -path ./nix-support -prune -o -type f -not -name '*.sha1' -not -name '*.md5' -printf '%P\n' | sort)" \
+              "$(cd $links && find . -mindepth 2 -exec realpath --relative-to=${package} {} \; | sort -u)" \
+              "the links reach other files than the build published"
+            ${lib.concatStrings (
+              lib.mapAttrsToList (
+                variant: files:
+                ''
+                  mkdir -p $out/${id}/${variant}
+                ''
+                + lib.concatStrings (
+                  lib.mapAttrsToList (key: file: ''
+                    ln -s ${file} $out/${id}/${variant}/${lib.escapeShellArg key}
+                  '') files
+                )
+              ) package.artifacts
+            )}
+          ''
+        ) build.packages
+      )}
+    '';
+
   # A repository holds every one of `files`.
   repositoryLayouts =
     name: repository: files:
@@ -163,7 +225,8 @@ let
     }:
     pkgs.runCommand name { } ''
       cd ${package}
-      others=$(find . -mindepth 2 -maxdepth 3 -type d -path './*/*' | grep -v '^./${dir}' || true)
+      # nix-support holds the links of the package to its own artifacts.
+      others=$(find . -mindepth 2 -maxdepth 3 -type d -path './*/*' -not -path './nix-support/*' | grep -v '^./${dir}' || true)
       test -d ${dir} || { echo "${package} does not hold ${dir}" >&2; exit 1; }
       test -z "$others" || { echo "${package} holds more than ${dir}: $others" >&2; exit 1; }
       ls ${lib.concatMapStringsSep " " (f: "${dir}/${f}") files}
@@ -399,6 +462,31 @@ in
         tr ':' '\n' <<<"$cp" | grep -qx '${ivy.repositories.ivyplugin}/example/ivyplugin/scala_2.12/sbt_1.0/4.0.0/jars/ivyplugin.jar' ||
           { echo "the plugin jar is not on the classpath: $cp" >&2; exit 1; }
       '';
+
+  # Builds defined outside their sbt projects know every artifact before
+  # they build: Maven-style on sbt 1 (multi), Ivy-style with Ivy-style
+  # plugins and a library for two Scala versions (ivy), sbt 2 with both
+  # styles (sbt2), and a projectMatrix build (matrix2).
+  externalized-multi = externalizedBuild "externalized-multi" multi {
+    core = [ "scala3" ];
+    javalib = [ "default" ];
+  };
+  externalized-ivy = externalizedBuild "externalized-ivy" ivy {
+    crosslib = [
+      "scala2_13"
+      "scala3"
+    ];
+    ivyjava = [ "default" ];
+    ivyplugin = [ "scala2_12_sbt1_0" ];
+  };
+  externalized-sbt2 = externalizedBuild "externalized-sbt2" sbt2 {
+    lib = [ "scala3" ];
+    ivyplugin2 = [ "scala3_sbt2" ];
+  };
+  externalized-matrix2 = externalizedBuild "externalized-matrix2" matrix2 {
+    core = [ "scala3" ];
+    core2_13 = [ "scala2_13" ];
+  };
 
   # The plugin repository holds the plugin for sbt 1 and for sbt 2, each
   # with its API documentation.

@@ -205,11 +205,21 @@ let
       ${lib.escapeShellArg command} </dev/null
   '';
 
+  # The build links each artifact of a variant, and its module descriptor,
+  # at names without the version of the project:
+  # <linkDirectory>/<variant>/<key> and …/descriptor. The variant is named
+  # for the cross version of the publish, such as scala3, scala2_13 or
+  # scala2_12_sbt1_0.
+  linkDirectory = "nix-support/artifacts";
+  artifactFile =
+    package: variant: key:
+    "${package}/${linkDirectory}/${variant}/${key}";
+  linksOf = v: [ "${v.name}/descriptor" ] ++ map (a: "${v.name}/${a.key}") v.artifacts;
+
   mkPackage =
     project:
-    stdenvNoCC.mkDerivation {
-      pname = project.name;
-      inherit (project) version;
+    stdenvNoCC.mkDerivation (finalAttrs: {
+      inherit (project) name;
       src = filteredSrc;
       outputs = [
         "out"
@@ -229,14 +239,50 @@ let
         runHook preInstall
         cp -r "$SBT_NIX_OUTPUT/${project.id}/artifacts" "$out"
         cp -r "$SBT_NIX_OUTPUT/${project.id}/repository" "$repository"
+        # The lock names the artifacts; the manifest it took them from
+        # stays out of the output.
+        rm -f "$out/sbt-nix-artifacts.json"
+        for link in ${lib.escapeShellArgs (lib.concatMap linksOf project.variants)}; do
+          if [ ! -f "$out/${linkDirectory}/$link" ]; then
+            echo "sbt-nix-backend: the lock names $link, which this build of ${project.id} did not publish; run nixLock" >&2
+            exit 1
+          fi
+        done
         runHook postInstall
       '';
       passthru = {
         inherit dependencies lock;
         sbtProject = project;
+        # For each variant the lock builds the project in, its name, its
+        # Scala version, and its artifacts as the lock records them (key,
+        # name, type, extension, classifier, configurations, extra
+        # attributes), each with `file`, its file in `out`, and
+        # `descriptorFile`, the file of its POM or ivy.xml. They are known
+        # from the lock alone, before the package is built.
+        variants = map (
+          v:
+          v
+          // {
+            artifacts = map (a: a // { file = artifactFile finalAttrs.finalPackage v.name a.key; }) v.artifacts;
+            descriptorFile = artifactFile finalAttrs.finalPackage v.name "descriptor";
+          }
+        ) project.variants;
+        # The artifact files of the package by variant and key, such as
+        # artifacts.scala3."core-sources.jar".
+        artifacts = builtins.listToAttrs (
+          map (v: {
+            inherit (v) name;
+            value = builtins.listToAttrs (
+              map (a: {
+                name = a.key;
+                value = artifactFile finalAttrs.finalPackage v.name a.key;
+              }) v.artifacts
+            );
+          }) project.variants
+        );
       };
-      meta.description = "${project.organization}:${project.name}:${project.version}, built by sbt-nix-backend";
-    };
+      meta.description = "${project.organization}:${project.name}, built by sbt-nix-backend";
+    });
 
   packages = builtins.mapAttrs (_: mkPackage) lock.projectsById;
   repositories = builtins.mapAttrs (_: p: p.repository) packages;

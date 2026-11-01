@@ -113,6 +113,60 @@ version the lock was made with), `fetchurl` (for credentials or mirrors),
 `doCheck` (runs `test`), `srcFilter`, `pluginRepository` and
 `flakeRepositories`.
 
+### A build without Nix files
+
+The lockfile names every package of the build and every artifact of each
+package, so the sbt project needs no Nix file of its own: `buildSbtProject`
+takes the top-level directory of the project, which holds the lockfile,
+and Nix knows what each package holds before it builds it.
+
+- `packages.<project>.artifacts` maps each variant of the project, and
+  each artifact key, to the artifact's file in the package. The key is
+  `<name>[-<classifier>].<extension>`, so the sources jar of `core` built
+  for Scala 3 is `artifacts.scala3."core-sources.jar"`.
+- `packages.<project>.variants` has, for each variant, its name, its Scala
+  version, its artifacts as the lockfile records them (key, name, type,
+  extension, classifier, configurations, and `file`), and
+  `descriptorFile`, its POM or `ivy.xml`.
+
+A project has one variant for each Scala version it is built for, named
+for the cross version its module is published with:
+
+| Published as | Variant |
+| --- | --- |
+| `core_3` | `scala3` |
+| `core_2.13` | `scala2_13` |
+| `core_2.13.16` (`CrossVersion.full`) | `scala2_13_16` |
+| `core_sjs1_3` (Scala.js) | `sjs1_scala3` |
+| `core` (`crossPaths := false`) | `default` |
+| an sbt 1 plugin, Maven or Ivy style | `scala2_12_sbt1_0` |
+| an sbt 2 plugin (`_sbt2_3`) | `scala3_sbt2` |
+
+The lock fails when two Scala versions of a project would have the same
+variant, such as 2.13.15 and 2.13.16 with a binary cross version.
+
+The package build links each artifact into the package at
+`nix-support/artifacts/<variant>/<key>`, and the module descriptor at
+`nix-support/artifacts/<variant>/descriptor`, beside the published files. These names leave out the version of the project, and
+the lockfile records no version either: the package build takes it from
+the sbt build. The lockfile is stale after any edit to the root `*.sbt`
+files or to `project/`, so a version set there makes it stale like any
+other edit, while a version the build reads from another file keeps it
+up to date.
+
+The expression that calls `buildSbtProject` can live anywhere: in a flake
+of another repository, in a flake whose input is the sbt project, or on
+the command line. From the top-level directory of an sbt project:
+
+```zsh
+nix build --impure --expr '
+  let
+    backend = builtins.getFlake "github:clhodapp/sbt-nix-backend";
+    pkgs = import backend.inputs.nixpkgs { overlays = [ backend.overlays.default ]; };
+  in
+  (pkgs.buildSbtProject { src = ./.; }).packages.core'
+```
+
 ### From the Maven repository
 
 Each release is in a Maven repository on GitHub Pages, which sbt reads

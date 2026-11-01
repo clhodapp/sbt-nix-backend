@@ -18,7 +18,7 @@ let
     builtins.toFile "lock.json" (
       builtins.toJSON (
         {
-          version = 1;
+          version = 2;
           sbtVersion = "1.11.7";
           javaVersion = "17.0.9";
           launcher = "https/repo.example/sbt-launch-1.11.7.jar";
@@ -29,7 +29,32 @@ let
               id = "core";
               organization = "example";
               name = "core_3";
-              version = "1.0.0";
+              variants = [
+                {
+                  name = "scala3";
+                  scalaVersion = "3.3.6";
+                  artifacts = [
+                    {
+                      key = "core.jar";
+                      name = "core";
+                      type = "jar";
+                      extension = "jar";
+                      classifier = null;
+                      configurations = [ "compile" ];
+                      extraAttributes = { };
+                    }
+                    {
+                      key = "core-sources.jar";
+                      name = "core";
+                      type = "src";
+                      extension = "jar";
+                      classifier = "sources";
+                      configurations = [ "compile" ];
+                      extraAttributes = { };
+                    }
+                  ];
+                }
+              ];
             }
           ];
           flakeRepositories = [ ];
@@ -129,7 +154,7 @@ let
       expected = 200;
     };
     testUnsupportedLockVersionFails = {
-      expr = failsToEvaluate (lockOf { version = 2; }).artifacts;
+      expr = failsToEvaluate (lockOf { version = 1; }).artifacts;
       expected = true;
     };
     testPackagesAreNamedByProjectId = {
@@ -220,6 +245,51 @@ let
           lockFile = lockJson { };
         }).jdk.outPath;
       expected = markerJdk.outPath;
+    };
+    # The lock names the artifacts of a package, so evaluating them builds
+    # nothing: the empty source tree here builds no sbt project at all.
+    testTheArtifactsOfAPackageAreKnownBeforeItIsBuilt = {
+      expr =
+        lib.mapAttrs (_: builtins.attrNames)
+          (build { lockFile = lockJson { }; }).packages.core.artifacts;
+      expected = {
+        scala3 = [
+          "core-sources.jar"
+          "core.jar"
+        ];
+      };
+    };
+    testAnArtifactIsLinkedByVariantAndKey = {
+      expr =
+        let
+          core = (build { lockFile = lockJson { }; }).packages.core;
+        in
+        core.artifacts.scala3."core-sources.jar" == "${core}/nix-support/artifacts/scala3/core-sources.jar";
+      expected = true;
+    };
+    testTheVariantsKeepWhatTheLockRecords = {
+      expr = map (v: {
+        inherit (v) name scalaVersion;
+        classifiers = map (a: a.classifier) v.artifacts;
+        descriptor = lib.removePrefix "${(build { lockFile = lockJson { }; }).packages.core}/" v.descriptorFile;
+      }) (build { lockFile = lockJson { }; }).packages.core.variants;
+      expected = [
+        {
+          name = "scala3";
+          scalaVersion = "3.3.6";
+          classifiers = [
+            null
+            "sources"
+          ];
+          descriptor = "nix-support/artifacts/scala3/descriptor";
+        }
+      ];
+    };
+    # The derivation of a package is named after the project, without its
+    # version, so a version bump renames nothing.
+    testAPackageIsNamedAfterItsProject = {
+      expr = (build { lockFile = lockJson { }; }).packages.core.name;
+      expected = "core_3";
     };
     testTheScopePluginRepositoryIsTheDefault = {
       expr =
