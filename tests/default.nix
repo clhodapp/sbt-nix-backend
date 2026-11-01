@@ -52,6 +52,18 @@ let
     doCheck = true;
   };
 
+  # Builds whose projects come from projectMatrix, on sbt 1 (the
+  # sbt-projectmatrix plugin) and on sbt 2 (built in): a project per Scala
+  # version, each with a package of its own.
+  matrix = buildSbtProject {
+    src = ./fixtures/matrix;
+    pluginRepository = plugin-repository;
+  };
+  matrix2 = buildSbtProject {
+    src = ./fixtures/matrix2;
+    pluginRepository = plugin-repository;
+  };
+
   # The consumer's lock pins a flake reference to the producer's
   # repository; the check passes the producer's output instead, as a flake
   # with the producer as an input would.
@@ -297,6 +309,37 @@ in
         "org.scala-sbt/interface/0.13.18/ivys/ivy.xml"
         "org.scala-sbt/interface/0.13.18/jars/interface.jar"
       ];
+
+  # Each Scala version of a projectMatrix project is a package of its own,
+  # holding that version's module only, and its repository alone runs it.
+  matrix-app-artifacts =
+    onlyOwnArtifacts "matrix-app-artifacts" matrix.packages.app "example/app_2.13"
+      { };
+  matrix-app3-artifacts =
+    onlyOwnArtifacts "matrix-app3-artifacts" matrix.packages.app3 "example/app_3"
+      { };
+  matrix-app-repository =
+    runFromRepository "matrix-app-repository" matrix.repositories.app "example:app_2.13:5.0.0"
+      "matrixexample.Main"
+      [ "matrix app for Scala 2.13" ];
+  matrix-app3-repository =
+    runFromRepository "matrix-app3-repository" matrix.repositories.app3 "example:app_3:5.0.0"
+      "matrixexample.Main"
+      [ "matrix app for Scala 3" ];
+  matrix2-app-artifacts =
+    onlyOwnArtifacts "matrix2-app-artifacts" matrix2.packages.app "example/app_3"
+      { };
+  matrix2-app2_13-artifacts =
+    onlyOwnArtifacts "matrix2-app2_13-artifacts" matrix2.packages.app2_13 "example/app_2.13"
+      { };
+  matrix2-app-repository =
+    runFromRepository "matrix2-app-repository" matrix2.repositories.app "example:app_3:6.0.0"
+      "matrixexample.Main"
+      [ "matrix app for Scala 3" ];
+  matrix2-app2_13-repository =
+    runFromRepository "matrix2-app2_13-repository" matrix2.repositories.app2_13 "example:app_2.13:6.0.0"
+      "matrixexample.Main"
+      [ "matrix app for Scala 2.13" ];
 
   # A project published Ivy-style for Scala 2.13 and Scala 3 has a module
   # for each in its output and in its repository, and each resolves and

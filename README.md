@@ -264,7 +264,10 @@ sbt 2, which resolves with coursier only.
   build the runner starts a client by default; the wrapper passes its
   settings in `SBT_OPTS`, which the server it starts receives too.
 - A cross-built project (`crossScalaVersions`) is built for each of its
-  Scala versions, as `+` does, and its outputs hold every variant.
+  Scala versions, as `+` does, and its outputs hold every variant. A
+  `projectMatrix` (sbt-projectmatrix on sbt 1, built into sbt 2) makes a
+  project per Scala version, and each gets a package of its own;
+  `tests/fixtures/matrix` and `tests/fixtures/matrix2` are such builds.
 - A lockfile records URLs, not credentials; a dependency from an
   authenticated repository needs a `fetchurl` that supplies them.
 - A `-SNAPSHOT` dependency changes under its URL, so its locked hash stops

@@ -301,6 +301,22 @@ same_as_nix "$published/example/ivyplugin/scala_2.12/sbt_1.0/4.0.0/jars/ivyplugi
 same_as_nix "$published/example/crosslib_2.13/4.0.0/jars/crosslib_2.13.jar" "ivy: +nixPublish publishes crosslib for Scala 2.13"
 same_as_nix "$published/example/crosslib_3/4.0.0/jars/crosslib_3.jar" "ivy: +nixPublish publishes crosslib for Scala 3"
 
+# With projectMatrix each Scala version is a project of its own, so a
+# plain nixPublish publishes every version, on sbt 1 and on sbt 2.
+nixpublish_suite matrix -- nixPublish
+nix_outputs 'show app/nixPackagedArtifacts' 'show app3/nixPackagedArtifacts' 'show core/nixPackagedArtifacts' \
+  'show core3/nixPackagedArtifacts'
+same_as_nix "$published/example/app_2.13/5.0.0/app_2.13-5.0.0.jar" "matrix: nixPublish publishes app for Scala 2.13"
+same_as_nix "$published/example/app_3/5.0.0/app_3-5.0.0.jar" "matrix: nixPublish publishes app for Scala 3"
+same_as_nix "$published/example/core_3/5.0.0/core_3-5.0.0.jar" "matrix: nixPublish publishes core for Scala 3"
+
+nixpublish_suite matrix2 -- nixPublish
+nix_outputs 'show app/nixPackagedArtifacts' 'show app2_13/nixPackagedArtifacts' 'show core/nixPackagedArtifacts' \
+  'show core2_13/nixPackagedArtifacts'
+same_as_nix "$published/example/app_3/6.0.0/app_3-6.0.0.jar" "matrix2: nixPublish publishes app for Scala 3"
+same_as_nix "$published/example/app_2.13/6.0.0/app_2.13-6.0.0.jar" "matrix2: nixPublish publishes app for Scala 2.13"
+same_as_nix "$published/example/core_2.13/6.0.0/core_2.13-6.0.0.jar" "matrix2: nixPublish publishes core for Scala 2.13"
+
 if ((failures > 0)); then
   echo "$failures failure(s); the sbt output is in $work/sbt.log (kept)" >&2
   trap - EXIT
