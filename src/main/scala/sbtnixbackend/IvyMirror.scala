@@ -110,9 +110,12 @@ object IvyMirror {
   /** A local HTTP server in front of the network for the lock run: a GET or
     * HEAD of `/https/host/path` answers with the file of
     * `https://host/path`, downloaded once into `cache` at its coursier
-    * path. An upstream 404 is a 404, and nothing is stored.
+    * path. An upstream 404 is a 404, and nothing is stored. A file of Maven
+    * Central comes from `centralMirror` when it is given (see
+    * [[CentralMirror]]); it is stored at the coursier path of its Central
+    * URL all the same.
     */
-  final class Server(cache: File) {
+  final class Server(cache: File, centralMirror: Option[String] = None) {
     private val server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 64)
     server.setExecutor(Executors.newFixedThreadPool(8))
     server.createContext(
@@ -139,7 +142,7 @@ object IvyMirror {
       val rel = if (rawPath.endsWith("/")) rawPath + ".directory" else rawPath
       val file = new File(cache, rel)
       val found = lock.synchronized {
-        file.isFile || fetch(CachePaths.url(rel), file)
+        file.isFile || fetch(CentralMirror.downloadUrl(CachePaths.url(rel), centralMirror), file)
       }
       if (!found) respond(exchange, 404, None)
       else respond(exchange, 200, if (exchange.getRequestMethod == "HEAD") None else Some(file))

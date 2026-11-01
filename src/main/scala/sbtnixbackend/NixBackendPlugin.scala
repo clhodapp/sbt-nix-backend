@@ -515,7 +515,11 @@ object NixBackendPlugin extends AutoPlugin {
       Mode.current match {
         case Mode.Sandbox =>
           Def.task(conf.withCache(Some(Mode.coursierCacheFromEnv)).withCachePolicies(Vector(CachePolicy.LocalOnly)))
-        case Mode.Lock => Def.task(conf.withCache(Some(Mode.coursierCacheFromEnv)))
+        case Mode.Lock =>
+          // The lock run downloads the files of Maven Central from a mirror
+          // when one is named; LockGeneration records their Central URLs.
+          val resolvers = CentralMirror.fromEnv(sys.env).fold(conf.resolvers)(m => conf.resolvers.map(CentralMirror.resolver(_, m)))
+          Def.task(conf.withCache(Some(Mode.coursierCacheFromEnv)).withResolvers(resolvers))
         case Mode.Interactive =>
           if ((ThisBuild / nixBackend).value)
             Def.task(conf.withCache(Some((ThisBuild / nixCoursierCache).value)).withCachePolicies(Vector(CachePolicy.LocalOnly)))

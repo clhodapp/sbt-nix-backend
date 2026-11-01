@@ -2,6 +2,7 @@ package sbtnixbackend
 
 import java.io.File
 import java.net.{HttpURLConnection, URI}
+import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, LinkOption, Path, StandardCopyOption}
 
 /** Writes a lock by running the sandboxed build once with the network.
@@ -59,11 +60,18 @@ object LockGeneration {
     info(s"[sbt-nix-backend] copying the build to $src")
     copyBuild(in.buildRoot, src)
 
+    val mirror = CentralMirror.fromEnv(sys.env)
+    mirror.foreach(m => info(s"[sbt-nix-backend] downloading the files of Maven Central from $m"))
     val launcherPath = CachePaths.relativePath(in.launcherUrl)
-    download(in.launcherUrl, new File(cache, launcherPath))
+    download(CentralMirror.downloadUrl(in.launcherUrl, mirror), new File(cache, launcherPath))
     in.networkUrls.foreach { url =>
       info(s"[sbt-nix-backend] fetching declared network dependency $url")
-      download(url, new File(cache, CachePaths.relativePath(url)))
+      download(CentralMirror.downloadUrl(url, mirror), new File(cache, CachePaths.relativePath(url)))
+    }
+    val launcherRepositories = mirror.map { m =>
+      val f = new File(work, "launcher-repositories")
+      Files.write(f.toPath, CentralMirror.launcherRepositories(m).getBytes(StandardCharsets.UTF_8))
+      f
     }
 
     // The injected plugin goes in as the fork's only global plugin, as it
@@ -94,6 +102,7 @@ object LockGeneration {
         "-Dsbt.log.noformat=true",
         "-Dsbt.supershell=false"
       ) ++ globalPlugins.map(d => s"-Dsbt.global.plugins=${d.getAbsolutePath}").toSeq ++
+        launcherRepositories.map(f => s"-Dsbt.repository.config=${f.getAbsolutePath}").toSeq ++
         Seq("-jar", new File(cache, launcherPath).getAbsolutePath, command)
 
     // The proxy settings may hold a password, and a command line is
@@ -123,6 +132,7 @@ object LockGeneration {
       "JDK_JAVA_OPTIONS" -> Some(javaOptionsEnv).filter(_.nonEmpty),
       "SBT_NIX_BACKEND" -> None,
       "SBT_NIX_MODE" -> Some("lock"),
+      CentralMirror.Variable -> mirror,
       "SBT_NIX_OUTPUT" -> Some(output.getAbsolutePath),
       "SBT_NIX_FLAKE_REPOSITORIES" -> Some(
         Json.Obj(in.flakeRepositoryPaths.toVector.sortBy(_._1).map { case (k, v) => k -> Json.str(v.getAbsolutePath) }).render
@@ -131,17 +141,18 @@ object LockGeneration {
     info(s"[sbt-nix-backend] running `$command` in a fresh sbt with an empty cache")
     // A project that resolves with Ivy downloads through this mirror, which
     // keeps every file in the fork's cache at its coursier path.
-    val mirror = new IvyMirror.Server(cache)
+    val ivyMirror = new IvyMirror.Server(cache, mirror)
     val code =
-      try Proc.stream(cmd, src, env + (IvyMirror.Variable -> Some(mirror.base)), line => info("[sbt-nix-backend lock] " + line))
+      try Proc.stream(cmd, src, env + (IvyMirror.Variable -> Some(ivyMirror.base)), line => info("[sbt-nix-backend lock] " + line))
       finally {
-        mirror.stop()
+        ivyMirror.stop()
         deleteRecursively(runtime)
       }
     if (code != 0)
       throw new LockFailed(
         s"the lock run failed (exit code $code); its output is above, and its directories are kept in $work"
       )
+    mirror.foreach(CentralMirror.canonicalize(cache, _))
 
     val files = CachePaths.downloadedFiles(cache)
     val artifacts = files.map { rel =>

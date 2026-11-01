@@ -69,6 +69,17 @@ build needs no entry in `project/plugins.sbt`:
 nix run github:nix-purifiers/sbt-purifier -- nixLock
 ```
 
+The lock run downloads every dependency afresh. When Maven Central limits
+the rate of a large run, `SBT_NIX_BACKEND_MAVEN_CENTRAL_MIRROR` names a
+mirror that serves the same files, and the lock run downloads the files of
+Maven Central from it. The lockfile still records their Maven Central
+URLs:
+
+```zsh
+SBT_NIX_BACKEND_MAVEN_CENTRAL_MIRROR=https://maven-central.storage-download.googleapis.com/maven2/ \
+  nix run github:nix-purifiers/sbt-purifier -- nixLock
+```
+
 Commit `sbt-nix-backend.lock.json`. The flake's `overlays.default` adds
 `buildSbtProject` to a package set, and a package written for
 `callPackage` takes it by name, like any other builder:
