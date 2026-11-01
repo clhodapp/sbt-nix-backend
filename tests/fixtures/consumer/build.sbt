@@ -9,7 +9,7 @@
 // names the revision it locks in SBT_NIX_BACKEND_TEST_PRODUCER.
 ThisBuild / scalaVersion := "3.3.6"
 
-val producer = sys.env.getOrElse("SBT_NIX_BACKEND_TEST_PRODUCER", "github:clhodapp/sbt-nix-backend?dir=tests/producers")
+val producer = sys.env.getOrElse("SBT_NIX_BACKEND_TEST_PRODUCER", "github:nix-purifiers/sbt-purifier?dir=tests/producers")
 
 ThisBuild / nixFlakeRepositories ++= Seq(
   NixFlakeRepository("multi", producer + "#multi-app"),

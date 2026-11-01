@@ -10,7 +10,7 @@ ThisBuild / version := sys.env
   .filter(_.nonEmpty)
   .getOrElse(IO.read((ThisBuild / baseDirectory).value / "version.txt").trim)
 ThisBuild / licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT"))
-ThisBuild / homepage := Some(url("https://github.com/clhodapp/sbt-nix-backend"))
+ThisBuild / homepage := Some(url("https://github.com/nix-purifiers/sbt-purifier"))
 
 lazy val root = (project in file("."))
   .settings(

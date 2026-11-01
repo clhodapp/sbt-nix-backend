@@ -5,7 +5,7 @@
 # the release zips in <zips> (each sbt-nix-backend-<version>-maven.zip,
 # as release.yml attaches them to the GitHub releases): a Maven
 # repository under <site>/maven, served at
-# https://clhodapp.github.io/sbt-nix-backend/maven. The GitHub releases
+# https://nix-purifiers.github.io/sbt-purifier/maven. The GitHub releases
 # are the only copy of the artifacts; the site is rebuilt from all of them
 # at each release, and nothing of it is in git.
 #

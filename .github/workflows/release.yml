@@ -20,7 +20,7 @@
 #    artifacts as a zip in Maven layout and their SHA256SUMS. The releases
 #    are the only copy of the artifacts; none is in git.
 #  - into the Maven repository that GitHub Pages serves at
-#    https://clhodapp.github.io/sbt-nix-backend/maven. The site is built
+#    https://nix-purifiers.github.io/sbt-purifier/maven. The site is built
 #    from the zips of every release (.github/release/pages.sh) and
 #    deployed as a Pages artifact, replacing the one before.
 #
@@ -129,7 +129,7 @@ jobs:
             echo "Install it in \`project/plugins.sbt\` (or in the meta-most build of a build that has several):"
             echo
             echo '```scala'
-            echo 'resolvers += "sbt-nix-backend" at "https://clhodapp.github.io/sbt-nix-backend/maven"'
+            echo 'resolvers += "sbt-nix-backend" at "https://nix-purifiers.github.io/sbt-purifier/maven"'
             echo "addSbtPlugin(\"io.github.clhodapp\" % \"sbt-nix-backend\" % \"$VERSION\")"
             echo '```'
             echo
