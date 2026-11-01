@@ -4,8 +4,9 @@
 # Brings the lockfiles of this repository's own build and of the test
 # fixtures up to date.
 #
-#   tests/relock-fixtures.sh          relock what is stale (nixLock)
-#   tests/relock-fixtures.sh --relock relock everything (nixRelock)
+#   tests/relock-fixtures.sh                 relock what is stale (nixLock)
+#   tests/relock-fixtures.sh --relock        relock everything (nixRelock)
+#   tests/relock-fixtures.sh --skip-consumer leave the consumer fixture
 #
 # Run it from anywhere, with the network: a relock downloads every artifact
 # of a build afresh. The fixtures run with the plugin injected by this
@@ -16,13 +17,24 @@
 # fixtures through tests/producers, a flake in this repository, on GitHub.
 # Its lockfile pins the commit this script runs from, which must be pushed;
 # the flake checks pass the repository outputs of this checkout instead.
-# While the GitHub repository is private, Nix fetches it with the token of
-# the GitHub CLI, which this script passes in NIX_CONFIG.
+# Its lockfile depends on its own build only, so a change to the other
+# fixtures leaves it valid, and --skip-consumer leaves it as it is (as
+# .github/workflows/update.yml does, before it has pushed anything).
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 task=nixLock
-if [[ ${1:-} == --relock ]]; then task=nixRelock; fi
+consumer=true
+for arg in "$@"; do
+  case $arg in
+    --relock) task=nixRelock ;;
+    --skip-consumer) consumer=false ;;
+    *)
+      echo "relock-fixtures: unknown argument $arg" >&2
+      exit 2
+      ;;
+  esac
+done
 
 # The root build compiles the plugin from source in its meta-build.
 (cd "$root" && sbt -batch "$task")
@@ -48,16 +60,14 @@ done
 # runs under plain sbt, from the flake's dev shell.
 (cd "$root/tests/fixtures/metameta" && nix develop "$root" -c sbt --server -batch "$task")
 
+if [[ $consumer == false ]]; then exit 0; fi
+
 # The consumer fixture locks tests/producers at the commit this checkout is
 # at, on GitHub.
 rev=$(git -C "$root" rev-parse HEAD)
 if [[ -z $(git -C "$root" branch -r --contains "$rev" 2>/dev/null) ]]; then
   echo "relock-fixtures: push $rev first; the consumer fixture locks it from GitHub" >&2
   exit 1
-fi
-if command -v gh >/dev/null && token=$(gh auth token 2>/dev/null); then
-  NIX_CONFIG="access-tokens = github.com=$token"${NIX_CONFIG:+$'\n'"$NIX_CONFIG"}
-  export NIX_CONFIG
 fi
 
 (cd "$root/tests/fixtures/consumer" &&
