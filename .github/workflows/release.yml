@@ -12,9 +12,8 @@
 # artifacts of the commit with the last release's version and compares
 # their SHA256SUMS with the SHA256SUMS of that release. The plugin build
 # is reproducible, so equal sums mean nothing a user receives changed,
-# whether the commit moved a pin (nixpkgs, sbt) or changed code, and the
-# run ends. Otherwise it builds them with the next revision and publishes
-# them:
+# whether the commit moved a pin (nixpkgs, sbt) or changed code. Otherwise
+# it builds them with the next revision and publishes them:
 #
 #  - as a GitHub release tagged v<version> at the commit, with the
 #    artifacts as a zip in Maven layout and their SHA256SUMS. The releases
@@ -22,7 +21,9 @@
 #  - into the Maven repository that GitHub Pages serves at
 #    https://nix-purifiers.github.io/sbt-purifier/maven. The site is built
 #    from the zips of every release (.github/release/pages.sh) and
-#    deployed as a Pages artifact, replacing the one before.
+#    merged with the README documentation and deployed as one Pages artifact.
+#    The combined site is refreshed after every successful main check, even
+#    when the plugin artifacts are unchanged.
 #
 # Started by hand with `deploy`, the run rebuilds and deploys the site
 # whether or not it releases. A new series (a manual edit of
@@ -63,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     outputs:
-      deploy: ${{ steps.decide.outputs.release == 'true' || inputs.deploy }}
+      deploy: 'true'
     env:
       GH_TOKEN: ${{ github.token }}
       SHA: ${{ inputs.sha || github.event.workflow_run.head_sha || github.sha }}
@@ -144,8 +145,24 @@ jobs:
           gh release create "v$VERSION" --target "$SHA" --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md" \
             "$zip" "$RUNNER_TEMP/release/SHA256SUMS"
 
+      - name: Check out the shared documentation theme
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: nix-purifiers/nix-purifiers.github.io
+          ref: 709850fbe1ec627f25daf66a6b74ca0953700b54
+          path: .pages-theme
+          persist-credentials: false
+      - name: Prepare the project documentation
+        run: python3 .pages-theme/docs-site/prepare.py --repository "$GITHUB_REPOSITORY"
+      - name: Build the project documentation
+        uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1
+        with:
+          source: .pages-source
+          destination: .pages-site
+          future: true
+          build_revision: ${{ env.SHA }}
+
       - name: Build the Maven repository from every release
-        if: steps.decide.outputs.release == 'true' || inputs.deploy
         run: |
           set -euo pipefail
           zips="$RUNNER_TEMP/zips"
@@ -154,9 +171,9 @@ jobs:
             gh release download "$tag" --pattern '*-maven.zip' --dir "$zips"
           done
           .github/release/pages.sh "$RUNNER_TEMP/site" "$zips"
+          cp -R .pages-site/. "$RUNNER_TEMP/site/"
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        if: steps.decide.outputs.release == 'true' || inputs.deploy
         with:
           path: ${{ runner.temp }}/site
 

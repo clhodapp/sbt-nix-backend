@@ -466,11 +466,10 @@ Nix build definition as described in
 
 ## Credits
 
-The model of the plugin, where the build tool plans and Nix fetches and
-builds, follows [cargo (libnix)](https://github.com/nixcloud/cargo). The
-download entries, their fetches and trees, and the lock in memory are the
-[purifier library](https://github.com/nix-purifiers/purifier), which the
-nix-purifiers share. Resolution is [coursier](https://get-coursier.io)'s.
+The purifier idea was inspired by nixcloud's
+[cargo (libnix)](https://github.com/nixcloud/cargo).
+
+Dependency resolution uses [Coursier](https://get-coursier.io).
 
 ## Development
 
