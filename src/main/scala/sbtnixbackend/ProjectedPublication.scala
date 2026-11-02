@@ -8,7 +8,7 @@ object ProjectedPublication {
   final case class Module(id: ModuleID, artifacts: Map[Artifact, File], pom: File, ivy: File)
 
   def modules(publication: File, maven: Boolean): Vector[Module] =
-    ProjectedDependencies.readCatalog(new File(publication, "catalog.json")).map { id =>
+    ProjectedDependencies.readCatalog(new File(publication, "catalog.json"), publications = maven).map { id =>
       val directory = new File(publication, "maven/" + id.organization.replace('.', '/') + "/" + id.name + "/" + id.revision)
       val prefix = id.name + "-" + id.revision
       val pom = new File(directory, prefix + ".pom")

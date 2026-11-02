@@ -12,10 +12,13 @@ object ProjectedDependencies {
       .filter(_.nonEmpty)
       .fold(Vector.empty[ModuleID])(path => readCatalog(new File(path)))
 
-  def readCatalog(file: File): Vector[ModuleID] = {
+  def readCatalog(file: File): Vector[ModuleID] = readCatalog(file, publications = false)
+
+  def readCatalog(file: File, publications: Boolean): Vector[ModuleID] = {
     val catalog = Json.parse(IO.read(file)).asObject
     if (catalog("version").asInt != 1) sys.error("sbt-purifier: unsupported JVM projection catalog")
-    catalog("modules").asArray.map { entry =>
+    val entries = if (publications) catalog.get("publications").getOrElse(catalog("modules")) else catalog("modules")
+    entries.asArray.map { entry =>
       val module = entry.asObject
       ModuleID(module("group").asString, module("name").asString, module("version").asString)
     }
