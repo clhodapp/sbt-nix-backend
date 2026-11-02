@@ -295,7 +295,7 @@ object LockGeneration {
     * The Nix library's default source filter leaves out the same ones.
     */
   def excluded(name: String): Boolean =
-    Set("target", ".git", ".bsp", ".metals", ".bloop", ".idea").contains(name) || name.startsWith("result")
+    Set("target", ".sbt-purifier", ".git", ".bsp", ".metals", ".bloop", ".idea").contains(name) || name.startsWith("result")
 
   /** Copies what a Nix build of `root` sees: in a git work tree, the
     * tracked files and the untracked ones git does not ignore (a flake's

@@ -358,6 +358,15 @@ else
   pass "sbt013: the wrapper supplies its plugin purely"
 fi
 
+
+# Generated resolver settings stay live across clean, including parallel projects.
+mapfile -t ivy_settings < <(find "$build" -type f -name '*-ivysettings.xml' | sort)
+expect "sbt013: generated Ivy settings exist" test "${#ivy_settings[@]}" -gt 0
+run_sbt clean
+for settings in "${ivy_settings[@]}"; do
+  expect "sbt013: clean preserves active Ivy settings" test -f "$settings"
+done
+
 if ((failures > 0)); then
   echo "$failures failure(s); the sbt output is in $work/sbt.log (kept)" >&2
   trap - EXIT

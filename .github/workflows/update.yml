@@ -68,7 +68,12 @@ jobs:
       # commit, and the other fixtures do not change it.
       - name: Relock
         if: steps.move.outputs.moved == 'true'
-        run: nix develop --command tests/relock-fixtures.sh --skip-consumer
+        # The dev shell builds this project's plugin repository, whose lock
+        # is stale after the version edits. Bootstrap with pinned plain sbt;
+        # the relock script rebuilds the current wrapper after the root lock.
+        run: |
+          export JAVA_HOME="$(nix eval --inputs-from . --raw nixpkgs#jdk.home)"
+          nix shell --inputs-from . nixpkgs#sbt --command tests/relock-fixtures.sh --skip-consumer
 
       - name: Run the flake checks
         if: steps.move.outputs.moved == 'true'

@@ -25,6 +25,7 @@ let
       type == "directory"
       && elem name [
         "target"
+        ".sbt-purifier"
         ".bsp"
         ".metals"
         ".bloop"

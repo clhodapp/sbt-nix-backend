@@ -147,7 +147,7 @@ object NixBackendPlugin extends AutoPlugin {
     def nixNetworkFile(url: String): Def.Initialize[Task[File]] = Def.task {
       val dir = Mode.current match {
         case Mode.Interactive if (ThisBuild / nixBackend).value => (ThisBuild / nixCoursierCache).value
-        case Mode.Interactive => ((ThisBuild / nixBuildRoot).value / "target") / "sbt-nix-backend" / "network"
+        case Mode.Interactive => cacheRoot((ThisBuild / nixBuildRoot).value) / "network"
         case _                => Mode.coursierCacheFromEnv
       }
       val f = dir / CachePaths.relativePath(url)
@@ -640,7 +640,7 @@ object NixBackendPlugin extends AutoPlugin {
     * coursier.
     */
   private def ivyMirror: Def.Initialize[Task[Option[IvyMirror.Setup]]] = Def.taskDyn {
-    val homes = (ThisBuild / nixBuildRoot).value / "target" / "sbt-nix-backend" / "ivy-homes"
+    lazy val homes = cacheRoot((ThisBuild / nixBuildRoot).value) / "ivy-homes"
     if (!Compat.usesIvyResolution.value) Def.task(Option.empty[IvyMirror.Setup])
     else
       Mode.current match {
@@ -658,12 +658,21 @@ object NixBackendPlugin extends AutoPlugin {
       }
   }
 
+  /** Resolution settings, caches and GC roots must survive every project clean. */
+  private def cacheRoot(root: File): File = {
+    val dir = root / ".sbt-purifier"
+    Files.createDirectories(dir.toPath)
+    try Files.write((dir / ".gitignore").toPath, "*\n".getBytes(StandardCharsets.UTF_8), java.nio.file.StandardOpenOption.CREATE_NEW)
+    catch { case _: java.nio.file.FileAlreadyExistsException => () }
+    dir
+  }
+
   private val coursierCacheLock = new Object
 
   private def coursierCacheTask: Def.Initialize[Task[File]] = Def.task(Compat.uncached {
     val log = streams.value.log
     val lockFile = nixLockFile.value
-    val base = ((ThisBuild / nixBuildRoot).value / "target") / "sbt-nix-backend"
+    val base = cacheRoot((ThisBuild / nixBuildRoot).value)
     val dir = base / "coursier-cache"
     if (!lockFile.isFile) sys.error(s"sbt-nix-backend: no lock at $lockFile; run `${Lock.LockCommand}`")
     coursierCacheLock.synchronized {
@@ -692,7 +701,7 @@ object NixBackendPlugin extends AutoPlugin {
     Mode.current match {
       case Mode.Interactive if declared.nonEmpty =>
         val lock = Lock.readOption(nixLockFile.value)
-        val base = ((ThisBuild / nixBuildRoot).value / "target") / "sbt-nix-backend" / "flake-repositories"
+        val base = cacheRoot((ThisBuild / nixBuildRoot).value) / "flake-repositories"
         lazy val nix = new Nix(_ => ())
         declared.map { r =>
           val locked = lock
@@ -775,7 +784,7 @@ object NixBackendPlugin extends AutoPlugin {
         else existing.flatMap(_.flakeRepositories.find(l => l.name == r.name && l.ref == r.ref))
       kept.getOrElse(LockedFlakeRepository(r.name, r.ref, nix.lockFlakeRef(r.flakeRef), r.attribute))
     }
-    val repoBase = ((ThisBuild / nixBuildRoot).value / "target") / "sbt-nix-backend" / "flake-repositories"
+    val repoBase = cacheRoot((ThisBuild / nixBuildRoot).value) / "flake-repositories"
     val repoViews =
         lockedRepos.map(r => r.name -> realizeFlakeRepository(nix, repoBase, r.name, r.locked, r.attribute)).toMap
       val repoPaths = repoViews.map { case (name, view) => name -> view.path }

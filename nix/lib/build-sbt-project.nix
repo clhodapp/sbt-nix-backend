@@ -99,7 +99,14 @@ let
     in
     !(
       (
-        type == "directory" && (name == "target" || name == ".bsp" || name == ".metals" || name == ".bloop")
+        type == "directory"
+        && (
+          name == "target"
+          || name == ".sbt-purifier"
+          || name == ".bsp"
+          || name == ".metals"
+          || name == ".bloop"
+        )
       )
       || name == ".git"
       || name == ".idea"

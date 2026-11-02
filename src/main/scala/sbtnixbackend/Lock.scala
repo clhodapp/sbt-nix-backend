@@ -258,7 +258,7 @@ object Lock {
     * buildSbtProject leaves the same names out of the source it copies.
     */
   def outsideTheBuild(name: String, isDirectory: Boolean): Boolean =
-    (isDirectory && Set("target", ".bsp", ".metals", ".bloop")(name)) ||
+    (isDirectory && Set("target", ".sbt-purifier", ".bsp", ".metals", ".bloop")(name)) ||
       name == ".git" || name == ".idea" || name.startsWith("result")
 
   /** A digest of the files that define the build's dependencies: every
