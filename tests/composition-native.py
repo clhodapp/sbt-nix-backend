@@ -81,4 +81,31 @@ public class NativeMain {
         path = published / 'org/apache/commons' / name / revision
         assert (path / (name + '-' + revision + '.jar')).is_file()
     assert (published / 'org/apache/commons/commons-text').is_dir()
+    # Resolve the deployed descriptors with an ordinary Maven client. This
+    # also requires uploaded parent/BOM POMs, not just the project JARs.
+    expression = """let
+      f = builtins.getFlake ("path:" + builtins.getEnv "COMPOSITION_FLAKE");
+      p = f.inputs.nixpkgs.legacyPackages.${builtins.currentSystem};
+    in p.runCommand "sbt-composition-downstream-tools" {} ''
+      mkdir -p "$out/bin"
+      ln -s ${p.maven}/bin/mvn "$out/bin/mvn"
+      ln -s ${p.jdk21_headless.home} "$out/jdk"
+    '' """
+    tools = Path(subprocess.check_output(['nix', 'build', '--impure', '--print-out-paths',
+        '--out-link', str(temporary / 'maven-tools'), '--expr', expression], text=True,
+        env=dict(os.environ, COMPOSITION_FLAKE=snapshot)).strip())
+    downstream = temporary / 'ordinary-downstream'
+    downstream.mkdir()
+    (downstream / 'pom.xml').write_text(f"""<project><modelVersion>4.0.0</modelVersion>
+      <groupId>example</groupId><artifactId>downstream</artifactId><version>1</version>
+      <repositories><repository><id>projected</id><url>{published.as_uri()}</url></repository></repositories>
+      <dependencies><dependency><groupId>example</groupId><artifactId>native-input-consumer</artifactId>
+      <version>{pom.parent.name}</version></dependency></dependencies></project>""")
+    plain = dict(os.environ, JAVA_HOME=str(tools / 'jdk'))
+    subprocess.run([str(tools / 'bin/mvn'), '-B', '-Dmaven.repo.local='+str(temporary / 'ordinary-m2'),
+        'dependency:build-classpath', '-Dmdep.outputFile=classpath'], cwd=downstream, env=plain, check=True)
+    output = subprocess.check_output([str(tools / 'jdk/bin/java'), '-cp',
+        (downstream / 'classpath').read_text().strip(), 'example.NativeMain'],
+        cwd=downstream, env=plain, text=True)
+    assert 'Hello Nix' in output, output
     print('SBT NATIVE COMPOSITION PASSED: ' + args.sbt_version)
