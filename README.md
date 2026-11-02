@@ -192,7 +192,8 @@ can live in the project's repository or in another one:
 
 ```nix
 {
-  inputs.sbt-purifier.url = "github:nix-purifiers/sbt-purifier";
+  inputs.sbt-purifier.url =
+    "github:nix-purifiers/sbt-purifier";
   inputs.nixpkgs.follows = "sbt-purifier/nixpkgs";
 
   outputs =
@@ -203,12 +204,15 @@ can live in the project's repository or in another one:
         inherit system;
         overlays = [ sbt-purifier.overlays.default ];
       };
-      build = pkgs.sbt-purifier.buildSbtProject { src = ./.; };
+      build = pkgs.sbt-purifier.buildSbtProject {
+        src = ./.;
+      };
     in
     {
       packages.${system}.core = build.packages.core;
       checks.${system}.tests = build.tests;
-      # Other builds reference these (see "Supported language repositories").
+      # Other builds reference these (see "Supported
+      # language repositories").
       sbtRepositories.${system} = build.sbtRepositories;
     };
 }
