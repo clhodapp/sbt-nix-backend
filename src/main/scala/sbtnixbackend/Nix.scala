@@ -45,7 +45,7 @@ final class Nix(log: String => Unit) {
   def build(installable: String, outLink: File): File = {
     Option(outLink.getParentFile).foreach(_.mkdirs())
     val out = nix("build", "--no-write-lock-file", "--print-out-paths", "--out-link", outLink.getAbsolutePath, installable).trim
-    new File(out.linesIterator.toSeq.head)
+    new File(out.split("\\r?\\n").toSeq.head)
   }
 
   /** Builds attribute `attribute` of the Nix file `file`, called with the
@@ -60,7 +60,7 @@ final class Nix(log: String => Unit) {
       Seq("build", "--impure", "--print-build-logs", "--print-out-paths", "--out-link", outLink.getAbsolutePath, "--file", file.getAbsolutePath) ++
         argv ++ Seq(attribute): _*
     ).trim
-    new File(out.linesIterator.toSeq.last)
+    new File(out.split("\\r?\\n").toSeq.last)
   }
 
   /** Downloads every artifact of `lockFile` into the store and returns the
@@ -113,7 +113,7 @@ object Nix {
         if (Files.isSymbolicLink(link)) Some(Files.readSymbolicLink(link))
         else if (Files.exists(link, LinkOption.NOFOLLOW_LINKS)) { Files.delete(link); None }
         else None
-      if (!current.contains(targetPath)) {
+      if (!current.exists(_ == targetPath)) {
         if (current.isDefined) Files.delete(link)
         Files.createSymbolicLink(link, targetPath)
       }

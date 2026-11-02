@@ -65,7 +65,7 @@ class IvyLayoutSuite extends munit.FunSuite {
     val resolver = Resolver.file("flat", source)(Patterns(Vector(pattern), Vector(pattern), false, false, false))
     val cache = new File(work, "cache")
     val repository = new File(work, "repository")
-    val copied = RuntimeRepository.complete(
+    val copied = RuntimeResolution.complete(
       repository,
       RuntimeRepository.Coordinates("org.example", "flat", "1.0"),
       CoursierConfiguration().withResolvers(Vector(resolver)).withCache(Some(cache)),

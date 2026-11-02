@@ -3,7 +3,7 @@ package sbtnixbackend
 import java.io.File
 import java.net.{HttpURLConnection, URI}
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, LinkOption, Path, StandardCopyOption}
+import java.nio.file.{Files, LinkOption, Path, StandardCopyOption, StandardOpenOption}
 
 /** Writes a lock by running the sandboxed build once with the network.
   *
@@ -47,7 +47,10 @@ object LockGeneration {
   def run(in: Inputs, info: String => Unit, warn: String => Unit): Lock = {
     val work = in.workDir
     deleteRecursively(work)
-    val src = new File(work, "src")
+    // sbt 0.13 derives implicit project ids from the directory name.
+    // Keep it in both the lock fork and the Nix build.
+    val buildDirectory = if (BootRepositories.legacy(in.sbtVersion)) Some(in.buildRoot.getName) else None
+    val src = buildDirectory.fold(new File(work, "src"))(name => new File(new File(work, "src"),name))
     val home = new File(work, "home")
     val cache = new File(work, "coursier-cache")
     val output = new File(work, "output")
@@ -68,7 +71,12 @@ object LockGeneration {
       info(s"[sbt-nix-backend] fetching declared network dependency $url")
       download(CentralMirror.downloadUrl(url, mirror), new File(cache, CachePaths.relativePath(url)))
     }
-    val launcherRepositories = mirror.map { m =>
+    val ivyMirror = new IvyMirror.Server(cache, mirror)
+    val launcherRepositories = if (BootRepositories.legacy(in.sbtVersion)) {
+      val f = new File(work, "launcher-repositories")
+      Files.write(f.toPath, BootRepositories.contents(Some(ivyMirror.base)).getBytes(StandardCharsets.UTF_8))
+      Some(f)
+    } else mirror.map { m =>
       val f = new File(work, "launcher-repositories")
       Files.write(f.toPath, CentralMirror.launcherRepositories(m).getBytes(StandardCharsets.UTF_8))
       f
@@ -79,7 +87,10 @@ object LockGeneration {
     val globalPlugins = in.injectedPluginFile.map { f =>
       val dir = new File(work, "global-plugins")
       dir.mkdirs()
-      Files.copy(f.toPath, new File(dir, "sbt-nix-backend.sbt").toPath)
+      val target = new File(dir, "sbt-nix-backend.sbt")
+      Files.copy(f.toPath, target.toPath)
+      if (BootRepositories.legacy(in.sbtVersion) && !new String(Files.readAllBytes(target.toPath), StandardCharsets.UTF_8).contains("// Bootstrap the global plugin"))
+        Files.write(target.toPath, NixLibrary.resource("legacy-global-settings.sbt"), StandardOpenOption.APPEND)
       dir
     }
 
@@ -101,7 +112,7 @@ object LockGeneration {
         "-Dsbt.server.forcestart=true",
         "-Dsbt.log.noformat=true",
         "-Dsbt.supershell=false"
-      ) ++ globalPlugins.map(d => s"-Dsbt.global.plugins=${d.getAbsolutePath}").toSeq ++
+      ) ++ globalPlugins.toSeq.flatMap(d => Seq(s"-Dsbt.global.plugins=${d.getAbsolutePath}", s"-Dsbt.nix.backend.inject=${new File(d, "sbt-nix-backend.sbt").getAbsolutePath}")) ++
         launcherRepositories.map(f => s"-Dsbt.repository.config=${f.getAbsolutePath}").toSeq ++
         Seq("-jar", new File(cache, launcherPath).getAbsolutePath, "nixEditorDownloads", command)
 
@@ -129,7 +140,7 @@ object LockGeneration {
       "COURSIER_CONFIG_DIR" -> None,
       "COURSIER_CREDENTIALS" -> None,
       "SBT_OPTS" -> None,
-      "JDK_JAVA_OPTIONS" -> Some(javaOptionsEnv).filter(_.nonEmpty),
+      (if (Lock.javaMajor(System.getProperty("java.version")) == "8") "JAVA_TOOL_OPTIONS" else "JDK_JAVA_OPTIONS") -> Some(javaOptionsEnv).filter(_.nonEmpty),
       "SBT_NIX_BACKEND" -> None,
       "SBT_NIX_MODE" -> Some("lock"),
       CentralMirror.Variable -> mirror,
@@ -141,7 +152,6 @@ object LockGeneration {
     info(s"[sbt-nix-backend] running `nixEditorDownloads` and `$command` in a fresh sbt with an empty cache")
     // A project that resolves with Ivy downloads through this mirror, which
     // keeps every file in the fork's cache at its coursier path.
-    val ivyMirror = new IvyMirror.Server(cache, mirror)
     val code =
       try Proc.stream(cmd, src, env + (IvyMirror.Variable -> Some(ivyMirror.base)), line => info("[sbt-nix-backend lock] " + line))
       finally {
@@ -187,7 +197,8 @@ object LockGeneration {
       flakeRepositories = in.flakeRepositories,
       artifacts = artifacts,
       inputsHash = in.inputsHash,
-      definitionHash = Lock.buildDefinitionHash(in.buildRoot, Nil)
+      definitionHash = Lock.buildDefinitionHash(in.buildRoot, Nil),
+      buildDirectory = buildDirectory
     )
   }
 

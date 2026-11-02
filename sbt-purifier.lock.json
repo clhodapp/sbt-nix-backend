@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "contentHash": "36e78e6dd9f3d5fd522e621a7aa7959b7e638ecfc4851a2b7245a9ae17fc58ba",
+  "contentHash": "333e2743aa54206f0d6051917eb53e113a91c3ee655a389210153d8c8130b71d",
   "sbtVersion": "1.11.7",
   "javaVersion": "21",
   "launcher": "https/repo1.maven.org/maven2/org/scala-sbt/sbt-launch/1.11.7/sbt-launch-1.11.7.jar",
@@ -15,6 +15,100 @@
       "organization": "io.github.clhodapp",
       "name": "sbt-nix-backend_2.12_1.0",
       "variants": [
+        {
+          "name": "scala2_10_sbt0_13",
+          "scalaVersion": "2.10.7",
+          "artifacts": [
+            {
+              "key": "sbt-nix-backend_2.10_0.13.jar",
+              "name": "sbt-nix-backend_2.10_0.13",
+              "type": "jar",
+              "extension": "jar",
+              "classifier": null,
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend.jar",
+              "name": "sbt-nix-backend",
+              "type": "jar",
+              "extension": "jar",
+              "classifier": null,
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend-javadoc.jar",
+              "name": "sbt-nix-backend",
+              "type": "doc",
+              "extension": "jar",
+              "classifier": "javadoc",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend_2.10_0.13-sources.jar",
+              "name": "sbt-nix-backend_2.10_0.13",
+              "type": "src",
+              "extension": "jar",
+              "classifier": "sources",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend.pom",
+              "name": "sbt-nix-backend",
+              "type": "pom",
+              "extension": "pom",
+              "classifier": null,
+              "configurations": [
+                "pom"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend-sources.jar",
+              "name": "sbt-nix-backend",
+              "type": "src",
+              "extension": "jar",
+              "classifier": "sources",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend_2.10_0.13.pom",
+              "name": "sbt-nix-backend_2.10_0.13",
+              "type": "pom",
+              "extension": "pom",
+              "classifier": null,
+              "configurations": [
+                "pom"
+              ],
+              "extraAttributes": {}
+            },
+            {
+              "key": "sbt-nix-backend_2.10_0.13-javadoc.jar",
+              "name": "sbt-nix-backend_2.10_0.13",
+              "type": "doc",
+              "extension": "jar",
+              "classifier": "javadoc",
+              "configurations": [
+                "compile"
+              ],
+              "extraAttributes": {}
+            }
+          ]
+        },
         {
           "name": "scala2_12_sbt1_0",
           "scalaVersion": "2.12.20",
@@ -66,7 +160,7 @@
           ]
         },
         {
-          "name": "scala3_sbt1_0",
+          "name": "scala3_sbt2",
           "scalaVersion": "3.8.4",
           "artifacts": [
             {
@@ -119,8 +213,8 @@
     }
   ],
   "flakeRepositories": [],
-  "inputsHash": "3e16c2cacb7909b42c3030ad04399c66f25a4945981109c9eaa64bd6e345a4df",
-  "definitionHash": "b35034e56de8dd065202887db030c26d013e471fdb09d0eff80684a582ade7e9",
+  "inputsHash": "48091398d3b908f64d4e57b2f554363f4a051ca602d5a15a8cb8f976c6f74e4d",
+  "definitionHash": "a9902889093f1fab4dac5ccb8e054822dc3e0663caec5ceee23a954f6908ef6d",
   "artifacts": [
     {
       "path": "https/repo1.maven.org/maven2/com/eed3si9n/gigahorse-apache-http_2.12/0.9.3/gigahorse-apache-http_2.12-0.9.3-javadoc.jar",
@@ -1371,6 +1465,38 @@
       "hash": "sha256-8uxkbyMjdkMlymEUkoRFjllXoR1EGsI7jYsq1HDjkBY="
     },
     {
+      "path": "https/repo1.maven.org/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.jar",
+      "url": "https://repo1.maven.org/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.jar"
+      ],
+      "hash": "sha256-ffnn/OhPQpxaMT/7hrI6pV/8/DbU1QY14Xa8hG4XsZU="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.jar.sha1"
+      ],
+      "hash": "sha256-AcyFRt043sghSZQx5HzYDvvzIZ1Lnxk/0R+5veXGBRQ="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.pom",
+      "url": "https://repo1.maven.org/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.pom"
+      ],
+      "hash": "sha256-U249mV/w3O2svEovYU+7q9T07QCc5kv72us5j+o3vbA="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/jcraft/jsch/0.1.50/jsch-0.1.50.pom.sha1"
+      ],
+      "hash": "sha256-24umK/XN0hM4OeKn7RfJpIai6abhRwp7t2tdABf/mf0="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/com/lihaoyi/fansi_3/0.5.1/fansi_3-0.5.1.jar",
       "url": "https://repo1.maven.org/maven2/com/lihaoyi/fansi_3/0.5.1/fansi_3-0.5.1.jar",
       "mirrors": [
@@ -1531,6 +1657,38 @@
       "hash": "sha256-LPHJZgcJSsvFi0ruMJuqyob9Q5X4+LVP5R37ohVkihA="
     },
     {
+      "path": "https/repo1.maven.org/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.jar",
+      "url": "https://repo1.maven.org/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.jar"
+      ],
+      "hash": "sha256-KekjImoNEOkUK72BBz71L2ASdwAfz5AUOJvwrz3DPcM="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.jar.sha1"
+      ],
+      "hash": "sha256-KFgwiea3SgtelXRRL+JESZY8IT8/a+CBVsPC/y7vYT8="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.pom",
+      "url": "https://repo1.maven.org/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.pom"
+      ],
+      "hash": "sha256-gYj1NhUu1kcjRfXmEE0tOP/5wyfFxIJbjoZiSctvl+A="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/novocode/junit-interface/0.11/junit-interface-0.11.pom.sha1"
+      ],
+      "hash": "sha256-ph1jMzWQ128OQL5cMBVqg/mnHrCkkyKKaT17Ag7Y/Sg="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/com/swoval/file-tree-views/2.1.12/file-tree-views-2.1.12-javadoc.jar",
       "url": "https://repo1.maven.org/maven2/com/swoval/file-tree-views/2.1.12/file-tree-views-2.1.12-javadoc.jar",
       "mirrors": [
@@ -1593,6 +1751,54 @@
         "https://maven-central.storage-download.googleapis.com/maven2/com/swoval/file-tree-views/2.1.12/file-tree-views-2.1.12.pom.sha1"
       ],
       "hash": "sha256-kI6+awnPk/VW5Fu+v4G3HIgyxWrrzG6kRVg/U+xNfW0="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer-parent/2.6/paranamer-parent-2.6.pom",
+      "url": "https://repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer-parent/2.6/paranamer-parent-2.6.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/thoughtworks/paranamer/paranamer-parent/2.6/paranamer-parent-2.6.pom"
+      ],
+      "hash": "sha256-V77ZF7aKVjpqx9xOkR3bB7i/mTI5SSVWlVs++nMhVpA="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer-parent/2.6/paranamer-parent-2.6.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer-parent/2.6/paranamer-parent-2.6.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/thoughtworks/paranamer/paranamer-parent/2.6/paranamer-parent-2.6.pom.sha1"
+      ],
+      "hash": "sha256-AWQ51xqMF8Fkzg+4uLipOqncguV4Mp1jnIvhNeV624M="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.jar",
+      "url": "https://repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.jar"
+      ],
+      "hash": "sha256-uWPBhY11/jesIGtVw3mahhYJF464gR9gsb38BN0UOr8="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.jar.sha1"
+      ],
+      "hash": "sha256-RtsCk3OLGX63jIGyF75wdoZA7ARFtCH+oAB8mHVL73Y="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.pom",
+      "url": "https://repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.pom"
+      ],
+      "hash": "sha256-BRvTMAu49exsGK87T5m0P3egc7d7hh66Xt8K6Anmlkk="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/com/thoughtworks/paranamer/paranamer/2.6/paranamer-2.6.pom.sha1"
+      ],
+      "hash": "sha256-KGbpEgH3Ao1lINV7Gqb+YC6rLDstsnIS3h45CIeZOJY="
     },
     {
       "path": "https/repo1.maven.org/maven2/com/typesafe/config/1.4.2/config-1.4.2-javadoc.jar",
@@ -2699,6 +2905,38 @@
       "hash": "sha256-lSGloxGgTnFJmsDJaq7/zgxCnS2cPAEdno39WxdrYRw="
     },
     {
+      "path": "https/repo1.maven.org/maven2/jline/jline/2.14.5/jline-2.14.5.jar",
+      "url": "https://repo1.maven.org/maven2/jline/jline/2.14.5/jline-2.14.5.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/jline/jline/2.14.5/jline-2.14.5.jar"
+      ],
+      "hash": "sha256-TzR7yQ1vXOYcD4ko1Ep7mTJ1zqp9fyN3FFGKm91QA84="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/jline/jline/2.14.5/jline-2.14.5.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/jline/jline/2.14.5/jline-2.14.5.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/jline/jline/2.14.5/jline-2.14.5.jar.sha1"
+      ],
+      "hash": "sha256-3xceGnSLMoHIQihWFnOkJINVi8OgI6NPGaNyUYvuHwo="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/jline/jline/2.14.5/jline-2.14.5.pom",
+      "url": "https://repo1.maven.org/maven2/jline/jline/2.14.5/jline-2.14.5.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/jline/jline/2.14.5/jline-2.14.5.pom"
+      ],
+      "hash": "sha256-/UbrMMcPiCvaQYsIWfY/PZxJU4YQ7QuZ+xHzL4uKZN4="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/jline/jline/2.14.5/jline-2.14.5.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/jline/jline/2.14.5/jline-2.14.5.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/jline/jline/2.14.5/jline-2.14.5.pom.sha1"
+      ],
+      "hash": "sha256-EPhCsIpQYwXUA5e+HNzxygDLyStMQ7fXPY2IxaL76Ro="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/jline/jline/2.14.6/jline-2.14.6-javadoc.jar",
       "url": "https://repo1.maven.org/maven2/jline/jline/2.14.6/jline-2.14.6-javadoc.jar",
       "mirrors": [
@@ -2761,6 +2999,38 @@
         "https://maven-central.storage-download.googleapis.com/maven2/jline/jline/2.14.6/jline-2.14.6.pom.sha1"
       ],
       "hash": "sha256-HNqo6NX3CmC0BchGsh1MqPszXZi7dv3s46fb2kNnPgw="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/junit/junit/4.11/junit-4.11.jar",
+      "url": "https://repo1.maven.org/maven2/junit/junit/4.11/junit-4.11.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/junit/junit/4.11/junit-4.11.jar"
+      ],
+      "hash": "sha256-kKjhYD7spI5+h586+8lWBxUyKYXzmidPb2BwtD+dBv4="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/junit/junit/4.11/junit-4.11.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/junit/junit/4.11/junit-4.11.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/junit/junit/4.11/junit-4.11.jar.sha1"
+      ],
+      "hash": "sha256-AKsPuM7k5lbiKtW/8T5bI82Is1knXY05DhsN5hasUic="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/junit/junit/4.11/junit-4.11.pom",
+      "url": "https://repo1.maven.org/maven2/junit/junit/4.11/junit-4.11.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/junit/junit/4.11/junit-4.11.pom"
+      ],
+      "hash": "sha256-GK2LCunmWpGV0E4lQn3+i1gXWrza6HWlpAau44vd+yY="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/junit/junit/4.11/junit-4.11.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/junit/junit/4.11/junit-4.11.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/junit/junit/4.11/junit-4.11.pom.sha1"
+      ],
+      "hash": "sha256-HkMYJ7MN8RFpmtvWrjXj0H6jsH2MJv7MbJJycBZ5BR8="
     },
     {
       "path": "https/repo1.maven.org/maven2/junit/junit/4.13.2/junit-4.13.2-javadoc.jar",
@@ -3499,6 +3769,22 @@
       "hash": "sha256-iokRW4Q5ZuTp02us8k+FGobcylGyFTUghh9CyesN7As="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/codehaus/codehaus-parent/4/codehaus-parent-4.pom",
+      "url": "https://repo1.maven.org/maven2/org/codehaus/codehaus-parent/4/codehaus-parent-4.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/codehaus/codehaus-parent/4/codehaus-parent-4.pom"
+      ],
+      "hash": "sha256-a4cjfejC4XQM+AYnx/POPhXeGTC7JQxVoeypT6PgFN8="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/codehaus/codehaus-parent/4/codehaus-parent-4.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/codehaus/codehaus-parent/4/codehaus-parent-4.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/codehaus/codehaus-parent/4/codehaus-parent-4.pom.sha1"
+      ],
+      "hash": "sha256-HZLT5drArfzo3Hrd/8oqQwpc0EmooaM/hwKQ06/4bwM="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/fusesource/fusesource-pom/1.12/fusesource-pom-1.12.pom",
       "url": "https://repo1.maven.org/maven2/org/fusesource/fusesource-pom/1.12/fusesource-pom-1.12.pom",
       "mirrors": [
@@ -3513,6 +3799,38 @@
         "https://maven-central.storage-download.googleapis.com/maven2/org/fusesource/fusesource-pom/1.12/fusesource-pom-1.12.pom.sha1"
       ],
       "hash": "sha256-z4Skfqj0O3Pdb6bIKpy/JOe3Y2AFtAqJmtlH1ehLBSA="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.jar",
+      "url": "https://repo1.maven.org/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.jar"
+      ],
+      "hash": "sha256-gtkVFFI0bWjpa4aSnwXyGDEX2eI5oACoE8DqWkjRdaA="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.jar.sha1"
+      ],
+      "hash": "sha256-UQK4cWjOY8FNiVKX/qHFapqlj8kHrJ9QYb2MO5xI60c="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.pom",
+      "url": "https://repo1.maven.org/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.pom"
+      ],
+      "hash": "sha256-Oqjm4piIrz77CtwJCukjJ4EVoJhWp9OBy0pS8tbM92U="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/fusesource/jansi/jansi/1.4/jansi-1.4.pom.sha1"
+      ],
+      "hash": "sha256-ma9kg9/m0WYDD1Z11+dqUGg6Pj2RRgPf2JXLrYoF/zU="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/fusesource/jansi/jansi/2.4.1/jansi-2.4.1-javadoc.jar",
@@ -4235,6 +4553,70 @@
       "hash": "sha256-Bex8EFkcUXb8W3igHXnn4UTC5OIrbOHCVQVV2nZWsNg="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.jar",
+      "url": "https://repo1.maven.org/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.jar"
+      ],
+      "hash": "sha256-HTWUZ3Kt9tfxpt5PNlADQzWgVA6sYC1GyvS+FAHu6qk="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.jar.sha1"
+      ],
+      "hash": "sha256-rVpm3jq9CMR80WXdFRPYCMA/tQHGiY+6NosIF0bH0Bw="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.pom",
+      "url": "https://repo1.maven.org/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.pom"
+      ],
+      "hash": "sha256-eSPSNQjoH1oReqgt+lZHoS5bbvThASXxGc+0YSNjRYE="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/json4s/json4s-ast_2.10/3.2.10/json4s-ast_2.10-3.2.10.pom.sha1"
+      ],
+      "hash": "sha256-J4daTuf0qYvxmoRW7CPR9JsLwj11oyFq8snEn5cx1kQ="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.jar",
+      "url": "https://repo1.maven.org/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.jar"
+      ],
+      "hash": "sha256-Y8buAKyEmmBmPnphAlYEk1iPUvAtpbOhbybNKekYUTQ="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.jar.sha1"
+      ],
+      "hash": "sha256-hKOGP1wudZnp/vE2CwKr59Rsvtkaza8CiiOgbRm5Yo0="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.pom",
+      "url": "https://repo1.maven.org/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.pom"
+      ],
+      "hash": "sha256-aW/YOnp8TPOLQWgMzQi7kU/k8EhH/VFRp2n21O+/H7o="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/json4s/json4s-core_2.10/3.2.10/json4s-core_2.10-3.2.10.pom.sha1"
+      ],
+      "hash": "sha256-XUWwABKOUincuG5dT11aQZ9DH7Kcu96xcayim8hbjpM="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/jsoup/jsoup/1.17.2/jsoup-1.17.2.jar",
       "url": "https://repo1.maven.org/maven2/org/jsoup/jsoup/1.17.2/jsoup-1.17.2.jar",
       "mirrors": [
@@ -4377,6 +4759,38 @@
         "https://maven-central.storage-download.googleapis.com/maven2/org/reactivestreams/reactive-streams/1.0.3/reactive-streams-1.0.3.pom.sha1"
       ],
       "hash": "sha256-65RXkNWcHpYAkNqKAtmI6s87pYHWa3uph4zdcs5nDyU="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.jar"
+      ],
+      "hash": "sha256-gT8rw0oJbMd4DGlGrPQByC5znPnVNZ7fQU90ZiE307E="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.jar.sha1"
+      ],
+      "hash": "sha256-I+mxCIjcBA8rus2mE9BCHgWgYcQ5f22LXzpI8pCC1YU="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.pom"
+      ],
+      "hash": "sha256-tQh7xN24054/Au26axLz2D5eJmYq657w73UvlyhMKT8="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/jline/2.10.7/jline-2.10.7.pom.sha1"
+      ],
+      "hash": "sha256-mSUm7Erm7agKhJfNLt5B1nM9v/QyyIA2g9y9808m2Pk="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-lang/modules/scala-asm/9.9.0-scala-1/scala-asm-9.9.0-scala-1.jar",
@@ -4635,6 +5049,38 @@
       "hash": "sha256-JXXjR60CpELs3s5BQpHq1QyQ6kzsqF/W0NKyf8P+scI="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.jar"
+      ],
+      "hash": "sha256-PgmCycSWo2Ag2M86HfZXlwnb0XsyMoXVBgTHnxdR3Fw="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.jar.sha1"
+      ],
+      "hash": "sha256-fBI4XlwcsSbSaTJwP0y1MiCg/HnB4PaWI1S9g9dDKfY="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.pom"
+      ],
+      "hash": "sha256-vDrrp3QKMP65znyzbu8nDu4bikKzbJ9XxAsHxXpiheU="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/modules/scala-pickling_2.10/0.10.1/scala-pickling_2.10-0.10.1.pom.sha1"
+      ],
+      "hash": "sha256-SgPBg8A/0pa+9S6zI1Yz7ZGTHy4SFI+tHCv+k0b8I5g="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scala-lang/modules/scala-xml_2.12/2.2.0/scala-xml_2.12-2.2.0.pom",
       "url": "https://repo1.maven.org/maven2/org/scala-lang/modules/scala-xml_2.12/2.2.0/scala-xml_2.12-2.2.0.pom",
       "mirrors": [
@@ -4747,6 +5193,38 @@
       "hash": "sha256-knSZiP8XcuBu8eQ8t75t4vTriWjoB5xszXRop1PAnaU="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.jar"
+      ],
+      "hash": "sha256-Kj1R2TfmhNTKmJi6wperuTIYMhRvzHXY1SgZD3NFZ5o="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.jar.sha1"
+      ],
+      "hash": "sha256-YAOlQjuolWANfKJLMiIeY2W0rS8scs2WKj7UHzKAJPo="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.pom"
+      ],
+      "hash": "sha256-1zSDN+vK2sADDtmHTLeo1mlWhaQUa6eXH4n4L1JLeYU="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-compiler/2.10.7/scala-compiler-2.10.7.pom.sha1"
+      ],
+      "hash": "sha256-GV2eg7p4OzlKerOKRYC7hnH4YH1O09Enk48JOXshdQk="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.12.20/scala-compiler-2.12.20-javadoc.jar",
       "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.12.20/scala-compiler-2.12.20-javadoc.jar",
       "mirrors": [
@@ -4809,6 +5287,38 @@
         "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-compiler/2.12.20/scala-compiler-2.12.20.pom.sha1"
       ],
       "hash": "sha256-ZzlYMeNSini+1J+c/CYTrEPrZjI37k5sMJdxh226164="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.jar"
+      ],
+      "hash": "sha256-aRGT93PrEU2xi0jpQTJhL02RDxHv02wvFUfmNtuW5OU="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.jar.sha1"
+      ],
+      "hash": "sha256-A6mfN7SuiI5IHe/8ri7U4nbrYmHTQPQopZ8V9Rpeb3Q="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.pom"
+      ],
+      "hash": "sha256-BTXvbD/u39jod6E/+9XJ4zDows+2Xv1bePtQTSLqkZA="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-library/2.10.7/scala-library-2.10.7.pom.sha1"
+      ],
+      "hash": "sha256-ShiXgEdi6pE/+4LLVkDoph5sLtAvfO6rqQFcaPCU3Xo="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.20/scala-library-2.12.20-javadoc.jar",
@@ -4937,6 +5447,38 @@
         "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-library/3.8.4/scala-library-3.8.4.pom.sha1"
       ],
       "hash": "sha256-LKZ+wSde3Rw3IxqhhDjHx1bWnMyzVE2/7cnvU/TL0Yg="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.jar"
+      ],
+      "hash": "sha256-rFrMt8RfzyDPyzq2k0cNvF8Fc4I2Gl6FYfzNggeNbJc="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.jar.sha1"
+      ],
+      "hash": "sha256-Qak9Q8hrgzCj4vUIhZksvipfZf4TPeWmSM2A16Qksdk="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.pom"
+      ],
+      "hash": "sha256-4N3rbCH7S1JaRN5bAooyaLY+zpFr9VzCprhsQizNsUg="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-lang/scala-reflect/2.10.7/scala-reflect-2.10.7.pom.sha1"
+      ],
+      "hash": "sha256-s8mWJEIMQXhOc1idsJH/IbO7dFexxrAc4FAHAQDD9C0="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.20/scala-reflect-2.12.20-javadoc.jar",
@@ -5611,6 +6153,38 @@
       "hash": "sha256-HPAQf/2pzR4a55qRFfBUEVBulhAiwcflNusL2rYvLVk="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0-sources.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0-sources.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0-sources.jar"
+      ],
+      "hash": "sha256-YNrAXjudNd6zl8mxqfuEmXvcD5bHCVB2QsJrB7c3GUQ="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0-sources.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0-sources.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0-sources.jar.sha1"
+      ],
+      "hash": "sha256-keW6Iocns1+eGlHMOtYPFHSg0TaFWP3+N5JgwdkfRjk="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0.pom"
+      ],
+      "hash": "sha256-ZXhWcTo8Kol/c+Is20+Bgbtzgcc0PDTchTEc7g9KbH4="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/compiler-bridge_2.10/1.11.0/compiler-bridge_2.10-1.11.0.pom.sha1"
+      ],
+      "hash": "sha256-HUVJ2cqzVsKZf4O/fITz8SC5RC3XbUuV/l6kRMNAxXk="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.12/1.11.0/compiler-bridge_2.12-1.11.0-javadoc.jar",
       "url": "https://repo1.maven.org/maven2/org/scala-sbt/compiler-bridge_2.12/1.11.0/compiler-bridge_2.12-1.11.0-javadoc.jar",
       "mirrors": [
@@ -6283,6 +6857,38 @@
       "hash": "sha256-b7xHBaM4cJMZu0ykDTYPpT7kKvQ6wt8CjSreSMDAr40="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.jar"
+      ],
+      "hash": "sha256-bURXogJL5SxL4W4jxS2/4KJRGSbomSfCf3yp8OKv1xU="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.jar.sha1"
+      ],
+      "hash": "sha256-rKxiQmwuFQEnUR5woJCKrBWfv1WaxpZ5PKeLbAb0KvY="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.pom"
+      ],
+      "hash": "sha256-2vLubfOKPEobHyuJZhHd78Go78iXlUbMAm2eLt9lgiI="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310/ivy-2.3.0-sbt-b18f59ea3bc914a297bb6f1a4f7fb0ace399e310.pom.sha1"
+      ],
+      "hash": "sha256-CS8fUP9bFa0djMOrrSIHUwrHI8R8AkNBLgBr5pAIBs4="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-f686954b0021a5c3245766ced0cdaeca8ba2fd7a/ivy-2.3.0-sbt-f686954b0021a5c3245766ced0cdaeca8ba2fd7a.jar",
       "url": "https://repo1.maven.org/maven2/org/scala-sbt/ivy/ivy/2.3.0-sbt-f686954b0021a5c3245766ced0cdaeca8ba2fd7a/ivy-2.3.0-sbt-f686954b0021a5c3245766ced0cdaeca8ba2fd7a.jar",
       "mirrors": [
@@ -6377,6 +6983,38 @@
         "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/jline/jline/2.14.7-sbt-9a88bc413e2b34a4580c001c654d1a7f4f65bf18/jline-2.14.7-sbt-9a88bc413e2b34a4580c001c654d1a7f4f65bf18.pom.sha1"
       ],
       "hash": "sha256-FhTh9SeKLUDL5pkT9R2LViIN2hC1g2QqlZ2SabY3WG0="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.jar"
+      ],
+      "hash": "sha256-d3bvXg0ceoRkhhI3GpQ4ySN36DSjAFWSysXVc2tKfn0="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.jar.sha1"
+      ],
+      "hash": "sha256-3T5IhNuztT3Y/xhHqEZ4GjI7VtTPMGbH1ZW45tzV38c="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.pom"
+      ],
+      "hash": "sha256-Lbcp0+VwcOxNGqJhiLrWTR9RkDog93/bgTm4zm+zSns="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/launcher-interface/1.0.1/launcher-interface-1.0.1.pom.sha1"
+      ],
+      "hash": "sha256-OpXnsXin1FvmCky8eMuh7bia57fUt7IQzQA/43gqLaM="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/launcher-interface/1.5.1/launcher-interface-1.5.1-javadoc.jar",
@@ -7449,6 +8087,38 @@
         "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/scripted-plugin_2.12/1.11.7/scripted-plugin_2.12-1.11.7.pom.sha1"
       ],
       "hash": "sha256-ub2jVKXm3v+4YAMJ2A860liqGqjtTSfHBUzjQ9X/kOg="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.jar",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.jar"
+      ],
+      "hash": "sha256-JJ/xJ81rY7R6pdymd1Atiw8/D8Il/Zxmg5TnRpMh0lg="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.jar.sha1"
+      ],
+      "hash": "sha256-ny0oxGh36o2njg7AUbuFkJo8LsCh9Ud2nNQqH2+mGIc="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.pom",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.pom"
+      ],
+      "hash": "sha256-lS9HIXDWcJo9dVkHXx2RvFibbSraW9xbHmP46GhD3KU="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scala-sbt/serialization_2.10/0.1.2/serialization_2.10-0.1.2.pom.sha1"
+      ],
+      "hash": "sha256-5/jiKpbjMFYzxtp6siGy/mkd3j47znmTSxfX8fclB5M="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/scala-sbt/task-system_2.12/1.11.7/task-system_2.12-1.11.7-javadoc.jar",
@@ -9627,6 +10297,38 @@
       "hash": "sha256-c0P/GK3TjBmMBEgdJTPdx3oEDP0tLUjB/xpS/HKul4Q="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.jar",
+      "url": "https://repo1.maven.org/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.jar"
+      ],
+      "hash": "sha256-WB6H+r8S9d0NN98aSCOFYCyOwq1qgrH/pzLxFeM2v0I="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.jar.sha1"
+      ],
+      "hash": "sha256-R/gEA9vYsild1G2wnRNDg5X5nhEZGNuNupuxssUOrBU="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.pom",
+      "url": "https://repo1.maven.org/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.pom"
+      ],
+      "hash": "sha256-W6oHDN64wTYyKrwHw5ggEduyJBUJG5JcHZUApLC0BKw="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/scalamacros/quasiquotes_2.10/2.0.1/quasiquotes_2.10-2.0.1.pom.sha1"
+      ],
+      "hash": "sha256-2Or5y8boJg1NsS1hOboLVRLRMo6wobQ72qiZ5FVz/bA="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/scalameta/junit-interface/1.0.4/junit-interface-1.0.4-javadoc.jar",
       "url": "https://repo1.maven.org/maven2/org/scalameta/junit-interface/1.0.4/junit-interface-1.0.4-javadoc.jar",
       "mirrors": [
@@ -10043,6 +10745,22 @@
       "hash": "sha256-3R03dIFLQf/Jk3IRsQxqukRfKnN3uOg8qE5/Pc5IaXU="
     },
     {
+      "path": "https/repo1.maven.org/maven2/org/sonatype/oss/oss-parent/6/oss-parent-6.pom",
+      "url": "https://repo1.maven.org/maven2/org/sonatype/oss/oss-parent/6/oss-parent-6.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/sonatype/oss/oss-parent/6/oss-parent-6.pom"
+      ],
+      "hash": "sha256-tDBtE+j1OSRYobMIZvHP8WGz0uaZmojQWe6jkyyKhJk="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/sonatype/oss/oss-parent/6/oss-parent-6.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/sonatype/oss/oss-parent/6/oss-parent-6.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/sonatype/oss/oss-parent/6/oss-parent-6.pom.sha1"
+      ],
+      "hash": "sha256-Y2Sn481D1js3NZ0WysLmUHOvE58T6eW9qKcYA8d8+q8="
+    },
+    {
       "path": "https/repo1.maven.org/maven2/org/sonatype/oss/oss-parent/7/oss-parent-7.pom",
       "url": "https://repo1.maven.org/maven2/org/sonatype/oss/oss-parent/7/oss-parent-7.pom",
       "mirrors": [
@@ -10073,6 +10791,70 @@
         "https://maven-central.storage-download.googleapis.com/maven2/org/sonatype/oss/oss-parent/9/oss-parent-9.pom.sha1"
       ],
       "hash": "sha256-ihmbnn4/AFOcE5B5wLGlW8us5NmEknvhuPo20Qv3AQY="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.jar",
+      "url": "https://repo1.maven.org/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.jar"
+      ],
+      "hash": "sha256-4LGrsjxDPhhzDvvZs3E4e7/0mYlkZI4285foiRk1T1w="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.jar.sha1"
+      ],
+      "hash": "sha256-zTzXQWvvM3PVAE0ilCTQYYbk75Fwsxtbn7PNzysUETo="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.pom",
+      "url": "https://repo1.maven.org/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.pom"
+      ],
+      "hash": "sha256-Mb/9Fva6ELHLQ1xiv4jormQP7gqSv6a0CFe8KgzOFeo="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/spire-math/jawn-parser_2.10/0.6.0/jawn-parser_2.10-0.6.0.pom.sha1"
+      ],
+      "hash": "sha256-9YiyMv7zVi6wWibH1z3Jxqq4DDoIDz83oH+b6GACB+4="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.jar",
+      "url": "https://repo1.maven.org/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.jar",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.jar"
+      ],
+      "hash": "sha256-DVCA9ckHEuvqsd51dK2OrTHTvnC/k+TaoLbqMEt0NFo="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.jar.sha1",
+      "url": "https://repo1.maven.org/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.jar.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.jar.sha1"
+      ],
+      "hash": "sha256-YxNKhyLBZuTdwQNQ+EY7lVR7u40GcAEfMKvvJxWIjh8="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.pom",
+      "url": "https://repo1.maven.org/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.pom",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.pom"
+      ],
+      "hash": "sha256-Ud5QF9PeV0Pu5k34M2bq1ynBXWIfj08di0vXvU7uoCc="
+    },
+    {
+      "path": "https/repo1.maven.org/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.pom.sha1",
+      "url": "https://repo1.maven.org/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.pom.sha1",
+      "mirrors": [
+        "https://maven-central.storage-download.googleapis.com/maven2/org/spire-math/json4s-support_2.10/0.6.0/json4s-support_2.10-0.6.0.pom.sha1"
+      ],
+      "hash": "sha256-02RqSehJeJVz1wOwSjCMmKI1s2qYONxHbwR3iGGlpL4="
     },
     {
       "path": "https/repo1.maven.org/maven2/org/virtuslab/using_directives/1.1.4/using_directives-1.1.4.jar",
@@ -10281,6 +11063,414 @@
         "https://maven-central.storage-download.googleapis.com/maven2/ua/co/k/strftime4j/1.0.5/strftime4j-1.0.5.pom.sha1"
       ],
       "hash": "sha256-pXjMItF3b0vRRWE5NPqsZi7usICCtrh1mtgIf//EZq8="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/actions/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/actions/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-GlhGTILZ5AdPaMGtRfyoqIIS9+ha3jxSMfc0tmvfTpU="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/actions/0.13.18/jars/actions.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/actions/0.13.18/jars/actions.jar",
+      "mirrors": [],
+      "hash": "sha256-9HgcjDF6+UoIvDixYkG+WPBOu/P8AIgZc3HShb7rxaI="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/api/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/api/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-0u4niybcrgoz0tQWdF5OzlBzjC0HV+LNw1yPMnNMi/w="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/api/0.13.18/jars/api.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/api/0.13.18/jars/api.jar",
+      "mirrors": [],
+      "hash": "sha256-OnawrWFAvJIuJFRaxArQBlnFY/6MVtKIUMQbm6zpJsk="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/apply-macro/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/apply-macro/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-rd+ljjwX7wHdz0t8tvlgI2Kgl9v/FcUzygjG+v6dGDU="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/apply-macro/0.13.18/jars/apply-macro.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/apply-macro/0.13.18/jars/apply-macro.jar",
+      "mirrors": [],
+      "hash": "sha256-vT2jg3j+jFIotJ/esgZzBLvpQ+qIr22mWg4A0ePtymo="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/cache/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/cache/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-7SmZLvIlzqns8RTtm5Z2S3k5+AKEDLHLf+vNuPuCBhc="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/cache/0.13.18/jars/cache.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/cache/0.13.18/jars/cache.jar",
+      "mirrors": [],
+      "hash": "sha256-nIDfXV+MfVUWhTfhyYu5uieXmM8FLw13cA6VJhjNy4s="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/classfile/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/classfile/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-wlauDoJxkq1RdY9fQnPysBhM1J9iBQHCVgTE1GNv/NM="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/classfile/0.13.18/jars/classfile.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/classfile/0.13.18/jars/classfile.jar",
+      "mirrors": [],
+      "hash": "sha256-LcIrM/Y2MoVSlNcTMSI4npTsskk0HsKZXEzJP1syc/k="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/classpath/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/classpath/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-JELGCMc596YNr1Js3mIg3tw5FUOYVSvKUoF89L9bXiM="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/classpath/0.13.18/jars/classpath.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/classpath/0.13.18/jars/classpath.jar",
+      "mirrors": [],
+      "hash": "sha256-kdluzwadssJH/oen5CBq3SOjNBzR9oOsWDg27zOOljM="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/collections/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/collections/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-YqmXJaGj46FMM9Vk0lIT3GagLVu381/zOIkJ2wKGS6A="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/collections/0.13.18/jars/collections.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/collections/0.13.18/jars/collections.jar",
+      "mirrors": [],
+      "hash": "sha256-hIr4cPtk4uFNapO5O8k6fm75ObPsp4IugOIU5pwzZM4="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/command/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/command/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-7WvT10kBcS0hWNEQSenXSRprf+ERScjbYeJITRxdlh0="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/command/0.13.18/jars/command.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/command/0.13.18/jars/command.jar",
+      "mirrors": [],
+      "hash": "sha256-n1RkoOQ00PZyGtji0eRSS7WlOEt4wkxrqa2sH7RW5s8="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compile/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compile/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-vtUUgDtBLW8MWr0IDXqAHXmlZEGjs3uqXbw99NmWQBQ="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compile/0.13.18/jars/compile.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compile/0.13.18/jars/compile.jar",
+      "mirrors": [],
+      "hash": "sha256-YufCoMGoZQvVd9zxi0ODAOogBDc6z0ACc9DLNq7QC/4="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-integration/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-integration/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-HjbQXrQ29NIvBa0S1sbYuJc1KTBIWPmGRV9ZOdKBMV0="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-integration/0.13.18/jars/compiler-integration.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-integration/0.13.18/jars/compiler-integration.jar",
+      "mirrors": [],
+      "hash": "sha256-gpjxuuoG5KENpFYHdgZEHaEMhhESsLugMFHUvgKeuAo="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-interface/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-interface/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-8CPnwGw0Tnp4hQVgwRQheneuCJGpNd5muKMVIAQTSOI="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-interface/0.13.18/jars/compiler-interface.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-interface/0.13.18/jars/compiler-interface.jar",
+      "mirrors": [],
+      "hash": "sha256-DkrJPvAiZYE2igmHOxMTAaamIV3S9wulnR45Op2GwoA="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-ivy-integration/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-ivy-integration/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-XVUJ7sN7ltifE4SIB0iQ8GeltuXWdULKq3KiG5FbqlE="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-ivy-integration/0.13.18/jars/compiler-ivy-integration.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/compiler-ivy-integration/0.13.18/jars/compiler-ivy-integration.jar",
+      "mirrors": [],
+      "hash": "sha256-DzM+IydjPUv/jwSB7cztxQ9IgCfNNUhnwJCUr5fvdkA="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/completion/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/completion/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-y3ReVqQajhYvwB8KXDOQKMbkDR6ISAHtrsUI2wZEVyk="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/completion/0.13.18/jars/completion.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/completion/0.13.18/jars/completion.jar",
+      "mirrors": [],
+      "hash": "sha256-tT2vE3wiGEQ1JPJRTiNx7HduZ2WpXG/s3fPFJ9jjewk="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/control/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/control/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-jzfHgcT71X4NifSX3QlAPbFfZe9gZzlxOLUym5de/o4="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/control/0.13.18/jars/control.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/control/0.13.18/jars/control.jar",
+      "mirrors": [],
+      "hash": "sha256-VKYZvENkgenjtQdZ+K3bHRcb4pyINdNdA0AUnelCAhA="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/cross/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/cross/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-neVcbAwl1CXuSMXBHuZPl9G+wFIf9/9s8KnJ11dwVqI="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/cross/0.13.18/jars/cross.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/cross/0.13.18/jars/cross.jar",
+      "mirrors": [],
+      "hash": "sha256-PNm1yyUXAjZOsx0hNWhfNqJ2A5P4jXGkzFqLPXc3VAg="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/incremental-compiler/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/incremental-compiler/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-hn8FjqYk+OL4W9o2I/n9lBqHYRcFeYQaV79dqgxj4AA="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/incremental-compiler/0.13.18/jars/incremental-compiler.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/incremental-compiler/0.13.18/jars/incremental-compiler.jar",
+      "mirrors": [],
+      "hash": "sha256-2pdgU7Q+9amWWyO0Tf8uAMlQWFv8cuBJSf+rWWKbFjw="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/interface/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/interface/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-QQUT/WnP1P7zQrifwJMWdsw2RiiaCloaf2Cfn/29Kro="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/interface/0.13.18/jars/interface.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/interface/0.13.18/jars/interface.jar",
+      "mirrors": [],
+      "hash": "sha256-7G3wdhDiMyawz0h2Qc/Nl3saby4xi43TC1aXS4DfbJ0="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/io/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/io/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-yrO9YBfmQ63RNDSRIjlhav/U9kKnFsAfvKQpebpdnas="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/io/0.13.18/jars/io.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/io/0.13.18/jars/io.jar",
+      "mirrors": [],
+      "hash": "sha256-jji24MS/xJ5uwbDohzXLyLbKAEQ1A/aoZC0KnpBwHGw="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/ivy/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/ivy/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-UOa2osdzpI5s7DntrMOq8iEx8B3eK3zZ0rRzI/1kg9I="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/ivy/0.13.18/jars/ivy.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/ivy/0.13.18/jars/ivy.jar",
+      "mirrors": [],
+      "hash": "sha256-4C1a8MX/2cmgnw1Gmha9hLgW+rLrnuQoslQEGD2CB5M="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/logging/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/logging/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-RRxYyee6TOQbcTiDsu9a4T3S0fBD3VBwm5iFcCMkLqQ="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/logging/0.13.18/jars/logging.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/logging/0.13.18/jars/logging.jar",
+      "mirrors": [],
+      "hash": "sha256-XhDdwtTlWwMEMcRKjS/15awzZLOMa7NbtwogpD90IbQ="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/logic/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/logic/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-NTEey/STxbqNktQHp/9qmX4h7zzoAFLh9hiW0uPIbNI="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/logic/0.13.18/jars/logic.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/logic/0.13.18/jars/logic.jar",
+      "mirrors": [],
+      "hash": "sha256-v5W5MqmbLNAp0q+ItyamhsAeR/UtsE+dF4MfSl2cUfQ="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/main-settings/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/main-settings/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-aBeW+0hgOBW/OQFJIJhktpBJj+X8XIWOdIt7So4siUQ="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/main-settings/0.13.18/jars/main-settings.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/main-settings/0.13.18/jars/main-settings.jar",
+      "mirrors": [],
+      "hash": "sha256-ODSjvjsROeqMawkr1X/5jf/aw0HxVKBvKikzEv1nSm8="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/main/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/main/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-iOv3cuqUJLGAMJyqV/WWYJhd1F/XdiyCbvPnCjIYBB8="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/main/0.13.18/jars/main.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/main/0.13.18/jars/main.jar",
+      "mirrors": [],
+      "hash": "sha256-e3RDwfTuWK7MEcNK0eRBc3457NxbVWA/JEM2ED59qWM="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/persist/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/persist/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-STROGhNo9xfSr4wrrj/YKbiKn8/6+BQmavyGjiTRri8="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/persist/0.13.18/jars/persist.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/persist/0.13.18/jars/persist.jar",
+      "mirrors": [],
+      "hash": "sha256-WUif/zGteW72Hs7zaHEk7rwAdXlDRbZT6mp3Ju6LyVw="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/process/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/process/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-PhSFy6gFv7JMtUjJBD8RWKGQ3isAgj5O9FdCY1ei2Pc="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/process/0.13.18/jars/process.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/process/0.13.18/jars/process.jar",
+      "mirrors": [],
+      "hash": "sha256-hPkHbtiUCdsqCYZMRPjUsxtj4x+b2QpIj8y8nzkxYSo="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/relation/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/relation/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-Az8+eoNMKdA1o6PklUEVPlmtGC7OnMXENLtZcliN3Ek="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/relation/0.13.18/jars/relation.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/relation/0.13.18/jars/relation.jar",
+      "mirrors": [],
+      "hash": "sha256-ZOo+XvCisOqdmHtRnkf4xZPLEDLD8GgFaFvX76p+T7k="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/run/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/run/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-KY2gaTAdcS/MOVzYZTP1JAHPwWrfLahCXdbOEJt2fw8="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/run/0.13.18/jars/run.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/run/0.13.18/jars/run.jar",
+      "mirrors": [],
+      "hash": "sha256-lt0HHXvQvRGUSBKo/CgdR3CCYKw0X3/FsOnh6K1f+o8="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/sbt/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/sbt/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-Qp6Ndlkge4nGdy49qbcff7c+bsJbnNI/izgeNZrWIbw="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/sbt/0.13.18/jars/sbt.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/sbt/0.13.18/jars/sbt.jar",
+      "mirrors": [],
+      "hash": "sha256-BzWei98TYBfxht7d0myYkD8fPWw4FL24WS4L4wnmbR0="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/task-system/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/task-system/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-DTlXNehGbnUxPcCwIW7upxByUR1J+23VRgmO1upILjE="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/task-system/0.13.18/jars/task-system.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/task-system/0.13.18/jars/task-system.jar",
+      "mirrors": [],
+      "hash": "sha256-v+dOD+FjcCq1JCH5kV0Rxyxgo0smUrWqRsI8iUukugU="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/tasks/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/tasks/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-QVqk8eSzZPUjpj0QyWQyonPIQQVz99V8pAN/R7GXRds="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/tasks/0.13.18/jars/tasks.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/tasks/0.13.18/jars/tasks.jar",
+      "mirrors": [],
+      "hash": "sha256-uPUIIixwb3vv2FhEN+FV2eV0UZW9Uhu20VpK2PPN3H8="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/test-agent/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/test-agent/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-RW1T8g9g/+qGPPosdpoeNPjtbIVzgZe2AAF8cuNcw0Q="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/test-agent/0.13.18/jars/test-agent.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/test-agent/0.13.18/jars/test-agent.jar",
+      "mirrors": [],
+      "hash": "sha256-rGcFngvQXu3XDMDwDfvwjVRgj5i2QwnVlFY3toOHPIY="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/testing/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/testing/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-gCsyAM9LYT61QYOMEDND0m3gVzr6iRSXdCaIhJY8KAo="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/testing/0.13.18/jars/testing.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/testing/0.13.18/jars/testing.jar",
+      "mirrors": [],
+      "hash": "sha256-cc34AebxbmvBHK2LssROobjOfMm051RNyMpbqxM9wTo="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/tracking/0.13.18/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/tracking/0.13.18/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-HftA2eyO0jnxymZHjD5lXUoibfeeMlubHVAoSsh92I8="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/tracking/0.13.18/jars/tracking.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/tracking/0.13.18/jars/tracking.jar",
+      "mirrors": [],
+      "hash": "sha256-N1vGYIqqyPUAlOmHngkKExqaf3Se1FqFkXXfS1BdQng="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-tools.sbinary/sbinary_2.10/0.4.2/ivys/ivy.xml",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-tools.sbinary/sbinary_2.10/0.4.2/ivys/ivy.xml",
+      "mirrors": [],
+      "hash": "sha256-z6gNyzyY+SPtEtNl5uorNB1ZPeu09Cq7Wd/Zos3r0vc="
+    },
+    {
+      "path": "https/scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-tools.sbinary/sbinary_2.10/0.4.2/jars/sbinary_2.10.jar",
+      "url": "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-tools.sbinary/sbinary_2.10/0.4.2/jars/sbinary_2.10.jar",
+      "mirrors": [],
+      "hash": "sha256-1KKWtwMomxIAQrIFt6ML8TpEXEDwDVfwwnbiORsFE2I="
     }
   ]
 }

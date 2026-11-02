@@ -13,6 +13,14 @@ class IvyMirrorSuite extends munit.FunSuite {
     )
   }
 
+  test("rewriting an inherited launcher mirror is idempotent") {
+    val proxy = "http://127.0.0.1:1234"
+    val original = MavenRepository("central", "https://repo.maven.apache.org/maven2/")
+    val rewritten = IvyMirror.rewrite(original, proxy)
+    assertEquals(IvyMirror.rewrite(rewritten, proxy), rewritten)
+    assertEquals(IvyMirror.unrewrite(rewritten, proxy), original: Resolver)
+  }
+
   test("a port is escaped the way coursier stores it") {
     assertEquals(
       IvyMirror.rewritePrefix("http://localhost:8080/repo/", "http://127.0.0.1:1"),

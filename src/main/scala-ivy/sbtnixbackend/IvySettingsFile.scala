@@ -19,19 +19,15 @@ import org.apache.ivy.plugins.resolver.{
 import org.w3c.dom.{Document, Element}
 import sbt.librarymanagement.{FileRepository, MavenRepository, Patterns, Resolver, URLRepository}
 
-/** An Ivy settings file (`externalIvySettings`) read through the mirror of
-  * the locked downloads (see IvyMirror).
+/** An Ivy settings file (`externalIvySettings`) read through the mirror of the locked downloads (see IvyMirror).
   *
-  * Ivy interprets the settings itself, so the plugin hands it a copy in
-  * which every remote URL is on the mirror: attribute values, the values of
-  * included properties files, and every included settings file, copied the
-  * same way. A remote file the settings include is read through the mirror
-  * too, so the lock run locks it. The copy ends with a `caches` element
-  * that puts Ivy's cache in the project's Ivy home.
+  * Ivy interprets the settings itself, so the plugin hands it a copy in which every remote URL is on the mirror:
+  * attribute values, the values of included properties files, and every included settings file, copied the same way. A
+  * remote file the settings include is read through the mirror too, so the lock run locks it. The copy ends with a
+  * `caches` element that puts Ivy's cache in the project's Ivy home.
   *
-  * Coursier, which builds the repository outputs, cannot read Ivy settings,
-  * so [[resolvers]] turns the resolvers of a copy into sbt resolvers at
-  * their real URLs.
+  * Coursier, which builds the repository outputs, cannot read Ivy settings, so [[resolvers]] turns the resolvers of a
+  * copy into sbt resolvers at their real URLs.
   */
 object IvySettingsFile {
 
@@ -76,7 +72,10 @@ object IvySettingsFile {
     def value(v: String, dirOf: String): String = {
       val substituted = v.replace("${ivy.settings.dir}", dirOf)
       mirror.fold(substituted) { m =>
-        remoteUrl.replaceAllIn(substituted, u => Regex.quoteReplacement(IvyMirror.rewritePrefix(u.matched, m).getOrElse(u.matched)))
+        remoteUrl.replaceAllIn(
+          substituted,
+          u => Regex.quoteReplacement(IvyMirror.rewritePrefix(u.matched, m).getOrElse(u.matched))
+        )
       }
     }
 
@@ -99,7 +98,8 @@ object IvySettingsFile {
       val doc = parse(read(uri))
       val dirOf = settingsDir(uri)
       def walk(e: Element): Unit = {
-        val target = Option(e.getAttribute("file")).filter(_.nonEmpty).orElse(Option(e.getAttribute("url")).filter(_.nonEmpty))
+        val target =
+          Option(e.getAttribute("file")).filter(_.nonEmpty).orElse(Option(e.getAttribute("url")).filter(_.nonEmpty))
         (e.getTagName, target) match {
           case ("include", Some(t)) =>
             val copied = copySettings(location(t, uri))
@@ -109,7 +109,9 @@ object IvySettingsFile {
             val properties = new java.util.Properties
             properties.load(new ByteArrayInputStream(read(location(t, uri))))
             val rewritten = new java.util.Properties
-            properties.stringPropertyNames.asScala.foreach(k => rewritten.setProperty(k, value(properties.getProperty(k), dirOf)))
+            properties.stringPropertyNames.asScala.foreach(k =>
+              rewritten.setProperty(k, value(properties.getProperty(k), dirOf))
+            )
             val out = next("ivy.properties")
             val stream = Files.newOutputStream(out.toPath)
             try rewritten.store(stream, null)
@@ -119,7 +121,9 @@ object IvySettingsFile {
             e.setAttribute("file", sibling(out))
           case _ =>
             val attributes = e.getAttributes
-            (0 until attributes.getLength).map(attributes.item).foreach(a => a.setNodeValue(value(a.getNodeValue, dirOf)))
+            (0 until attributes.getLength)
+              .map(attributes.item)
+              .foreach(a => a.setNodeValue(value(a.getNodeValue, dirOf)))
         }
         val children = e.getChildNodes
         (0 until children.getLength).map(children.item).foreach {
@@ -139,8 +143,7 @@ object IvySettingsFile {
     Copy(top, top +: all.filterNot(_ == top))
   }
 
-  /** A digest of the files of `copy`, which name every repository the
-    * settings read.
+  /** A digest of the files of `copy`, which name every repository the settings read.
     */
   def digest(copy: Copy): String = {
     val md = MessageDigest.getInstance("SHA-256")
@@ -158,8 +161,8 @@ object IvySettingsFile {
     write(doc, top)
   }
 
-  /** The resolvers of the settings at `uri` as sbt resolvers, with URLs on
-    * the mirror at `mirror` turned back into the URLs they mirror.
+  /** The resolvers of the settings at `uri` as sbt resolvers, with URLs on the mirror at `mirror` turned back into the
+    * URLs they mirror.
     */
   def resolvers(uri: URI, mirror: Option[String]): Vector[Resolver] = {
     val settings = new IvySettings

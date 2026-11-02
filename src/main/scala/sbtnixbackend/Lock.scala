@@ -86,11 +86,12 @@ final case class Lock(
     flakeRepositories: Vector[LockedFlakeRepository],
     artifacts: Vector[LockedArtifact],
     inputsHash: String,
-    definitionHash: String
+    definitionHash: String,
+    buildDirectory: Option[String] = None
 ) {
   def toJson: Json = {
     import Json._
-    obj(
+    val base = obj(
       "version" -> num(Lock.FormatVersion),
       "sbtVersion" -> str(sbtVersion),
       "javaVersion" -> str(javaVersion),
@@ -126,6 +127,7 @@ final case class Lock(
         obj("path" -> str(a.path), "url" -> str(a.url), "mirrors" -> Arr(a.mirrors.map(str)), "hash" -> str(a.hash))
       })
     )
+    buildDirectory.fold(base)(directory => Obj(base.asObject.fields :+ ("buildDirectory" -> str(directory))))
   }
 
   /** The text of the lockfile, with its content hash (see [[Lock.parse]]). */
@@ -232,7 +234,8 @@ object Lock {
         LockedArtifact(a("path").asString, a("url").asString, a("hash").asString, a("mirrors").asArray.map(_.asString))
       },
       inputsHash = o("inputsHash").asString,
-      definitionHash = o("definitionHash").asString
+      definitionHash = o("definitionHash").asString,
+      buildDirectory = o.get("buildDirectory").map(_.asString)
     )
   }
 

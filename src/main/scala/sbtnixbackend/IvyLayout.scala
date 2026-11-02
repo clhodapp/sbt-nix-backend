@@ -2,7 +2,7 @@ package sbtnixbackend
 
 import java.io.File
 
-import sbt.librarymanagement.{FileRepository, MavenCache, Patterns, Resolver}
+import sbt.librarymanagement.{FileRepository, Patterns, Resolver}
 
 /** The Ivy layout of the plugin's outputs.
   *
@@ -22,7 +22,7 @@ object IvyLayout {
 
   /** A Maven resolver and an Ivy resolver on `dir`, in that order. */
   def resolvers(name: String, dir: File): Vector[Resolver] =
-    Vector(MavenCache(name, dir), ivy(name + "-ivy", dir))
+    Vector(Compat.mavenCache(name, dir), ivy(name + "-ivy", dir))
 
   /** The Ivy resolver on `dir`, with its patterns below the directory. */
   def ivy(name: String, dir: File): Resolver = {

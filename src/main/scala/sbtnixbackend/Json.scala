@@ -31,7 +31,7 @@ object Json {
   def str(value: String): Str = Str(value)
   def num(value: Int): Num = Num(BigDecimal(value))
 
-  implicit final class JsonOps(private val json: Json) extends AnyVal {
+  implicit final class JsonOps(val json: Json) extends AnyVal {
     def asString: String = json match {
       case Str(s) => s
       case other  => throw new JsonError(s"expected a string, got ${other.render}")

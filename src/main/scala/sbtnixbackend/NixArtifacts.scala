@@ -173,7 +173,7 @@ object NixArtifacts {
           "type" -> Json.str(a.`type`),
           "extension" -> Json.str(a.extension),
           "classifier" -> a.classifier.fold[Json](Json.Null)(Json.str),
-          "configurations" -> Json.Arr(a.configurations.map(c => Json.str(c.name))),
+          "configurations" -> Json.Arr(a.configurations.map(c => Json.str(c.name)).toVector),
           "extraAttributes" -> Json.Obj(a.extraAttributes.toVector.sorted.map { case (k, v) => k -> Json.str(v) })
         )
       })
@@ -186,7 +186,7 @@ object NixArtifacts {
       v("scalaVersion").asString,
       v("artifacts").asArray.map { a =>
         val o = a.asObject
-        Artifact(
+        Compat.artifact(
           o("name").asString,
           o("type").asString,
           o("extension").asString,

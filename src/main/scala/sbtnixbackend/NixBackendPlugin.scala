@@ -4,10 +4,8 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 
-import lmcoursier.definitions.CachePolicy
 import sbt._
 import sbt.Keys._
-import sbt.librarymanagement.MavenCache
 
 /** sbt-nix-backend: Nix as the dependency and build backend of sbt.
   *
@@ -399,26 +397,16 @@ object NixBackendPlugin extends AutoPlugin {
     nixSbtJavaOptions := Seq("-Xss4m", "-Xmx2g"),
     nixLauncherUrl := {
       val v = sbtVersion.value
-      s"https://repo1.maven.org/maven2/org/scala-sbt/sbt-launch/$v/sbt-launch-$v.jar"
+      BootRepositories.launcher(v)
     },
     nixCoursierCache := Compat.uncached(coursierCacheTask.value),
     nixNixpkgs := sys.props.get("sbt.nix.backend.nixpkgs").filter(_.nonEmpty).getOrElse("flake:nixpkgs"),
-    // The sbt wrapper boots sbt with COURSIER_CACHE set to the read-only
-    // tree of locked downloads, and names the user's own cache in
-    // SBT_NIX_BACKEND_USER_COURSIER_CACHE. Every resolution the lock does
-    // not cover (source jars for an IDE, a build whose lock is stale)
-    // goes to the user's cache.
-    csrCacheDirectory := (sys.env.get("SBT_NIX_BACKEND_USER_COURSIER_CACHE") match {
-      case Some(dir) if dir.nonEmpty => new File(dir)
-      case Some(_)                   => defaultUserCoursierCache
-      case None                      => csrCacheDirectory.value
-    }),
     nixLock := Compat.uncached(lockTask(force = false, updateFlakes = false).value),
     nixRelock := Compat.uncached(lockTask(force = true, updateFlakes = false).value),
     nixLockUpdate := Compat.uncached(lockTask(force = true, updateFlakes = true).value)
-  )
+  ) ++ ResolutionSupport.buildSettings
 
-  override def projectSettings: Seq[Setting[_]] = passOnSettings ++ Compat.ivyMirrorSettings(ivyMirror) ++ Seq(
+  override def projectSettings: Seq[Setting[_]] = passOnSettings ++ Compat.ivyMirrorSettings(ivyMirror) ++ ResolutionSupport.projectSettings ++ Seq(
     nixPackaged := !(publish / skip).value,
     // The lock describes every Scala version a project is built for, as the
     // Nix build builds each, so `++` leaves it as it is: it names a project
@@ -460,17 +448,17 @@ object NixBackendPlugin extends AutoPlugin {
           // in anywhere: Maven, or with publishMavenStyle := false the
           // standard Ivy layout.
           val dir = Mode.output / thisProject.value.id / "artifacts"
-          Seq(if (publishMavenStyle.value) MavenCache(NixOutputResolver, dir) else IvyLayout.ivy(NixOutputResolver, dir))
+          Seq(if (publishMavenStyle.value) Compat.mavenCache(NixOutputResolver, dir) else IvyLayout.ivy(NixOutputResolver, dir))
       }
     },
     nixPublishArtifacts / publishConfiguration := Compat.uncached {
       // The stock publishConfiguration fails when publishTo is unset, so
       // this one is built the same way with the output resolver named.
-      Classpaths.publishConfig(
+      Compat.publishConfig(
         publishMavenStyle.value,
         Classpaths.deliverPattern(crossTarget.value),
         if (isSnapshot.value) "integration" else "release",
-        ivyConfigurations.value.map(c => ConfigRef(c.name)).toVector,
+        ivyConfigurations.value.map(c => sbt.librarymanagement.ConfigRef(c.name)).toVector,
         Compat.publishedArtifacts.value,
         (publish / checksums).value.toVector,
         NixOutputResolver,
@@ -490,7 +478,7 @@ object NixBackendPlugin extends AutoPlugin {
         )
         .value
       val dir = Mode.output / thisProject.value.id / "artifacts"
-      val name = NixArtifacts.variantName(projectID.value.crossVersion, sbtPlugin.value, sbtBinaryVersion.value, scalaVersion.value)
+      val name = NixArtifacts.variantName(projectID.value.crossVersion, sbtPlugin.value, (pluginCrossBuild / sbtBinaryVersion).value, scalaVersion.value)
       NixArtifacts.record(dir, name, scalaVersion.value, Compat.publishedArtifacts.value)
       dir
     },
@@ -511,21 +499,10 @@ object NixBackendPlugin extends AutoPlugin {
       NixArtifacts.files(out, variant)
     },
     nixRuntimeRepository := Compat.uncached(nixBuildPackage("repository").value),
-    // Feature 3: interactive resolution reads the locked downloads, offline.
-    csrConfiguration := Compat.uncached(withLockedCache(csrConfiguration).value),
-    scalaCompilerBridgeScope / csrConfiguration :=
-      Compat.uncached(withLockedCache(scalaCompilerBridgeScope / csrConfiguration).value),
     // javadoc writes the time it ran into every page, so a Nix build of a
     // Java project would differ from a rebuild of it; it leaves the time
     // out with -notimestamp.
     Compile / doc / javacOptions ++= (if (Mode.current == Mode.Interactive) Nil else Seq("-notimestamp")),
-    // The sources and javadoc jars an editor asks for resolve through
-    // configurations of their own, which sbt does not derive from the one
-    // above.
-    updateClassifiers / csrConfiguration :=
-      Compat.uncached(withLockedCache(updateClassifiers / csrConfiguration).value),
-    updateSbtClassifiers / csrConfiguration :=
-      Compat.uncached(withLockedCache(updateSbtClassifiers / csrConfiguration).value),
     update := Compat.uncached {
       val result = update.result.value
       val log = streams.value.log
@@ -547,26 +524,6 @@ object NixBackendPlugin extends AutoPlugin {
     }
   )
 
-  private def withLockedCache(
-      key: TaskKey[lmcoursier.CoursierConfiguration]
-  ): Def.Initialize[Task[lmcoursier.CoursierConfiguration]] =
-    Def.taskDyn {
-      val conf = key.value
-      Mode.current match {
-        case Mode.Sandbox =>
-          Def.task(conf.withCache(Some(Mode.coursierCacheFromEnv)).withCachePolicies(Vector(CachePolicy.LocalOnly)))
-        case Mode.Lock =>
-          // The lock run downloads the files of Maven Central from a mirror
-          // when one is named; LockGeneration records their Central URLs.
-          val resolvers = CentralMirror.fromEnv(sys.env).fold(conf.resolvers)(m => conf.resolvers.map(CentralMirror.resolver(_, m)))
-          Def.task(conf.withCache(Some(Mode.coursierCacheFromEnv)).withResolvers(resolvers))
-        case Mode.Interactive =>
-          if ((ThisBuild / nixBackend).value)
-            Def.task(conf.withCache(Some((ThisBuild / nixCoursierCache).value)).withCachePolicies(Vector(CachePolicy.LocalOnly)))
-          else Def.task(conf)
-      }
-    }
-
   /** The concrete build's root. sbt runs every level of a build in one JVM
     * started in the concrete build's root, and level k lives at
     * `<root>/project` repeated k times; a meta-build checks that its own
@@ -582,16 +539,6 @@ object NixBackendPlugin extends AutoPlugin {
         sys.error(s"sbt-nix-backend: the meta-build at $base is not a project/ directory under the build root $root")
       root
     }
-  }
-
-  /** Coursier's default cache location when COURSIER_CACHE is unset
-    * (coursier.paths.CoursierPaths): the XDG cache on Linux, Library/Caches
-    * on macOS.
-    */
-  private def defaultUserCoursierCache: File = {
-    val home = new File(sys.props("user.home"))
-    if (sys.props("os.name").toLowerCase.contains("mac")) new File(home, "Library/Caches/Coursier/v1")
-    else new File(sys.env.get("XDG_CACHE_HOME").filter(_.nonEmpty).map(new File(_)).getOrElse(new File(home, ".cache")), "coursier/v1")
   }
 
   /** Builds `output` of this project's package in the Nix sandbox: the
@@ -817,7 +764,11 @@ object NixBackendPlugin extends AutoPlugin {
     val coordinates =
       if (publishMavenStyle.value) {
         val pom = Compat.publishedArtifacts.value
-          .collectFirst { case (a, f) if a.`type` == "pom" => f }
+          .filter { case (a, _) => a.`type` == "pom" }
+          // Prefer the standard Maven POM when a plugin also publishes
+          // the legacy sbt filename for older resolvers.
+          .sortBy { case (a, _) => if (a.name == moduleName.value) 1 else 0 }
+          .headOption.map(_._2)
           .getOrElse(sys.error(s"sbt-nix-backend: $id packages no POM"))
         RuntimeRepository.pomCoordinates(pom)
       } else {
@@ -832,16 +783,7 @@ object NixBackendPlugin extends AutoPlugin {
       }
     // A project that resolves through an Ivy settings file adds its
     // resolvers, which coursier cannot read from the file.
-    val baseConf = csrConfiguration.value
-    val settingsResolvers = Compat.ivySettingsResolvers(ivyMirror).value
-    val conf = baseConf.withResolvers(baseConf.resolvers ++ settingsResolvers.filterNot(baseConf.resolvers.contains))
-    val copied = RuntimeRepository.complete(
-      repository,
-      coordinates,
-      conf,
-      conf.cache.getOrElse(Mode.coursierCacheFromEnv),
-      log
-    )
+    val copied = ResolutionSupport.runtimeCompletion(ivyMirror).value.apply(repository, coordinates, log)
     val mainClassName = (Compile / mainClass).?.value.flatten
     val module = Json.obj(
       "organization" -> Json.str(coordinates.organization),
@@ -911,10 +853,10 @@ object NixBackendPlugin extends AutoPlugin {
     ) { state0 =>
       if (Mode.current != Mode.Interactive) sys.error("sbt-nix-backend: nixPublish runs outside the sandbox")
       val extracted = Project.extract(state0)
-      val refs = extracted.structure.allProjectRefs.filter(ref => extracted.getOpt(ref / nixPackaged).isDefined)
+      val refs = extracted.structure.allProjectRefs.filter(ref => Compat.hasTask(extracted, ref / nixPackaged))
       // The settings of the session (`set` commands, a `publishTo` among
       // them) stay; the original state comes back after the run.
-      val state1 = extracted.appendWithSession(refs.flatMap(Compat.publishFromNix), state0)
+      val state1 = Compat.appendWithSession(extracted, refs.flatMap(Compat.publishFromNix), state0)
       val after = Project.extract(state1)
       after.runAggregated(after.currentRef / publish, state1)
       state0

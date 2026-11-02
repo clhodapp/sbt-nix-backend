@@ -344,6 +344,17 @@ same_as_nix "$published/example/app_3/6.0.0/app_3-6.0.0.jar" "matrix2: nixPublis
 same_as_nix "$published/example/app_2.13/6.0.0/app_2.13-6.0.0.jar" "matrix2: nixPublish publishes app for Scala 2.13"
 same_as_nix "$published/example/core_2.13/6.0.0/core_2.13-6.0.0.jar" "matrix2: nixPublish publishes core for Scala 2.13"
 
+# Start legacy sbt from an empty home as well as the newer fixtures.
+network=off
+use_fixture sbt013
+output=$(run_sbt clean test 'run nix') || fail "sbt013: offline development failed"
+expect "sbt013: the application runs offline" has 'Hello, Nix!'
+if has 'plugin is being resolved impurely'; then
+  fail "sbt013: the wrapper did not supply its plugin from Nix"
+else
+  pass "sbt013: the wrapper supplies its plugin purely"
+fi
+
 if ((failures > 0)); then
   echo "$failures failure(s); the sbt output is in $work/sbt.log (kept)" >&2
   trap - EXIT

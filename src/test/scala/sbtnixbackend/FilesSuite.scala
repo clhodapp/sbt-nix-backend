@@ -119,7 +119,7 @@ class FilesSuite extends munit.FunSuite {
   test("the plugin carries every file of the Nix library, and the flake.lock") {
     val dir = new File("nix/lib")
     assume(dir.isDirectory, "the tests run from the repository root")
-    assertEquals(NixLibrary.files, (dir.list().toVector.filter(_.endsWith(".nix")) :+ "flake.lock").sorted)
+    assertEquals(NixLibrary.files, (dir.list().toVector.filter(n => n.endsWith(".nix") || n.endsWith(".sbt")) :+ "flake.lock").sorted)
     val out = tempDir()
     NixLibrary.write(out)
     NixLibrary.files.foreach { n =>

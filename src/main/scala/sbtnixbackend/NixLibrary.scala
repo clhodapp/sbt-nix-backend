@@ -20,6 +20,8 @@ object NixLibrary {
       // The flake.lock of the repository, whose purifier node
       // purifier-source.nix reads.
       "flake.lock",
+      "legacy-boot-repositories.nix",
+      "legacy-global-settings.sbt",
       "library.nix",
       "lock-version.nix",
       "package.nix",
@@ -30,7 +32,7 @@ object NixLibrary {
       "source-readable.nix"
     )
 
-  private def resource(name: String): Array[Byte] = {
+  private[sbtnixbackend] def resource(name: String): Array[Byte] = {
     val in = getClass.getResourceAsStream("/sbtnixbackend/nix/" + name)
     if (in == null) throw new IllegalStateException(s"the plugin jar has no Nix file $name")
     try {

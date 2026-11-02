@@ -279,6 +279,7 @@ built for, named for the cross version its module is published with:
 | `core_2.13.16` (`CrossVersion.full`) | `scala2_13_16` |
 | `core_sjs1_3` (Scala.js) | `sjs1_scala3` |
 | `core` (`crossPaths := false`) | `default` |
+| an sbt 0.13 plugin | `scala2_10_sbt0_13` |
 | an sbt 1 plugin, Maven or Ivy style | `scala2_12_sbt1_0` |
 | an sbt 2 plugin (`_sbt2_3`) | `scala3_sbt2` |
 
@@ -380,8 +381,8 @@ compiler bridges, Scaladoc tooling and the projects' dependencies alike.
 
 - **Maven repositories**, resolved with coursier, at every level of the
   build.
-- **Ivy repositories and Ivy settings files**, on sbt 1 with
-  `useCoursier := false`. The plugin rewrites every remote resolver of such
+- **Ivy repositories and Ivy settings files**, on sbt 0.13 and on sbt 1
+  with `useCoursier := false`. The plugin rewrites every remote resolver of such
   a project onto a mirror of the coursier cache, where the file of
   `https://host/path` sits at `https/host/path`, including the resolvers
   of an Ivy settings file and every file it includes. Such a project gets
@@ -400,9 +401,11 @@ compiler bridges, Scaladoc tooling and the projects' dependencies alike.
   them in `nixNetworkDependencies` and reads them where the system
   property `sbt.nix.backend.coursierCache` says
   (`tests/fixtures/multi/project/LicensePlugin.scala` is an example).
-- **sbt 1.11 and later in the 1.x line, and sbt 2.0.** The plugin is
-  cross-built (`sbt-nix-backend_2.12_1.0` and `sbt-nix-backend_sbt2_3`),
-  and the wrapper injects the variant the build's sbt loads.
+- **sbt 0.13.18, sbt 1.11 and later in the 1.x line, and sbt 2.0.** The
+  plugin is cross-built for Scala 2.10, 2.12 and 3. The wrapper injects the
+  variant the project's sbt loads. For sbt 0.13, use the wrapper: it supplies
+  Java 8 and bootstraps sbt from the official archive, including offline
+  startup from a lock.
 - **Cross builds and projectMatrix.** A project in `crossScalaVersions` is
   built for each of its Scala versions; a `projectMatrix` makes a package
   per Scala version.

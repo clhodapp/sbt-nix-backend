@@ -16,10 +16,19 @@ lazy val root = (project in file("."))
   .settings(
     name := "sbt-nix-backend",
     sbtPlugin := true,
-    // The plugin builds for sbt 1 (Scala 2.12) and sbt 2 (Scala 3).
+    sbtPluginPublishLegacyMavenStyle := scalaBinaryVersion.value == "2.10",
+    Compile / unmanagedSourceDirectories ++= {
+      if (scalaBinaryVersion.value == "2.10") Nil
+      else Seq(baseDirectory.value / "src" / "main" / "scala-modern")
+    },
+    Compile / unmanagedSourceDirectories ++= {
+      if (scalaBinaryVersion.value == "3") Nil else Seq(baseDirectory.value / "src" / "main" / "scala-ivy")
+    },
+    // sbt 0.13 uses Scala 2.10 and Ivy; sbt 1 and 2 use Coursier.
     scalaVersion := "2.12.20",
-    crossScalaVersions := Seq("2.12.20", "3.8.4"),
+    crossScalaVersions := Seq("2.12.20", "2.10.7", "3.8.4"),
     pluginCrossBuild / sbtVersion := (scalaBinaryVersion.value match {
+      case "2.10" => "0.13.18"
       case "2.12" => "1.11.7"
       case _      => "2.0.12"
     }),
@@ -33,7 +42,7 @@ lazy val root = (project in file("."))
     // is the one whose annotation constructor matches what the TASTy calls
     // (0.2.9 and later take nine arguments where sbt 2.0.12 passes none).
     Compile / doc / dependencyClasspath ++= {
-      if (scalaBinaryVersion.value == "2.12") Nil
+      if (scalaBinaryVersion.value != "3") Nil
       else
         dependencyResolution.value
           .retrieve(
@@ -44,7 +53,18 @@ lazy val root = (project in file("."))
           )
           .fold(w => throw w.resolveException, _.map(Attributed.blank))
     },
-    libraryDependencies += "org.scalameta" %% "munit" % "1.0.4" % Test,
+    resolvers += Resolver.url(
+      "sbt-archive",
+      url("https://scala.jfrog.io/artifactory/api/download/ivy-releases/")
+    )(Resolver.ivyStylePatterns),
+    libraryDependencies ++= {
+      if (scalaBinaryVersion.value == "2.10") Seq("com.novocode" % "junit-interface" % "0.11" % Test)
+      else Seq("org.scalameta" %% "munit" % "1.0.4" % Test)
+    },
+    Test / unmanagedSourceDirectories := {
+      if (scalaBinaryVersion.value == "2.10") Seq(baseDirectory.value / "src" / "test" / "scala-2.10")
+      else (Test / unmanagedSourceDirectories).value
+    },
     NixLibraryResources.settings,
     // NixBackendPlugin reads its coordinates from the jar manifest to
     // record which plugin version a lock was made with.

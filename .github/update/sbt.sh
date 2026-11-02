@@ -53,7 +53,7 @@ sbt2_old=$(current_sbt _)
 sbt2_new=$(latest 2)
 scala2_old=$(grep -oP 'scalaVersion := "\K2\.12\.[0-9]+' build.sbt)
 scala2_new=$(scala_of "$sbt1_new" scala-library)
-scala3_old=$(grep -oP 'crossScalaVersions := Seq\("2\.12\.[0-9]+", "\K3\.[0-9.]+' build.sbt)
+scala3_old=$(grep -oP 'crossScalaVersions := Seq\("2\.12\.[0-9]+", "2\.10\.[0-9]+", "\K3\.[0-9.]+' build.sbt)
 scala3_new=$(scala_of "$sbt2_new" scala3-library_3)
 
 for v in "$sbt1_new" "$sbt2_new" "$scala2_new" "$scala3_new"; do

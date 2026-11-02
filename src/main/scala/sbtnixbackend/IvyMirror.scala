@@ -59,7 +59,7 @@ object IvyMirror {
     */
   def pinIvyHome(resolver: Resolver, ivyHome: File): Resolver = resolver match {
     case f: FileRepository if (f.patterns.ivyPatterns ++ f.patterns.artifactPatterns).exists(_.contains("${ivy.home}")) =>
-      def pin(ps: Vector[String]) = ps.map(_.replace("${ivy.home}", ivyHome.getAbsolutePath))
+      def pin(ps: Seq[String]) = ps.toVector.map(_.replace("${ivy.home}", ivyHome.getAbsolutePath))
       val p = f.patterns
       f.withPatterns(Patterns(pin(p.ivyPatterns), pin(p.artifactPatterns), p.isMavenCompatible, p.descriptorOptional, p.skipConsistencyCheck))
     case other => other
@@ -70,7 +70,7 @@ object IvyMirror {
     * http(s) URL is not rewritten.
     */
   def rewritePrefix(prefix: String, base: String): Option[String] =
-    if (!(prefix.startsWith("http://") || prefix.startsWith("https://"))) None
+    if (prefix.startsWith(base.stripSuffix("/") + "/") || !(prefix.startsWith("http://") || prefix.startsWith("https://"))) None
     else {
       val slash = prefix.endsWith("/")
       val rel = CachePaths.relativePath(if (slash) prefix.stripSuffix("/") else prefix)
@@ -97,13 +97,24 @@ object IvyMirror {
         MavenRepository(m.name, root).withAllowInsecureProtocol(true)
       }
     case u: URLRepository =>
-      def patterns(ps: Vector[String]) = ps.map(p => rewritePrefix(p, base).getOrElse(p))
+      def patterns(ps: Seq[String]) = ps.toVector.map(p => rewritePrefix(p, base).getOrElse(p))
       val p = u.patterns
       URLRepository(
         u.name,
         Patterns(patterns(p.ivyPatterns), patterns(p.artifactPatterns), p.isMavenCompatible, p.descriptorOptional, p.skipConsistencyCheck),
         true
       )
+    case other => other
+  }
+
+  /** Resolver URLs before an enclosing launcher's mirror rewrite. */
+  def unrewrite(resolver: Resolver, base: String): Resolver = resolver match {
+    case m: MavenRepository => MavenRepository(m.name, unrewritePrefix(m.root,base))
+    case u: URLRepository =>
+      val p = u.patterns
+      URLRepository(u.name, Patterns(p.ivyPatterns.map(unrewritePrefix(_,base)).toVector,
+        p.artifactPatterns.map(unrewritePrefix(_,base)).toVector,
+        p.isMavenCompatible,p.descriptorOptional,p.skipConsistencyCheck), true)
     case other => other
   }
 

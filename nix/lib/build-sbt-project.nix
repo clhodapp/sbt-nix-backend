@@ -178,10 +178,13 @@ let
       {
         inherit (p) via;
         inherit repo;
-        file = writeText "sbt-nix-backend-plugin.sbt" ''
-          resolvers += MavenRepository("sbt-nix-backend-plugin", "file://${repo}")
-          addSbtPlugin("${p.organization}" % "${p.name}" % "${p.version}")
-        '';
+        file = writeText "sbt-nix-backend-plugin.sbt" (
+          ''
+            resolvers += MavenRepository("sbt-nix-backend-plugin", "file://${repo}")
+            addSbtPlugin("${p.organization}" % "${p.name}" % "${p.version}")
+          ''
+          + lib.optionalString legacy (builtins.readFile ./legacy-global-settings.sbt)
+        );
         # An sbt plugin publishes as <name>_<scala>_<sbt> in Maven layout.
         # The check runs in the build rather than at evaluation, which
         # would have to build the repository first.
@@ -196,6 +199,8 @@ let
           fi
         '';
       };
+
+  legacy = lib.hasPrefix "0.13." lock.sbtVersion;
 
   # The sbt invocation shared by every package build; nixLock runs sbt the
   # same way, so a lock made from it holds what this needs.
@@ -229,6 +234,11 @@ let
     # Coursier and the launcher write lock and marker files next to what
     # they read, so the cache is a writable tree of links into the store.
     cp -rs --no-preserve=mode ${dependencies}/. "$COURSIER_CACHE"
+    ${lib.optionalString legacy (''
+      cat > "$TMPDIR/launcher-repositories" <<EOF
+      ${import ./legacy-boot-repositories.nix { base = "file://$COURSIER_CACHE"; }}
+      EOF
+    '')}
     java ${lib.escapeShellArgs lock.javaOptions} \
       -Duser.home="$HOME" \
       -Djava.io.tmpdir="$TMPDIR/java-tmp" \
@@ -240,10 +250,10 @@ let
       -Dsbt.log.noformat=true \
       -Dsbt.supershell=false \
       ${
-        lib.optionalString (
-          plugin != null && plugin.via == "global-plugin"
-        ) ''-Dsbt.global.plugins="$TMPDIR/global-plugins"''
+        lib.optionalString (plugin != null && plugin.via == "global-plugin")
+          ''-Dsbt.global.plugins="$TMPDIR/global-plugins" -Dsbt.nix.backend.inject="$TMPDIR/global-plugins/sbt-nix-backend.sbt"''
       } \
+      ${lib.optionalString legacy ''-Dsbt.repository.config="$TMPDIR/launcher-repositories"''} \
       -jar "$COURSIER_CACHE/${lock.launcher}" \
       ${lib.escapeShellArg command} </dev/null
   '';
@@ -266,6 +276,19 @@ let
       # packages run their tests anyway.
       name = project.name + lib.optionalString (check && !doCheck) "-tests";
       src = filteredSrc;
+      postUnpack = lib.optionalString (lock ? buildDirectory) (
+        assert
+          builtins.match "[^/]+" lock.buildDirectory != null
+          && !(builtins.elem lock.buildDirectory [
+            "."
+            ".."
+          ]);
+        ''
+          mkdir -p legacy-source
+          mv "$sourceRoot" ${lib.escapeShellArg ("legacy-source/" + lock.buildDirectory)}
+          sourceRoot=${lib.escapeShellArg ("legacy-source/" + lock.buildDirectory)}
+        ''
+      );
       outputs = [
         "out"
         "repository"

@@ -13,7 +13,7 @@ object NixLibraryResources {
       val out = (Compile / resourceManaged).value / "sbtnixbackend" / "nix"
       val root = (ThisBuild / baseDirectory).value
       // The flake.lock goes beside the library, for purifier-source.nix.
-      ((root / "nix" / "lib" * "*.nix").get :+ (root / "flake.lock")).map { source =>
+      ((root / "nix" / "lib" * ("*.nix" | "*.sbt")).get :+ (root / "flake.lock")).map { source =>
         val target = out / source.getName
         IO.copyFile(source, target)
         target

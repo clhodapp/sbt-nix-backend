@@ -74,6 +74,13 @@ let
     doCheck = true;
   };
 
+  # sbt 0.13's implicit project id must survive copying into a sandbox.
+  legacy = buildSbtProject {
+    src = ./fixtures/sbt013;
+    pluginRepository = plugin-repository;
+    doCheck = true;
+  };
+
   # An sbt 2 build, which injects the plugin's sbt 2 variant.
   sbt2 = buildSbtProject {
     src = ./fixtures/sbt2;
@@ -632,16 +639,30 @@ in
       ln -s ${external.packages.app} $out
     '';
 
-  # The plugin repository holds the plugin for sbt 1 and for sbt 2, each
+  legacy-build = legacy.packages.sbt013;
+  legacy-ivy-build = legacy.packages.ivy;
+  legacy-ivy-repository =
+    runFromRepository "legacy-ivy-repository" legacy.sbtRepositories.ivy "example.legacy:ivy_2.10:1.0.0"
+      "example.IvyMain"
+      [ "Legacy Ivy" ];
+  legacy-repository =
+    runFromRepository "legacy-repository" legacy.sbtRepositories.sbt013
+      "example.legacy:legacy-example_2.10:1.0.0"
+      "example.Main"
+      [ "Hello, Nix!" ];
+
+  # The plugin repository holds the plugin for sbt 0.13, 1 and 2, each
   # with its API documentation.
   plugin-variants = pkgs.runCommand "plugin-variants" { nativeBuildInputs = [ multi.jdk ]; } ''
-    for variant in sbt-nix-backend_2.12_1.0 sbt-nix-backend_sbt2_3; do
+    for variant in sbt-nix-backend_2.10_0.13 sbt-nix-backend_2.12_1.0 sbt-nix-backend_sbt2_3; do
       ls ${plugin-repository}/io/github/clhodapp/$variant/*/*.jar
-      pages=$(jar tf ${plugin-repository}/io/github/clhodapp/$variant/*/*-javadoc.jar | grep -c 'NixBackendPlugin.*\.html$' || true)
-      if [ "$pages" -eq 0 ]; then
-        echo "the $variant documentation jar has no page for NixBackendPlugin" >&2
-        exit 1
-      fi
+      for docs in ${plugin-repository}/io/github/clhodapp/$variant/*/*-javadoc.jar; do
+        pages=$(jar tf "$docs" | grep -c 'NixBackendPlugin.*\.html$' || true)
+        if [ "$pages" -eq 0 ]; then
+          echo "the $variant documentation jar has no page for NixBackendPlugin" >&2
+          exit 1
+        fi
+      done
     done
     touch $out
   '';

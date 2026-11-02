@@ -30,10 +30,18 @@
   pluginVersion,
 }:
 let
-  inject = writeText "sbt-nix-backend-plugin.sbt" ''
+  injectText = ''
     resolvers += MavenRepository("sbt-nix-backend-plugin", "file://${pluginRepository}")
     addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % "${pluginVersion}")
   '';
+  inject = writeText "sbt-nix-backend-plugin.sbt" injectText;
+  legacyInject = writeText "sbt-purifier-legacy-plugin.sbt" (
+    injectText + builtins.readFile ../../nix/lib/legacy-global-settings.sbt
+  );
+  legacyLauncher = pkgs.fetchurl {
+    url = "https://scala.jfrog.io/artifactory/api/download/ivy-releases/org.scala-sbt/sbt-launch/0.13.18/jars/sbt-launch.jar";
+    hash = "sha256-ZvklAnUM2fxS3RAg071BQK+ptYC9I6dGMrP/RMxzqbI=";
+  };
   # The directory name changes with the plugin, so a new plugin version
   # never meets the old one's resolution in target/.
   dirName = "global-plugins-" + builtins.substring 11 32 (toString inject);
@@ -50,10 +58,18 @@ writeTextFile {
   text = ''
     #!${runtimeShell}
     set -eu
-    dir="''${XDG_CACHE_HOME:-$HOME/.cache}/sbt-nix-backend/${dirName}"
-    user="''${SBT_NIX_BACKEND_USER_GLOBAL_PLUGINS:-$HOME/.sbt/1.0/plugins}"
+    wanted=$(sed -n 's/^[[:space:]]*sbt\.version[[:space:]]*=[[:space:]]*\([^[:space:]]*\).*/\1/p' project/build.properties 2>/dev/null || true)
+    legacy=0
+    inject=${inject}
+    binary=1.0
+    case "$wanted" in
+      0.13.*) legacy=1; inject=${legacyInject}; binary=0.13 ;;
+      2.*) binary=2.0 ;;
+    esac
+    dir="''${XDG_CACHE_HOME:-$HOME/.cache}/sbt-nix-backend/${dirName}-$binary"
+    user="''${SBT_NIX_BACKEND_USER_GLOBAL_PLUGINS:-$HOME/.sbt/$binary/plugins}"
     mkdir -p "$dir"
-    ln -sfn ${inject} "$dir/sbt-nix-backend.sbt"
+    ln -sfn "$inject" "$dir/sbt-nix-backend.sbt"
     # Links to the user's global plugins: added for new entries, removed
     # for entries that are gone. target/ stays this directory's own.
     for link in "$dir"/* "$dir"/.[!.]*; do
@@ -84,6 +100,8 @@ writeTextFile {
     # a relock records the same major whatever JAVA_HOME the caller has;
     # without a lockfile, on nixpkgs' default JDK.
     export JAVA_HOME=${pkgs.jdk.home}
+    if [ "$legacy" = 1 ]; then export JAVA_HOME=${pkgs.jdk8_headless.home}; fi
+    boot_pinned=0
     if [ -n "$lockfile" ] && [ -f "$lockfile" ]; then
       major=$(sed -n 's/^  "javaVersion": "\([0-9]*\)",$/\1/p' "$lockfile")
       if [ -n "$major" ]; then
@@ -109,6 +127,7 @@ writeTextFile {
           --arg lockFile "$(realpath "$lockfile")" --out-link target/sbt-nix-backend/gcroots/boot-cache); then
           export SBT_NIX_BACKEND_USER_COURSIER_CACHE="''${COURSIER_CACHE:-}"
           export COURSIER_CACHE="$tree"
+          boot_pinned=1
         else
           echo "sbt-nix-backend: the locked downloads did not build; sbt boots the usual way" >&2
         fi
@@ -129,18 +148,35 @@ writeTextFile {
     # plugin of this wrapper.
     if [ -f build.sbt ] || [ -d project ]; then
       stamp=target/sbt-nix-backend/global-plugins-inject
-      if [ "$(cat "$stamp" 2>/dev/null)" != ${inject} ]; then
+      if [ "$(cat "$stamp" 2>/dev/null)" != "$inject" ]; then
         for target in target/out/jvm/*/global-plugins project/target project/project/target; do
           if [ -d "$target" ]; then rm -rf "$target"; fi
         done
         mkdir -p target/sbt-nix-backend
-        echo ${inject} > "$stamp"
+        echo "$inject" > "$stamp"
       fi
     fi
     # The properties go in SBT_OPTS rather than on the command line: for an
     # sbt 2 build the runner starts a client, and the server it starts in
     # the background gets SBT_OPTS too.
-    export SBT_OPTS="-Dsbt.global.plugins=$dir -Dsbt.nix.backend.inject=${inject} -Dsbt.nix.backend.repository=${pluginRepository} -Dsbt.nix.backend.nixpkgs=${pkgs.path} ''${SBT_OPTS:-}"
-    exec ${lib.getExe pkgs.sbt} "$@"
+    export SBT_OPTS="-Dsbt.global.plugins=$dir -Dsbt.nix.backend.inject=$inject -Dsbt.nix.backend.repository=${pluginRepository} -Dsbt.nix.backend.nixpkgs=${pkgs.path} ''${SBT_OPTS:-}"
+    if [ "$legacy" = 1 ]; then
+      launcher=${legacyLauncher}
+      if [ "$boot_pinned" = 1 ]; then
+        export SBT_NIX_BOOT_MIRROR="file://$COURSIER_CACHE"
+        locked_launcher=$(sed -n 's/^  "launcher": "\(.*\)",$/\1/p' "$lockfile")
+        launcher="$COURSIER_CACHE/$locked_launcher"
+        cat > "$dir/launcher-repositories" <<EOF
+    ${import ../../nix/lib/legacy-boot-repositories.nix { base = "file://$COURSIER_CACHE"; }}
+    EOF
+      else
+        cat > "$dir/launcher-repositories" <<EOF
+    ${import ../../nix/lib/legacy-boot-repositories.nix { }}
+    EOF
+      fi
+      export SBT_OPTS="$SBT_OPTS -Dsbt.repository.config=$dir/launcher-repositories"
+      exec ${lib.getExe pkgs.sbt} --java-home "$JAVA_HOME" --sbt-jar "$launcher" "$@"
+    fi
+    exec ${lib.getExe pkgs.sbt} --java-home "$JAVA_HOME" "$@"
   '';
 }

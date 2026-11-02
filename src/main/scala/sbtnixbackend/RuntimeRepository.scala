@@ -2,37 +2,18 @@ package sbtnixbackend
 
 import java.io.File
 import java.net.URI
-import java.nio.file.{Files, StandardCopyOption}
-import java.util.concurrent.ConcurrentHashMap
+import java.nio.file.Files
 
-import scala.collection.JavaConverters._
-
-import lmcoursier.{CoursierConfiguration, CoursierDependencyResolution}
-import lmcoursier.definitions.CacheLogger
 import sbt.librarymanagement._
 import sbt.util.Logger
-
-/** Records every URL a coursier resolution reads, whether it came from the
-  * cache or the network. Coursier calls `foundLocally` for each cache hit
-  * and `downloadedArtifact` for each download (coursier.cache.internal.Downloader);
-  * a resolution with a new logger instance never takes lm-coursier's
-  * in-memory resolution cache, whose key holds the logger.
-  */
-final class RecordingCacheLogger extends CacheLogger {
-  private val seen = ConcurrentHashMap.newKeySet[String]()
-  override def foundLocally(url: String): Unit = { seen.add(url); () }
-  override def downloadedArtifact(url: String, success: Boolean): Unit =
-    if (success) { seen.add(url); () }
-  def urls: Vector[String] = seen.asScala.toVector.sorted
-}
 
 /** Feature 4: a repository holding a project's published artifacts and
   * everything a consumer needs to resolve and run them.
   *
   * The repository is complete by construction: after the project and its
   * internal dependencies are published into it, a consumer of the project's
-  * coordinates is resolved against it and the build's own resolvers with a
-  * [[RecordingCacheLogger]], and every file that resolution read from
+  * coordinates is resolved against it and the build's own resolvers. Coursier
+  * cache callbacks or Ivy origin records identify every file it read from
   * elsewhere (POMs, parent POMs, imported BOMs, Ivy descriptors, jars) is
   * copied in. A file from a Maven repository keeps its path; a file from an
   * Ivy repository goes to its path in the standard Ivy layout (see
@@ -101,48 +82,12 @@ object RuntimeRepository {
     Coordinates(need("groupId"), child("artifactId").getOrElse(throw new NotRepresentable(s"$pom declares no artifactId")), need("version"))
   }
 
-  /** Resolves a consumer of `coordinates` and copies what it read into
-    * `repository`. `conf` is the project's coursier configuration;
-    * `cacheDir` is the coursier cache that configuration reads. Returns the
-    * repository-relative paths it copied.
-    */
-  def complete(
-      repository: File,
-      coordinates: Coordinates,
-      conf: CoursierConfiguration,
-      cacheDir: File,
-      log: Logger
-  ): Vector[String] = {
-    val own = IvyLayout.resolvers("sbt-nix-backend-repository", repository)
-    val ownNames = own.map(_.name).toSet
-    val recorder = new RecordingCacheLogger
-    val others = conf.resolvers.filterNot(r => ownNames(r.name))
-    val resolution = CoursierDependencyResolution(
-      conf
-        .withResolvers(own ++ others)
-        .withLogger(Some(recorder))
-        // The project's own descriptor would otherwise come from the build
-        // rather than from the POM or ivy.xml just published.
-        .withInterProjectDependencies(Vector.empty)
-        .withExtraProjects(Vector.empty)
-    )
-    val dependency =
-      ModuleID(coordinates.organization, coordinates.name, coordinates.version).withExtraAttributes(coordinates.attributes)
-    val consumer = ModuleDescriptorConfiguration(
-      ModuleID("sbt-nix-backend", "consumer-of-" + coordinates.name, "0"),
-      ModuleInfo("consumer-of-" + coordinates.name)
-    ).withDependencies(Vector(dependency))
-      .withConfigurations(Vector(Configurations.Compile, Configurations.Runtime))
-    val descriptor = resolution.moduleDescriptor(consumer)
-    val report = resolution.update(descriptor, UpdateConfiguration(), UnresolvedWarningConfiguration(), log) match {
-      case Left(warning) => throw warning.resolveException
-      case Right(r)      => r
-    }
+  def copyUrls(repository: File, coordinates: Coordinates, others: Seq[Resolver], cacheDir: File, urls: Seq[String], report: UpdateReport, log: Logger): Vector[String] = {
     val roots = resolverRoots(others)
     val ownDir = normalize(repository)
     lazy val modules = reportedModules(report)
     val copied = Vector.newBuilder[String]
-    recorder.urls.foreach { url =>
+    urls.foreach { url =>
       val local = if (url.startsWith("file:")) Some(normalize(new File(new URI(url)))) else None
       if (!local.exists(_.startsWith(ownDir)) && !url.endsWith("/")) {
         val found = first(roots.iterator.flatMap(root => relativeTo(root.base, url, local).map(root -> _)))
@@ -195,7 +140,7 @@ object RuntimeRepository {
   private def reportedModules(report: UpdateReport): Vector[Reported] =
     report.configurations.toVector
       .flatMap(c => c.modules ++ c.details.flatMap(_.modules))
-      .map(m => Reported(m.module, m.artifacts.map(_._1) ++ m.missingArtifacts))
+      .map(m => Reported(m.module, (m.artifacts.map(_._1) ++ m.missingArtifacts).toVector))
       .distinct
 
   private val checksumSuffixes = Vector(".sha1", ".md5", ".sha256", ".sha512")
@@ -211,13 +156,13 @@ object RuntimeRepository {
     val standardIvy = IvyLayout.patterns.ivyPatterns.head
     val standardArtifact = IvyLayout.patterns.artifactPatterns.head
     def matching(patterns: Vector[String], standard: String, tokens: Boolean => Map[String, String]): Option[String] =
-      if (patterns.exists(p => IvyLayout.render(p, tokens(root.mavenCompatible)).contains(file)))
+      if (patterns.exists(p => IvyLayout.render(p, tokens(root.mavenCompatible)).exists(_ == file)))
         IvyLayout.render(standard, tokens(false))
       else None
     first(modules.iterator.flatMap { case Reported(m, artifacts) =>
       def moduleTokens(mavenCompatible: Boolean) =
         IvyLayout.moduleTokens(m.organization, m.name, m.revision, m.extraAttributes, mavenCompatible) ++
-          m.branchName.map("branch" -> _)
+          Compat.branchName(m).map("branch" -> _)
       matching(root.ivyPatterns, standardIvy, mc => moduleTokens(mc) ++ IvyLayout.descriptorTokens).iterator ++
         artifacts.iterator.flatMap { a =>
           matching(
@@ -247,11 +192,11 @@ object RuntimeRepository {
     def ivyRoots(patterns: Patterns, base: String => Base): Vector[Root] = {
       val ivy = patterns.ivyPatterns.map(splitPattern)
       val artifact = patterns.artifactPatterns.map(splitPattern)
-      (ivy ++ artifact).map(_._1).distinct.map { b =>
+      (ivy ++ artifact).toVector.map(_._1).distinct.map { b =>
         IvyRoot(
           base(b),
-          ivy.collect { case (`b`, p) => p },
-          artifact.collect { case (`b`, p) => p },
+          ivy.collect { case (`b`, p) => p }.toVector,
+          artifact.collect { case (`b`, p) => p }.toVector,
           patterns.isMavenCompatible
         )
       }
@@ -260,7 +205,7 @@ object RuntimeRepository {
       if (prefix.startsWith("file:")) LocalBase(normalize(new File(new URI(prefix)))) else RemoteBase(prefix)
     resolvers.toVector
       .flatMap {
-        case m: MavenCache => Vector(MavenRoot(LocalBase(normalize(m.rootFile))))
+        case r if Compat.mavenCacheRoot(r).isDefined => Vector(MavenRoot(LocalBase(normalize(Compat.mavenCacheRoot(r).get))))
         case m: MavenRepository =>
           Vector(MavenRoot(remote(if (m.root.endsWith("/")) m.root else m.root + "/")))
         case f: FileRepository => ivyRoots(f.patterns, b => LocalBase(normalize(new File(b))))

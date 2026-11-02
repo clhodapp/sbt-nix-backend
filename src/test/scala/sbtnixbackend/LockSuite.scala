@@ -55,6 +55,12 @@ class LockSuite extends munit.FunSuite {
     assertEquals(read.copy(projects = lock.projects, artifacts = lock.artifacts), lock)
   }
 
+  test("a legacy build preserves its directory-derived project identity") {
+    val legacy = lock.copy(sbtVersion = "0.13.18", buildDirectory = Some("old-project"))
+    assertEquals(Lock.parse(legacy.render).buildDirectory, Some("old-project"))
+    assert(!lock.toJson.asObject.fields.exists(_._1 == "buildDirectory"))
+  }
+
   test("header checksums and pre-seeded downloads lock the same published sidecars") {
     val cache = tempDir()
     val rel = "https/repo1.maven.org/maven2/org/example/a/1/a-1.jar"
