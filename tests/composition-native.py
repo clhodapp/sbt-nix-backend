@@ -76,8 +76,9 @@ public class NativeMain {
     for name in ['commons-text', 'commons-lang3']:
         dependency = next(node for node in dependencies if node.findtext('{*}artifactId') == name)
         version = dependency.findtext('{*}version')
-        assert '-nix-' in version
-        path = published / 'org/apache/commons' / name / version
-        assert (path / (name + '-' + version + '.jar')).is_file()
+        assert version.startswith('[') and version.endswith(']') and '-nix-' in version
+        revision = version[1:-1]
+        path = published / 'org/apache/commons' / name / revision
+        assert (path / (name + '-' + revision + '.jar')).is_file()
     assert (published / 'org/apache/commons/commons-text').is_dir()
     print('SBT NATIVE COMPOSITION PASSED: ' + args.sbt_version)
