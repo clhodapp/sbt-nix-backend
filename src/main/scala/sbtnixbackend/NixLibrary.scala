@@ -26,6 +26,7 @@ object NixLibrary {
       "lock-version.nix",
       "package.nix",
       "plugin.nix",
+      "project-repository.nix",
       "purifier-source.nix",
       "read-lock.nix",
       "realize.nix",

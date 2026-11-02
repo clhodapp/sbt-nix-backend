@@ -387,15 +387,23 @@ compiler bridges, Scaladoc tooling and the projects' dependencies alike.
   `https://host/path` sits at `https/host/path`, including the resolvers
   of an Ivy settings file and every file it includes. Such a project gets
   an Ivy home of its own under `target/sbt-nix-backend/ivy-homes`.
-- **Flake repositories**: another build's repository output, named in
-  `nixFlakeRepositories` with a flake reference whose fragment names the
-  attribute under the producer's `sbtRepositories.<system>`. The lockfile
-  pins the reference with its `narHash`.
+- **Flake repositories**: another purified JVM project's package, named in
+  `nixFlakeRepositories`. The producer exports `projections.maven` or
+  `projections.ivy`; legacy `sbtRepositories.<system>` references remain supported.
 
   ```scala
-  ThisBuild / nixFlakeRepositories += NixFlakeRepository("lib", "github:owner/lib/<rev>#core")
-  libraryDependencies += nixFlakeModule("lib").value
+  ThisBuild / nixFlakeRepositories += NixFlakeRepository(
+    "lib", "github:owner/lib/<rev>#core"
+  )
+  libraryDependencies += "example" %% "core" % "1.0"
   ```
+
+  The catalog selects the supplied module's Nix-derived version automatically.
+  The lock pins the producer's Nix source, without adding its artifacts to the
+  download list. `nixUpdate` refreshes the pin. Nix build definitions can also
+  supply `projectDependencies = [ producer.packages.${system}.core ];`.
+  Projected repositories use immutable versions and rewrite POM references
+  for ordinary downstream consumers.
 
 - **Files a plugin downloads outside coursier**, when the plugin declares
   them in `nixNetworkDependencies` and reads them where the system

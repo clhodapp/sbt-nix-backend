@@ -3,6 +3,10 @@ import java.io.File
 import sbt._
 import sbt.Keys._
 object Compat {
+  def implicitRoot(project: ResolvedProject): Boolean = true
+
+  def moduleRevision(module: ModuleID, revision: String): ModuleID = module.copy(revision = revision)
+
   def archivedResolver(r: Resolver): Resolver = {
     def url(s: String): String = s
       .replace("https://repo.typesafe.com/typesafe/ivy-releases/", BootRepositories.archive)
@@ -34,7 +38,11 @@ object Compat {
   def branchName(m: ModuleID): Option[String] = m.extraAttributes.get("e:branch")
 
   def hasTask[A](e: Extracted, key: TaskKey[A]): Boolean = e.structure.data.get(key.scope, key.key).isDefined
-  def appendWithSession(e: Extracted, settings: Seq[Setting[_]], state: State): State = e.append(settings, state)
+  def appendWithSession(e: Extracted, settings: Seq[Setting[_]], state: State): State = {
+    val appended = Load.transformSettings(Load.projectScope(e.currentRef), e.currentRef.build, e.rootProject, settings)
+    val rebuilt = Load.reapply(e.session.mergeSettings ++ appended, e.structure)(e.showKey)
+    Project.setProject(e.session, rebuilt, state)
+  }
 
   def mavenCacheRoot(r: Resolver): Option[File] = None
 
@@ -155,6 +163,13 @@ object Compat {
     )
     IvyActions.publish(ivyModule.value, fixed, streams.value.log)
   }
+  def publishProjection(ref: ProjectRef, module: ProjectedPublication.Module): Seq[Setting[_]] = Seq(
+    projectID.in(ref) := module.id,
+    packagedArtifacts.in(ref, publish) := module.artifacts,
+    makePom.in(ref) := module.pom,
+    deliver.in(ref) := module.ivy,
+    skip.in(ref, publish) := false
+  )
   def publishFromNix(ref: ProjectRef): Seq[Setting[_]] = Seq(packagedArtifacts.in(ref, publish) := {
     update.in(ref).value; NixBackendPlugin.autoImport.nixPackagedArtifacts.in(ref).value
   })

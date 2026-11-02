@@ -33,7 +33,9 @@ object LockGeneration {
       flakeRepositoryPaths: Map[String, File],
       injectedPluginFile: Option[File],
       plugin: Option[LockedPlugin],
-      inputsHash: String
+      inputsHash: String,
+      flakeRepositoryCatalogs: Map[String, File] = Map.empty,
+      preserveBuildDirectory: Boolean = false
   )
 
   final class LockFailed(message: String) extends RuntimeException(message)
@@ -47,9 +49,9 @@ object LockGeneration {
   def run(in: Inputs, info: String => Unit, warn: String => Unit): Lock = {
     val work = in.workDir
     deleteRecursively(work)
-    // sbt 0.13 derives implicit project ids from the directory name.
+    // Implicit root project ids and names depend on the directory name.
     // Keep it in both the lock fork and the Nix build.
-    val buildDirectory = if (BootRepositories.legacy(in.sbtVersion)) Some(in.buildRoot.getName) else None
+    val buildDirectory = if (BootRepositories.legacy(in.sbtVersion) || in.preserveBuildDirectory) Some(in.buildRoot.getName) else None
     val src = buildDirectory.fold(new File(work, "src"))(name => new File(new File(work, "src"),name))
     val home = new File(work, "home")
     val cache = new File(work, "coursier-cache")
@@ -147,6 +149,13 @@ object LockGeneration {
       "SBT_NIX_OUTPUT" -> Some(output.getAbsolutePath),
       "SBT_NIX_FLAKE_REPOSITORIES" -> Some(
         Json.Obj(in.flakeRepositoryPaths.toVector.sortBy(_._1).map { case (k, v) => k -> Json.str(v.getAbsolutePath) }).render
+      ),
+      "SBT_NIX_FLAKE_REPOSITORY_CATALOGS" -> Some(
+        Json
+          .Obj(in.flakeRepositoryCatalogs.toVector.sortBy(_._1).map { case (name, file) =>
+            name -> Json.str(file.getAbsolutePath)
+          })
+          .render
       )
     )
     info(s"[sbt-nix-backend] running `nixEditorDownloads` and `$command` in a fresh sbt with an empty cache")

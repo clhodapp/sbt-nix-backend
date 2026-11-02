@@ -8,6 +8,10 @@ import sbt.Keys.*
 /** The sbt 2 side of the sbt APIs that differ between sbt 1 and sbt 2; src/main/scala-2.12 holds the sbt 1 side.
   */
 object Compat {
+  def implicitRoot(project: ResolvedProject): Boolean = project.projectOrigin == ProjectOrigin.GenericRoot
+
+  def moduleRevision(module: ModuleID, revision: String): ModuleID = module.withRevision(revision)
+
   def branchName(m: ModuleID): Option[String] = m.branchName
 
   def hasTask[A](e: Extracted, key: TaskKey[A]): Boolean = e.getOpt(key).isDefined
@@ -113,6 +117,21 @@ object Compat {
   /** `ref / publish / packagedArtifacts` as the files the Nix build made, as the virtual file references sbt 2
     * publishes from.
     */
+  def publishProjection(ref: ProjectRef, module: ProjectedPublication.Module): Seq[Setting[_]] = Seq(
+    ref / projectID := module.id,
+    ref / publish / packagedArtifacts := Def.uncached {
+      val converter = (ref / fileConverter).value
+      module.artifacts.map { (artifact, file) =>
+        artifact -> (converter.toVirtualFile(file.toPath): xsbti.HashedVirtualFileRef)
+      }
+    },
+    ref / makePom := Def.uncached {
+      (ref / fileConverter).value.toVirtualFile(module.pom.toPath): xsbti.HashedVirtualFileRef
+    },
+    ref / deliver := module.ivy,
+    ref / publish / skip := false
+  )
+
   def publishFromNix(ref: ProjectRef): Seq[Setting[?]] = Seq(
     ref / publish / packagedArtifacts := Def.uncached {
       val converter = (ref / fileConverter).value

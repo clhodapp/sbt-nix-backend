@@ -60,7 +60,7 @@ object NixBackendPlugin extends AutoPlugin {
         "sbt.nix.backend.coursierCache names."
     )
     val nixFlakeRepositories = settingKey[Seq[NixFlakeRepository]](
-      "Flake references to sbt-nix-backend repositories that resolution reads before the other resolvers (feature 5)."
+      "Flake references to purified JVM packages; inferred native coordinates select their Nix-built artifacts before other resolvers."
     )
     val nixFlakeRepositoryPaths = settingKey[Map[String, File]](
       "The store path of each flake repository, by name."
@@ -86,6 +86,7 @@ object NixBackendPlugin extends AutoPlugin {
         "the build definition changed): each artifact publish publishes for this Scala version, as a file in " +
         "the Nix build's output."
     )
+    val nixPublication = taskKey[File]("Builds the immutable JVM publication and its catalog with Nix.")
     val nixRuntimeRepository = taskKey[File](
       "Builds this project's repository output in the Nix sandbox: a Maven repository of its artifacts and " +
         "their runtime dependencies."
@@ -106,13 +107,24 @@ object NixBackendPlugin extends AutoPlugin {
       */
     def nixFlakeModule(name: String): Def.Initialize[ModuleID] = Def.setting {
       val paths = (ThisBuild / nixFlakeRepositoryPaths).value
+      val views = (ThisBuild / nixFlakeRepositoryViews).value
       val binary = scalaBinaryVersion.value
       val dir = paths.getOrElse(
         name,
         sys.error(s"sbt-nix-backend: no flake repository named $name in ThisBuild / nixFlakeRepositories")
       )
-      val meta = Json.parse(new String(Files.readAllBytes(new File(dir, RepositoryMetadata).toPath), StandardCharsets.UTF_8)).asObject
-      val modules = meta("modules").asArray.map(_.asObject)
+      val legacy = new File(dir, RepositoryMetadata)
+      val metadata = if (legacy.isFile) legacy else views.get(name).flatMap(_.catalog).getOrElse(
+        sys.error(s"sbt-purifier: repository $name has no module metadata")
+      )
+      val meta = Json.parse(new String(Files.readAllBytes(metadata.toPath), StandardCharsets.UTF_8)).asObject
+      val all = meta("modules").asArray.map(_.asObject)
+      val modules = if (legacy.isFile) all else {
+        val producer = meta.get("producer").getOrElse(
+          sys.error(s"sbt-purifier: repository $name needs a catalog that identifies its producer")
+        )
+        all.filter(_.get("producer").exists(_ == producer))
+      }
       val module = modules match {
         case Vector(only) => only
         case several =>
@@ -125,7 +137,7 @@ object NixBackendPlugin extends AutoPlugin {
       }
       val attributes =
         module.get("attributes").fold(Map.empty[String, String])(_.asObject.fields.map { case (k, v) => k -> v.asString }.toMap)
-      ModuleID(module("organization").asString, module("name").asString, module("version").asString)
+      ModuleID(module.get("organization").getOrElse(module("group")).asString, module("name").asString, module("version").asString)
         .withExtraAttributes(attributes)
     }
 
@@ -148,6 +160,11 @@ object NixBackendPlugin extends AutoPlugin {
   }
 
   import autoImport._
+
+  private val nixFlakeRepositoryViews =
+    settingKey[Map[String, Nix.RepositoryView]]("The realized JVM repository views and catalogs.")
+  private val nixProvidedModules = settingKey[Vector[ModuleID]]("Native coordinates selected by Nix inputs.")
+
 
   /** The file at the root of every repository the plugin writes, naming
     * the module it was built for.
@@ -393,7 +410,13 @@ object NixBackendPlugin extends AutoPlugin {
       }
     },
     nixFlakeRepositories := Nil,
-    nixFlakeRepositoryPaths := flakeRepositoryPathsSetting.value,
+    nixFlakeRepositoryViews := flakeRepositoryViewsSetting.value,
+    nixFlakeRepositoryPaths := nixFlakeRepositoryViews.value.map { case (name, view) => name -> view.path },
+    nixProvidedModules := ProjectedDependencies.merge(
+      ProjectedDependencies.read(sys.env) ++ nixFlakeRepositoryViews.value.values.toVector
+        .flatMap(_.catalog)
+        .flatMap(ProjectedDependencies.readCatalog)
+    ),
     nixSbtJavaOptions := Seq("-Xss4m", "-Xmx2g"),
     nixLauncherUrl := {
       val v = sbtVersion.value
@@ -408,6 +431,26 @@ object NixBackendPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Setting[_]] = passOnSettings ++ Compat.ivyMirrorSettings(ivyMirror) ++ ResolutionSupport.projectSettings ++ Seq(
     nixPackaged := !(publish / skip).value,
+    libraryDependencies := {
+      val supplied = (ThisBuild / nixProvidedModules).value
+      val full = scalaVersion.value
+      val binary = scalaBinaryVersion.value
+      libraryDependencies.value.map(module => ProjectedDependencies.select(module, full, binary, supplied))
+    },
+    dependencyOverrides := {
+      val supplied = (ThisBuild / nixProvidedModules).value
+      val full = scalaVersion.value
+      val binary = scalaBinaryVersion.value
+      dependencyOverrides.value.map(module =>
+        ProjectedDependencies.select(module, full, binary, supplied)
+      ) ++ supplied
+    },
+    pomPostProcess := {
+      val previous = pomPostProcess.value
+      val supplied = (ThisBuild / nixProvidedModules).value
+      node => ProjectedDependencies.pom(previous(node), supplied)
+    },
+
     // The lock describes every Scala version a project is built for, as the
     // Nix build builds each, so `++` leaves it as it is: it names a project
     // by its first Scala version and hashes its names for all of them.
@@ -438,7 +481,10 @@ object NixBackendPlugin extends AutoPlugin {
       val flake = (ThisBuild / nixFlakeRepositoryPaths).value.toVector.sortBy(_._1).flatMap { case (n, dir) =>
         IvyLayout.resolvers("nix-flake-" + n, dir)
       }
-      flake ++ resolvers.value.filterNot(r => flake.exists(_.name == r.name))
+      val supplied = sys.env.get("SBT_PURIFIER_PROVIDED_REPOSITORY").filter(_.nonEmpty).toSeq.map { path =>
+        MavenRepository("nix-project-dependencies", new File(path).toURI.toString)
+      }
+      supplied ++ flake ++ resolvers.value.filterNot(r => flake.exists(_.name == r.name))
     },
     otherResolvers ++= {
       Mode.current match {
@@ -498,6 +544,7 @@ object NixBackendPlugin extends AutoPlugin {
         )
       NixArtifacts.files(out, variant)
     },
+    nixPublication := Compat.uncached(nixBuildPackage("publication").value),
     nixRuntimeRepository := Compat.uncached(nixBuildPackage("repository").value),
     // javadoc writes the time it ran into every page, so a Nix build of a
     // Java project would differ from a rebuild of it; it leaves the time
@@ -640,7 +687,7 @@ object NixBackendPlugin extends AutoPlugin {
     * same) and built once, with a GC root and a record of the pin, so
     * later loads read the record rather than calling Nix.
     */
-  private def flakeRepositoryPathsSetting: Def.Initialize[Map[String, File]] = Def.setting {
+  private def flakeRepositoryViewsSetting: Def.Initialize[Map[String, Nix.RepositoryView]] = Def.setting {
     val declared = nixFlakeRepositories.value
     Mode.current match {
       case Mode.Interactive if declared.nonEmpty =>
@@ -655,29 +702,56 @@ object NixBackendPlugin extends AutoPlugin {
           r.name -> realizeFlakeRepository(nix, base, r.name, locked, r.attribute)
         }.toMap
       case Mode.Interactive => Map.empty
-      case _                => Mode.flakeRepositoryPathsFromEnv
+      case _                =>
+        val catalogs = sys.env
+          .get("SBT_NIX_FLAKE_REPOSITORY_CATALOGS")
+          .filter(_.trim.nonEmpty)
+          .map(json =>
+            Json.parse(json).asObject.fields.map { case (name, value) => name -> new File(value.asString) }.toMap
+          )
+          .getOrElse(Map.empty[String, File])
+        Mode.flakeRepositoryPathsFromEnv.map { case (name, path) =>
+          name -> Nix.RepositoryView(path, catalogs.get(name))
+        }
     }
   }
 
-  private def realizeFlakeRepository(nix: => Nix, base: File, name: String, locked: String, attribute: String): File = {
+  private def realizeFlakeRepository(
+      nix: => Nix,
+      base: File,
+      name: String,
+      locked: String,
+      attribute: String
+  ): Nix.RepositoryView = {
     val record = base / (name + ".json")
     val root = base / (name + "-gcroot")
-    val key = Json.obj("locked" -> Json.str(locked), "attribute" -> Json.str(attribute))
+    val key = Json.obj("locked" -> Json.str(locked), "attribute" -> Json.str(attribute), "viewVersion" -> Json.num(2))
     val recorded =
       if (record.isFile) {
         val o = Json.parse(new String(Files.readAllBytes(record.toPath), StandardCharsets.UTF_8)).asObject
         val path = new File(o("path").asString)
-        if (o("locked") == key("locked") && o("attribute") == key("attribute") && path.isDirectory) Some(path) else None
+        val catalog = o.get("catalog").map(value => new File(value.asString))
+        if (
+          o.get("viewVersion").exists(_ == key("viewVersion")) && o("locked") == key("locked") &&
+          o("attribute") == key("attribute") && path.isDirectory && catalog.forall(_.isFile)
+        )
+          Some(Nix.RepositoryView(path, catalog))
+        else None
       } else None
     recorded.getOrElse {
-      val installable = s"$locked#sbtRepositories.${nix.currentSystem}.$attribute"
-      val path = nix.build(installable, root)
+      val view = nix.projectRepository(locked, attribute, NixLibrary.write(base / "nix-lib"), root)
       base.mkdirs()
       Files.write(
         record.toPath,
-        Json.Obj(key.fields :+ ("path" -> Json.str(path.getAbsolutePath))).render.getBytes(StandardCharsets.UTF_8)
+        Json
+          .Obj(
+            key.fields ++ Vector("path" -> Json.str(view.path.getAbsolutePath)) ++
+              view.catalog.toVector.map(file => "catalog" -> Json.str(file.getAbsolutePath))
+          )
+          .render
+          .getBytes(StandardCharsets.UTF_8)
       )
-      path
+      view
     }
   }
 
@@ -689,6 +763,7 @@ object NixBackendPlugin extends AutoPlugin {
   private def lockInputs(updateFlakes: Boolean): Def.Initialize[Task[LockGeneration.Inputs]] = Def.task(Compat.uncached {
     val root = (ThisBuild / nixBuildRoot).value
     val projects = nixLockedProject.all(allProjects).value.flatten.toVector.sortBy(_.id)
+    val preserveBuildDirectory = thisProject.all(allProjects).value.exists(p => p.base == root && (Compat.implicitRoot(p) || p.id == root.getName))
     val crossNames = nixLockedNames.all(allProjects).value.flatten.distinct.sorted
     val urls = (nixNetworkDependencies.all(allProjects).value.flatten ++ (ThisBuild / nixNetworkDependencies).value).distinct.sorted.toVector
     val declared = (ThisBuild / nixFlakeRepositories).value.toVector
@@ -701,8 +776,11 @@ object NixBackendPlugin extends AutoPlugin {
       kept.getOrElse(LockedFlakeRepository(r.name, r.ref, nix.lockFlakeRef(r.flakeRef), r.attribute))
     }
     val repoBase = ((ThisBuild / nixBuildRoot).value / "target") / "sbt-nix-backend" / "flake-repositories"
-    val repoPaths = lockedRepos.map(r => r.name -> realizeFlakeRepository(nix, repoBase, r.name, r.locked, r.attribute)).toMap
-    val injectFile = injectedPluginFile
+    val repoViews =
+        lockedRepos.map(r => r.name -> realizeFlakeRepository(nix, repoBase, r.name, r.locked, r.attribute)).toMap
+      val repoPaths = repoViews.map { case (name, view) => name -> view.path }
+      val repoCatalogs = repoViews.toVector.flatMap { case (name, view) => view.catalog.map(name -> _) }.toMap
+      val injectFile = injectedPluginFile
     val plugin = lockedPlugin
     if (injectFile.isDefined && plugin.isEmpty)
       sys.error("sbt-nix-backend: the plugin was injected but its jar names no coordinates")
@@ -726,6 +804,8 @@ object NixBackendPlugin extends AutoPlugin {
       networkUrls = urls,
       flakeRepositories = lockedRepos,
       flakeRepositoryPaths = repoPaths,
+      flakeRepositoryCatalogs = repoCatalogs,
+      preserveBuildDirectory = preserveBuildDirectory,
       injectedPluginFile = injectFile,
       plugin = plugin,
       inputsHash = hash
@@ -853,12 +933,35 @@ object NixBackendPlugin extends AutoPlugin {
     ) { state0 =>
       if (Mode.current != Mode.Interactive) sys.error("sbt-nix-backend: nixPublish runs outside the sandbox")
       val extracted = Project.extract(state0)
-      val refs = extracted.structure.allProjectRefs.filter(ref => Compat.hasTask(extracted, ref / nixPackaged))
-      // The settings of the session (`set` commands, a `publishTo` among
-      // them) stay; the original state comes back after the run.
-      val state1 = Compat.appendWithSession(extracted, refs.flatMap(Compat.publishFromNix), state0)
-      val after = Project.extract(state1)
-      after.runAggregated(after.currentRef / publish, state1)
+      val lock = Lock.read(extracted.get(ThisBuild / nixLockFile))
+      if (lock.flakeRepositories.isEmpty) {
+        val refs = extracted.structure.allProjectRefs.filter(ref => Compat.hasTask(extracted, ref / nixPackaged))
+        val state = Compat.appendWithSession(extracted, refs.flatMap(Compat.publishFromNix), state0)
+        val after = Project.extract(state)
+        after.runAggregated(after.currentRef / publish, state)
+      } else {
+        def aggregated(ref: ProjectRef, seen: Set[ProjectRef]): Vector[ProjectRef] =
+          if (seen(ref)) Vector.empty
+          else Vector(ref) ++ extracted.get(ref / thisProject).aggregate.toVector.flatMap(child => aggregated(child, seen + ref))
+        val refs = aggregated(extracted.currentRef, Set.empty).distinct.filter { ref =>
+          Compat.hasTask(extracted, ref / nixPackaged) && extracted.runTask(ref / nixPackaged, state0)._2
+        }
+        val published = scala.collection.mutable.Set.empty[(String, String, String)]
+        refs.foreach { ref =>
+          val (builtState, publication) = extracted.runTask(ref / nixPublication, state0)
+          val mavenStyle = extracted.get(ref / publishMavenStyle)
+          ProjectedPublication.modules(publication, mavenStyle).foreach { module =>
+            val coordinate = (module.id.organization, module.id.name, module.id.revision)
+            if (!published(coordinate)) {
+              val state = Compat.appendWithSession(
+                Project.extract(builtState), Compat.publishProjection(ref, module), builtState
+              )
+              Project.extract(state).runTask(ref / publish, state)
+              published += coordinate
+            }
+          }
+        }
+      }
       state0
     }
 

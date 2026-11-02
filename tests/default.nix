@@ -290,6 +290,9 @@ let
 
 in
 {
+  jvm-maven-projection = multi.packages.javalib.projections.maven;
+  jvm-ivy-projection = ivy.packages.ivyjava.projections.maven;
+
   # The plugin built by itself from its lock, with its unit tests run.
   inherit plugin;
 
@@ -666,4 +669,9 @@ in
     done
     touch $out
   '';
+  composition-producer = import ./composition-producer.nix {
+    inherit pkgs;
+    purifier = flakeLib.purifier;
+  };
+
 }

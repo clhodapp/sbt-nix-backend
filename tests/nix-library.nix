@@ -292,6 +292,7 @@ let
       expected = [
         "out"
         "repository"
+        "publications"
       ];
     };
     testSbtRepositoriesAreTheRepositoryOutputs = {

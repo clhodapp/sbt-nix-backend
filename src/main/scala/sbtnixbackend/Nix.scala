@@ -48,6 +48,30 @@ final class Nix(log: String => Unit) {
     new File(out.split("\\r?\\n").toSeq.head)
   }
 
+  /** Realize a typed JVM projection and its separate metadata output. */
+  def projectRepository(locked: String, attribute: String, library: File, outLink: File): Nix.RepositoryView = {
+    Option(outLink.getParentFile).foreach(_.mkdirs())
+    val arguments = Seq(
+      "--file",
+      new File(library, "project-repository.nix").getAbsolutePath,
+      "--argstr",
+      "locked",
+      locked,
+      "--argstr",
+      "attribute",
+      attribute,
+      "--argstr",
+      "system",
+      currentSystem
+    )
+    val info = Json.parse(nix((Seq("eval", "--json") ++ arguments ++ Seq("info")): _*)).asObject
+    nix(
+      (Seq("build", "--no-write-lock-file", "--out-link", outLink.getAbsolutePath) ++
+        arguments ++ Seq("build")): _*
+    )
+    Nix.RepositoryView(new File(info("path").asString), info.get("catalog").map(value => new File(value.asString)))
+  }
+
   /** Builds attribute `attribute` of the Nix file `file`, called with the
     * string arguments `args`, in an impure evaluation (the file may read
     * the build root by its absolute path), and returns its output path,
@@ -92,6 +116,8 @@ final class Nix(log: String => Unit) {
 }
 
 object Nix {
+
+  final case class RepositoryView(path: File, catalog: Option[File])
 
   /** Makes `dir` a coursier cache whose files are symbolic links into the
     * store, as `manifest` (cache-relative path to store path) lists them.

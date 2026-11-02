@@ -3,6 +3,7 @@ package sbtnixbackend
 import java.io.File
 import java.net.URI
 import java.nio.file.Files
+import java.nio.charset.StandardCharsets
 
 import sbt.librarymanagement._
 import sbt.util.Logger
@@ -115,6 +116,18 @@ object RuntimeRepository {
         } else log.debug(s"[sbt-nix-backend] $url has no file in the cache; skipped")
       }
     }
+    // Retain the selected graph as well as the files needed to repeat the
+    // resolution (which can include descriptors of evicted versions).
+    val graph = new File(repository, "purifier-runtime-modules.json")
+    val earlier = if (graph.isFile) Json.parse(new String(Files.readAllBytes(graph.toPath), StandardCharsets.UTF_8)).asObject("modules").asArray else Vector.empty
+    val selected = report.configurations.toVector.flatMap(_.modules).filterNot(_.evicted).map(_.module).distinct.map { m =>
+      Json.obj("group" -> Json.str(m.organization), "name" -> Json.str(m.name), "version" -> Json.str(m.revision))
+    }
+    val combined = (earlier ++ selected).groupBy { entry =>
+      val m = entry.asObject
+      (m("group").asString, m("name").asString, m("version").asString)
+    }.toVector.sortBy(_._1).map(_._2.head)
+    Files.write(graph.toPath, (Json.obj("modules" -> Json.Arr(combined)).render + "\n").getBytes(StandardCharsets.UTF_8))
     copied.result().distinct
   }
 

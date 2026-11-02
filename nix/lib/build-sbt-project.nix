@@ -71,6 +71,9 @@
   # pass its output here rather than letting the lock's reference be
   # fetched with builtins.getFlake.
   flakeRepositories ? { },
+  # Nix-built projects from any JVM purifier. Their native coordinates and
+  # selected publication versions are inferred from repository metadata.
+  projectDependencies ? [ ],
   # Runs the build's tests (`test`) in each package build.
   doCheck ? false,
   # Filters the build root before it is copied into the store, as the
@@ -139,20 +142,32 @@ let
     // fetchers
   );
 
-  # Feature 5: the store path of each flake repository of the lock.
-  flakeRepositoryPaths = builtins.listToAttrs (
-    map (r: {
-      inherit (r) name;
-      value =
-        flakeRepositories.${r.name} or (
-          let
-            flake = builtins.getFlake r.locked;
-          in
-          flake.sbtRepositories.${system}.${r.attribute}
-            or (throw "sbt-purifier: ${r.locked} has no output sbtRepositories.${system}.${r.attribute} (flake repository ${r.name})")
-        );
+  flakeViews = builtins.listToAttrs (
+    map (input: {
+      inherit (input) name;
+      value = import ./project-repository.nix {
+        inherit system;
+        inherit (input) locked attribute;
+        override = flakeRepositories.${input.name} or null;
+      };
     }) lock.flakeRepositories
   );
+  flakeRepositoryPaths = builtins.mapAttrs (_: view: view.repository) flakeViews;
+  flakeRepositoryCatalogs = builtins.mapAttrs (_: view: view.catalog) (
+    lib.filterAttrs (_: view: view.catalog != null) flakeViews
+  );
+  allProjectDependencies =
+    projectDependencies
+    ++ builtins.filter (dependency: dependency != null) (
+      map (view: view.dependency) (builtins.attrValues flakeViews)
+    );
+
+  provided = purifier.jvmProjections {
+    repository = null;
+    dependencies = allProjectDependencies;
+    inherit runCommand python3;
+    name = "sbt-provided-dependencies";
+  };
 
   plugin =
     if lock.plugin == null then
@@ -212,6 +227,7 @@ let
     export SBT_NIX_MODE=sandbox
     export SBT_NIX_OUTPUT="$TMPDIR/sbt-nix-output"
     export SBT_NIX_FLAKE_REPOSITORIES=${lib.escapeShellArg (builtins.toJSON flakeRepositoryPaths)}
+    export SBT_NIX_FLAKE_REPOSITORY_CATALOGS=${lib.escapeShellArg (builtins.toJSON flakeRepositoryCatalogs)}
     export COURSIER_CACHE="$TMPDIR/coursier-cache"
     export COURSIER_MODE=offline
     ${lib.optionalString (plugin != null) plugin.check}
@@ -229,6 +245,10 @@ let
       # wrapper sets it too, so a lock made with the wrapper and such a
       # build needs it as well as the global plugin.
       export SBT_NIX_BACKEND_REPOSITORY=${plugin.repo}
+    ''}
+    ${lib.optionalString (projectDependencies != [ ]) ''
+      export SBT_PURIFIER_PROVIDED_REPOSITORY=${provided.maven}
+      export SBT_PURIFIER_PROVIDED_CATALOG=${provided.maven.catalog}
     ''}
     mkdir -p "$HOME" "$XDG_RUNTIME_DIR" "$TMPDIR/java-tmp" "$COURSIER_CACHE"
     # Coursier and the launcher write lock and marker files next to what
@@ -292,6 +312,7 @@ let
       outputs = [
         "out"
         "repository"
+        "publications"
       ];
       nativeBuildInputs = [ jdk' ];
       dontConfigure = true;
@@ -310,6 +331,13 @@ let
         runHook preInstall
         cp -r "$SBT_NIX_OUTPUT/${project.id}/artifacts" "$out"
         cp -r "$SBT_NIX_OUTPUT/${project.id}/repository" "$repository"
+        # Every project actually built for this runtime closure contributes
+        # owned publications; downloaded dependencies retain their provenance.
+        mkdir -p "$publications"
+        for artifacts in "$SBT_NIX_OUTPUT"/*/artifacts; do
+          cp -r --no-preserve=mode "$artifacts"/. "$publications"/
+        done
+        rm -rf "$publications/nix-support" "$publications/sbt-nix-artifacts.json"
         # The lock names the artifacts; the manifest it took them from
         # stays out of the output.
         rm -f "$out/sbt-nix-artifacts.json"
@@ -324,6 +352,20 @@ let
       passthru = {
         inherit dependencies lock;
         sbtProject = project;
+        projections = purifier.jvmProjections {
+          repository = finalAttrs.finalPackage.publications;
+          producer = finalAttrs.finalPackage;
+          runtimeRepository = finalAttrs.finalPackage.repository;
+          formats = [
+            "maven"
+          ]
+          ++ lib.optional (builtins.all (
+            variant: builtins.all (artifact: artifact.type != "pom") variant.artifacts
+          ) project.variants) "ivy";
+          dependencies = allProjectDependencies;
+          inherit runCommand python3;
+          name = "sbt-jvm-publications";
+        };
         # For each variant the lock builds the project in, its name, its
         # Scala version, and its artifacts as the lock records them (key,
         # name, type, extension, classifier, configurations, extra
@@ -356,6 +398,11 @@ let
     });
 
   packages = builtins.mapAttrs (_: mkPackage doCheck) read.outputs;
+  publicationRepository = runCommand "sbt-release" { } ''
+    mkdir $out
+    ${lib.concatStrings (lib.mapAttrsToList (_: p: "cp -r --no-preserve=mode ${p}/. $out/\n") packages)}
+    rm -rf $out/nix-support
+  '';
 in
 {
   inherit
@@ -377,10 +424,12 @@ in
   # The published artifacts of every package in one repository, as
   # `sbt-purifier publish` uploads them; the links of each package to its
   # own artifacts stay out.
-  release = runCommand "sbt-release" { } ''
-    mkdir $out
-    ${lib.concatStrings (lib.mapAttrsToList (_: p: "cp -r --no-preserve=mode ${p}/. $out/\n") packages)}
-    rm -rf $out/nix-support
-  '';
+  release = publicationRepository;
+  projections = purifier.jvmProjections {
+    repository = publicationRepository;
+    dependencies = allProjectDependencies;
+    inherit runCommand python3;
+    name = "sbt-jvm-publications";
+  };
   jdk = jdk';
 }

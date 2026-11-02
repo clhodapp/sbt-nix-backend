@@ -47,4 +47,12 @@ in
 {
   out = package;
   inherit (package) repository;
+  publication = pkgs.runCommand "sbt-projected-publication" { } ''
+    mkdir -p "$out"
+    ln -s ${package.projections.maven} "$out/maven"
+    ${pkgs.lib.optionalString (package.projections ? ivy) ''
+      ln -s ${package.projections.ivy} "$out/ivy"
+    ''}
+    ln -s ${package.projections.maven.catalog} "$out/catalog.json"
+  '';
 }

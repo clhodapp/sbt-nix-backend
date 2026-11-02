@@ -94,3 +94,17 @@ jobs:
           skipPush: true
       - name: Update moves the pinned producer
         run: tests/update.sh
+
+  composition-native:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+        sbt: ['0.13.18', '1.11.7', '2.0.12']
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Native Nix project inputs and publication
+        run: python3 tests/composition-native.py --sbt-version '${{ matrix.sbt }}'

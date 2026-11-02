@@ -19,6 +19,10 @@ import sbt.librarymanagement.ivy.{
 /** The sbt 1 side of the sbt APIs that differ between sbt 1 and sbt 2; src/main/scala-3 holds the sbt 2 side.
   */
 object Compat {
+  def implicitRoot(project: ResolvedProject): Boolean = project.projectOrigin == ProjectOrigin.GenericRoot
+
+  def moduleRevision(module: ModuleID, revision: String): ModuleID = module.withRevision(revision)
+
   def branchName(m: ModuleID): Option[String] = m.branchName
 
   def hasTask[A](e: Extracted, key: TaskKey[A]): Boolean = e.getOpt(key).isDefined
@@ -186,6 +190,14 @@ object Compat {
     * module's ivy.xml from Ivy's resolution of the project, so the resolution runs first; it reads the locked downloads
     * and compiles nothing.
     */
+  def publishProjection(ref: ProjectRef, module: ProjectedPublication.Module): Seq[Setting[_]] = Seq(
+    ref / projectID := module.id,
+    ref / publish / packagedArtifacts := module.artifacts,
+    ref / makePom := module.pom,
+    ref / deliver := module.ivy,
+    ref / publish / skip := false
+  )
+
   def publishFromNix(ref: ProjectRef): Seq[Setting[_]] = Seq(
     ref / publish / packagedArtifacts := {
       Def.unit((ref / update).value)
