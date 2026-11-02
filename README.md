@@ -31,7 +31,8 @@ Install Nix and keep your existing sbt workflow. Add the plugin to
 your build definition itself uses the plugin's keys):
 
 ```scala
-resolvers += "sbt-nix-backend" at "https://nix-purifiers.github.io/sbt-purifier/maven"
+resolvers += "sbt-nix-backend" at
+  "https://nix-purifiers.github.io/sbt-purifier/maven"
 addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % "0.1.4")
 ```
 
@@ -77,7 +78,8 @@ resolves the usual way, from the network, so the edited build loads and
 
 ```zsh
 sbt nixLock         # relocks when the build definition changed
-sbt nixLockUpdate   # resolves dependencies afresh and moves the flake repositories
+# resolves dependencies afresh and moves the flake repositories
+sbt nixLockUpdate
 ```
 
 `nixLock` keeps a lockfile that is up to date as it is, and a relock of an
@@ -129,7 +131,8 @@ without credentials. Install it in the meta-most build, with the version
 of the newest [release](https://github.com/nix-purifiers/sbt-purifier/releases):
 
 ```scala
-resolvers += "sbt-nix-backend" at "https://nix-purifiers.github.io/sbt-purifier/maven"
+resolvers += "sbt-nix-backend" at
+  "https://nix-purifiers.github.io/sbt-purifier/maven"
 addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % "<version>")
 ```
 
@@ -154,7 +157,10 @@ resolvers += MavenRepository(
   backendRepository.map(path => new File(path).toURI.toString)
     .getOrElse("https://nix-purifiers.github.io/sbt-purifier/maven")
 )
-addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % backendRepository.fold("0.1.4")(_ => "0.1.0"))
+addSbtPlugin(
+  "io.github.clhodapp" % "sbt-nix-backend" %
+    backendRepository.fold("0.1.4")(_ => "0.1.0")
+)
 ```
 
 `nix develop github:nix-purifiers/sbt-purifier` gives plain nixpkgs sbt
@@ -204,7 +210,8 @@ can live in the project's repository or in another one:
   inputs.sbt-purifier.url = "github:nix-purifiers/sbt-purifier";
   inputs.nixpkgs.follows = "sbt-purifier/nixpkgs";
 
-  outputs = { nixpkgs, sbt-purifier, ... }:
+  outputs =
+    { nixpkgs, sbt-purifier, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -298,15 +305,14 @@ For an ad hoc build, the builder can also be evaluated directly from the
 project root. Replace the example package name with one from your project:
 
 ```zsh
-nix build --impure --expr '
-  let
-    sbt-purifier = builtins.getFlake "github:nix-purifiers/sbt-purifier";
-    pkgs = import sbt-purifier.inputs.nixpkgs {
-      system = builtins.currentSystem;
-      overlays = [ sbt-purifier.overlays.default ];
-    };
-  in
-  (pkgs.sbt-purifier.buildSbtProject { src = ./.; }).packages.core'
+nix build --impure --expr 'let
+  sbt-purifier = builtins.getFlake "github:nix-purifiers/sbt-purifier";
+  pkgs = import sbt-purifier.inputs.nixpkgs {
+    system = builtins.currentSystem;
+    overlays = [ sbt-purifier.overlays.default ];
+  };
+in
+(pkgs.sbt-purifier.buildSbtProject { src = ./.; }).packages.core'
 ```
 
 This uses the purifier's pinned nixpkgs, matching the lock command above.
@@ -421,7 +427,10 @@ resolvers:
 ```scala
 externalResolvers := Seq(
   MavenRepository("repository", "file:///nix/store/...-repository"),
-  Resolver.file("repository-ivy", file("/nix/store/...-repository"))(Resolver.ivyStylePatterns)
+  Resolver.file(
+    "repository-ivy",
+    file("/nix/store/...-repository")
+  )(Resolver.ivyStylePatterns)
 )
 ```
 
