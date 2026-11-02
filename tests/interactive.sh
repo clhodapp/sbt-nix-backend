@@ -110,8 +110,8 @@ interactive_suite() {
     done
   fi
   expect "$fixture: the meta-build's plugin comes from the store" \
-    from_store "$build/target/sbt-nix-backend/coursier-cache/$buildinfo"
-  expect "$fixture: the locked downloads have a GC root" test -L "$build/target/sbt-nix-backend/gcroots/coursier-cache"
+    from_store "$build/.sbt-purifier/coursier-cache/$buildinfo"
+  expect "$fixture: the locked downloads have a GC root" test -L "$build/.sbt-purifier/gcroots/coursier-cache"
 
   echo "== $fixture: nixPackagedArtifacts"
   output=$(run_sbt 'show app/nixPackagedArtifacts' 'show app/nixRuntimeRepository') ||
