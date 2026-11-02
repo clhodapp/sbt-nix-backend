@@ -5,8 +5,6 @@ Nix-resolved dependencies. Use the normal build and test commands in your
 working tree; building the project itself in the Nix sandbox is an
 optional next step.
 
-It follows the [purifier contract](https://github.com/nix-purifiers/purifier/blob/main/CONTRACT.md).
-
 - **A lockfile.** `sbt-purifier lock` writes `sbt-purifier.lock.json` at
   the build root, with every file the build downloads (by URL, mirrors and
   SHA-256), the sbt launcher, the JVM options, and the projects to build.
