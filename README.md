@@ -26,33 +26,20 @@ optional next step.
 
 ## Quickstart
 
-Install Nix and keep your existing sbt workflow. Add the plugin to
-`project/plugins.sbt` (or the meta-most `project/project/plugins.sbt` when
-your build definition itself uses the plugin's keys):
-
-```scala
-resolvers += "sbt-nix-backend" at
-  "https://nix-purifiers.github.io/sbt-purifier/maven"
-addSbtPlugin("io.github.clhodapp" % "sbt-nix-backend" % "0.1.4")
-```
-
-From the project root, create the lock and build with sbt:
+From the project root:
 
 ```zsh
+nix shell 'github:nix-purifiers/sbt-purifier#sbt'
 sbt nixLock
 sbt compile
 sbt test
 ```
 
-Commit the plugin declaration and `sbt-purifier.lock.json`. Subsequent sbt
-commands resolve dependencies from the locked files through Nix; your
-project compiles and tests locally, with sbt's normal incremental builds.
-No project Nix files are needed for this workflow.
+The wrapper supplies the plugin through Nix. Commit
+`sbt-purifier.lock.json` after locking. To add the plugin to an existing
+sbt installation instead, see [From the Maven repository](#from-the-maven-repository).
 
-The Maven-loaded plugin warns that resolution of the plugin itself is
-impure. The optional [wrapper](#resolving-the-plugin-through-nix) resolves
-that plugin through Nix too. Sandboxed builds of the whole project are a
-separate [next step](#building-the-project-with-nix).
+For persistent use, add the wrapper through your usual Nix configuration.
 
 ## Development loop
 
@@ -113,8 +100,6 @@ inputs too. It provides pure resolution of the plugin itself and keeps
 the ordinary sbt command line:
 
 ```zsh
-# Install once; the wrapper provides the normal sbt command.
-nix profile install 'github:nix-purifiers/sbt-purifier#sbt'
 nix shell 'github:nix-purifiers/sbt-purifier#sbt'
 sbt compile test
 ```
