@@ -347,7 +347,10 @@ same_as_nix "$published/example/core_2.13/6.0.0/core_2.13-6.0.0.jar" "matrix2: n
 # Start legacy sbt from an empty home as well as the newer fixtures.
 network=off
 use_fixture sbt013
-output=$(run_sbt clean test 'run nix') || fail "sbt013: offline development failed"
+if ! output=$(run_sbt clean test 'run nix'); then
+  printf '%s\n' "$output" >&2
+  fail "sbt013: offline development failed"
+fi
 expect "sbt013: the application runs offline" has 'Hello, Nix!'
 if has 'plugin is being resolved impurely'; then
   fail "sbt013: the wrapper did not supply its plugin from Nix"
