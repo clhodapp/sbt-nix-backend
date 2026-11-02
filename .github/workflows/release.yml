@@ -40,6 +40,10 @@ on:
         description: Commit to release; main's head when empty
         required: false
         type: string
+      site_only:
+        description: Deploy documentation and existing Maven releases without rebuilding the plugin
+        required: false
+        type: boolean
       deploy:
         description: Rebuild and deploy the Maven repository on GitHub Pages even without a new release
         required: false
@@ -74,14 +78,16 @@ jobs:
           ref: ${{ env.SHA }}
           fetch-depth: 0
 
-      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+      - if: ${{ !inputs.site_only }}
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
           extra_nix_config: |
             experimental-features = nix-command flakes
             sandbox = true
 
-      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+      - if: ${{ !inputs.site_only }}
+        uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
         with:
           name: clhodapp
           skipPush: true
@@ -89,8 +95,14 @@ jobs:
 
       - name: Decide the version
         id: decide
+        env:
+          SITE_ONLY: ${{ inputs.site_only }}
         run: |
           set -euo pipefail
+          if [[ "$SITE_ONLY" == true ]]; then
+            echo "release=false" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
           series=$(cat .github/release/series)
           last=$(git tag -l "v$series.*" | sort -V | tail -n 1)
           if [[ -z $last ]]; then
