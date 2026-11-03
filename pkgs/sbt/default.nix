@@ -108,7 +108,13 @@ writeTextFile {
         mkdir -p target/sbt-purifier/gcroots
         if jdk=$(nix-build ${pkgs.path} -A "javaPackages.compiler.openjdk$major.headless" \
           --out-link target/sbt-purifier/gcroots/jdk 2>/dev/null); then
-          export JAVA_HOME="$jdk/lib/openjdk"
+          # OpenJDK's Java home is lib/openjdk. On darwin the attribute is
+          # Zulu, whose store path is a Java home itself.
+          if [ -d "$jdk/lib/openjdk" ]; then
+            export JAVA_HOME="$jdk/lib/openjdk"
+          else
+            export JAVA_HOME="$jdk"
+          fi
         else
           echo "sbt-purifier: nixpkgs has no headless OpenJDK $major, the Java major $lockfile records; sbt runs on $JAVA_HOME" >&2
         fi

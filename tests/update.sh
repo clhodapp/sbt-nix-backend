@@ -25,7 +25,7 @@ cat > "$producer/flake.nix" <<EOF
 {
   inputs.nixpkgs.url = "$nixpkgs";
   outputs = { nixpkgs, ... }: {
-    sbtRepositories = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" ] (system: {
+    sbtRepositories = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ] (system: {
       lib = nixpkgs.legacyPackages.\${system}.runCommandLocal "lib-repository" { } "cp -r \${./repository} \$out";
     });
   };

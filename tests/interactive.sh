@@ -19,7 +19,10 @@ set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 sbt_wrapper=$(nix build --no-link --print-out-paths "$root#sbt")
 
-work=$(mktemp -d)
+# Short, for sbt's boot socket under $work/<fixture>-run (a Unix socket path
+# is limited to 104 bytes on macOS, where mktemp is under /var/folders), and
+# resolved, as sbt reports the build root (/tmp is /private/tmp on macOS).
+work=$(cd "$(mktemp -d /tmp/sbt-it.XXXXXX)" && pwd -P)
 trap 'chmod -R u+w "$work"; rm -rf "$work"' EXIT
 
 # A suite with the network cut off points the JVM's proxies at a closed
@@ -41,7 +44,10 @@ expect() {
   shift
   if "$@"; then pass "$description"; else fail "$description"; fi
 }
-has() { grep -qE "$1" <<<"$output"; }
+# Large text goes through a process substitution, not a here-string: bash
+# writes a here-string into a pipe itself, which deadlocks when macOS gives
+# the pipe a smaller buffer than the text (under pipe memory pressure).
+has() { grep -qE "$1" < <(printf '%s\n' "$output"); }
 from_store() { [[ -L $1 && $(readlink "$1") == /nix/store/* ]]; }
 
 # Each fixture runs with a home, caches and runtime directory of its own.
@@ -208,7 +214,7 @@ sbt_wrapper=$other_wrapper
 output=$(run_sbt "$location") || fail "ivy: sbt did not load with the rebuilt plugin"
 sbt_wrapper=$saved_wrapper
 copy=$(grep -o '/nix/store/[a-z0-9]*-plugin-repository-copy' "$other_wrapper/bin/sbt" | head -1)
-expect "ivy: the first run loads the plugin from the flake's repository" grep -q 'ans: String = file:/nix/store/[a-z0-9]*-sbt-nix-backend_2.12_1.0-repository/' <<<"$first"
+expect "ivy: the first run loads the plugin from the flake's repository" grep -q 'ans: String = file:/nix/store/[a-z0-9]*-sbt-nix-backend_2.12_1.0-repository/' < <(printf '%s\n' "$first")
 expect "ivy: the second run loads the rebuilt plugin (${copy:-no copy found})" has "ans: String = file:$copy/"
 
 # metameta installs the plugin only in project/project/plugins.sbt and runs
@@ -250,7 +256,7 @@ expect "metameta through the wrapper: the Nix build of that lockfile succeeds" \
 # injects it from, so one plugin build runs at every level.
 output=$(run_sbt 'reload plugins' 'reload plugins' 'export Runtime/fullClasspath' 'reload return' 'reload return') ||
   fail "metameta through the wrapper: sbt did not load the meta-meta-build"
-plugin_jars=$(tr ':' '\n' <<<"$output" | grep 'sbt-nix-backend_2\.12_1\.0-.*\.jar' | sort -u || true)
+plugin_jars=$(tr ':' '\n' < <(printf '%s\n' "$output") | grep 'sbt-nix-backend_2\.12_1\.0-.*\.jar' | sort -u || true)
 expect "metameta through the wrapper: the meta-meta-build has one plugin jar, from the wrapper's repository (found: $plugin_jars)" \
   test "$(wc -l <<<"$plugin_jars")" -eq 1 -a "${plugin_jars#"$wrapper_repository"/}" != "$plugin_jars"
 runner=wrapper
@@ -292,7 +298,7 @@ same_as_nix() {
     return
   fi
   digest=$(sha256sum "$file" | cut -d' ' -f1)
-  if grep -qx "$digest" <<<"$nix_digests"; then pass "$description"; else fail "$description: $file differs from the Nix build"; fi
+  if grep -qx "$digest" < <(printf '%s\n' "$nix_digests"); then pass "$description"; else fail "$description: $file differs from the Nix build"; fi
 }
 
 # The digests of every file in the Nix package outputs nixPackagedArtifacts
