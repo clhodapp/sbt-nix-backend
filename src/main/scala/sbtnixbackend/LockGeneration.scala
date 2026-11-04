@@ -46,6 +46,21 @@ object LockGeneration {
     */
   private val expectedHomeEntries = Set(".sbt", ".ivy2", ".cache/sbt", ".cache/JNA")
 
+  private def macOS: Boolean = sys.props("os.name").toLowerCase.contains("mac")
+
+  /** macOS's sockaddr_un holds 104 bytes, the path's terminating NUL included. */
+  private val MacSocketPathMax = 103
+
+  /** The longest path at which the lock run's sbt can bind its boot server
+    * socket when its runtime directory is under `root`: that directory is
+    * `sbt-nix-run` and an unsigned long, and sbt binds
+    * `.sbt/sbt-socket<signed long>/sbt-load.sock` in it.
+    */
+  private def longestBootSocket(root: File): Int =
+    new File(root, "sbt-nix-run" + "9" * 20 + "/.sbt/sbt-socket-" + "9" * 19 + "/sbt-load.sock").getPath
+      .getBytes(StandardCharsets.UTF_8)
+      .length
+
   def run(in: Inputs, info: String => Unit, warn: String => Unit): Lock = {
     val work = in.workDir
     deleteRecursively(work)
@@ -57,10 +72,21 @@ object LockGeneration {
     val cache = new File(work, "coursier-cache")
     val output = new File(work, "output")
     // sbt puts its boot server socket under XDG_RUNTIME_DIR, and a Unix
-    // socket path is limited to about 100 bytes, so this one is short. It is
+    // socket path is limited to about 100 bytes, so this one is short.
     // Prefer an explicitly supplied runtime root for restricted environments.
     // Keep /tmp as the fallback: java.io.tmpdir can have a long macOS path.
-    val runtimeRoot = sys.env.get("XDG_RUNTIME_DIR").filter(_.nonEmpty).map(new File(_)).getOrElse(new File("/tmp"))
+    // On macOS a socket path over the limit kills the lock run's JVM with
+    // SIGTRAP, so a supplied root too long for it gives way to /tmp.
+    val runtimeRoot = sys.env.get("XDG_RUNTIME_DIR").filter(_.nonEmpty).map(new File(_)) match {
+      case Some(dir) if macOS && longestBootSocket(dir) > MacSocketPathMax =>
+        warn(
+          s"[sbt-nix-backend] XDG_RUNTIME_DIR ($dir) is too long for the lock run's sbt boot server socket " +
+            s"on macOS ($MacSocketPathMax bytes at most); its runtime directory is under /tmp instead"
+        )
+        new File("/tmp")
+      case Some(dir) => dir
+      case None      => new File("/tmp")
+    }
     val runtime = Files.createTempDirectory(runtimeRoot.toPath, "sbt-nix-run").toFile
     val javaTmp = new File(work, "java-tmp")
     Seq(src, home, cache, output, javaTmp).foreach(_.mkdirs())
