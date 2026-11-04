@@ -22,7 +22,8 @@ sbt_wrapper=$(nix build --no-link --print-out-paths "$root#sbt")
 # Short, for sbt's boot socket under $work/<fixture>-run (a Unix socket path
 # is limited to 104 bytes on macOS, where mktemp is under /var/folders), and
 # resolved, as sbt reports the build root (/tmp is /private/tmp on macOS).
-work=$(cd "$(mktemp -d /tmp/sbt-it.XXXXXX)" && pwd -P)
+work=$(mktemp -d /tmp/sbt-it.XXXXXX)
+work=$(cd "$work" && pwd -P)
 trap 'chmod -R u+w "$work"; rm -rf "$work"' EXIT
 
 # A suite with the network cut off points the JVM's proxies at a closed
