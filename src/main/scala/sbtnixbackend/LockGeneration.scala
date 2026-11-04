@@ -58,8 +58,10 @@ object LockGeneration {
     val output = new File(work, "output")
     // sbt puts its boot server socket under XDG_RUNTIME_DIR, and a Unix
     // socket path is limited to about 100 bytes, so this one is short. It is
-    // under /tmp, not java.io.tmpdir, which on macOS is a long /var/folders path.
-    val runtime = Files.createTempDirectory(new File("/tmp").toPath, "sbt-nix-run").toFile
+    // Prefer an explicitly supplied runtime root for restricted environments.
+    // Keep /tmp as the fallback: java.io.tmpdir can have a long macOS path.
+    val runtimeRoot = sys.env.get("XDG_RUNTIME_DIR").filter(_.nonEmpty).map(new File(_)).getOrElse(new File("/tmp"))
+    val runtime = Files.createTempDirectory(runtimeRoot.toPath, "sbt-nix-run").toFile
     val javaTmp = new File(work, "java-tmp")
     Seq(src, home, cache, output, javaTmp).foreach(_.mkdirs())
 
