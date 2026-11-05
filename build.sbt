@@ -25,11 +25,11 @@ lazy val root = (project in file("."))
       if (scalaBinaryVersion.value == "3") Nil else Seq(baseDirectory.value / "src" / "main" / "scala-ivy")
     },
     // sbt 0.13 uses Scala 2.10 and Ivy; sbt 1 and 2 use Coursier.
-    scalaVersion := "2.12.20",
-    crossScalaVersions := Seq("2.12.20", "2.10.7", "3.8.4"),
+    scalaVersion := "2.12.21",
+    crossScalaVersions := Seq("2.12.21", "2.10.7", "3.8.4"),
     pluginCrossBuild / sbtVersion := (scalaBinaryVersion.value match {
       case "2.10" => "0.13.18"
-      case "2.12" => "1.11.7"
+      case "2.12" => "1.13.1"
       case _      => "2.0.12"
     }),
     scalacOptions ++= Seq("-deprecation", "-feature", "-unchecked") ++
