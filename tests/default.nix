@@ -40,9 +40,9 @@ let
     assert ok || throw "${name}: the lockfile problem is not reported as the contract says";
     pkgs.runCommand name { } "touch $out";
   multiLockText = builtins.readFile ./fixtures/multi/sbt-purifier.lock.json;
-  editedLock = builtins.toFile "sbt-purifier.lock.json" (
-    builtins.replaceStrings [ ''"sbtVersion": "1.11.7"'' ] [ ''"sbtVersion": "1.11.8"'' ] multiLockText
-  );
+  # Trailing whitespace preserves valid JSON but changes the hashed bytes,
+  # including after the scheduled updater relocks a newer sbt version.
+  editedLock = builtins.toFile "sbt-purifier.lock.json" (multiLockText + "\n");
   # The multi lockfile without the downloads whose paths `drop` matches,
   # written as the plugin writes a lockfile: the version line, the content
   # hash of the text without its line, and the rest.
