@@ -219,6 +219,37 @@ def run_sample(args, runtime_root, short_runtime):
     build = work / 'build'
     build.mkdir()
     shutil.copytree(project, build / 'project', ignore=shutil.ignore_patterns('.git', '*.gcroot*'))
+    socket_bindings = ''
+    pure_tests = 'b.tests'
+    if system == 'aarch64-darwin' and args.fixture == 'independent' and parsed['javaVersion'] == '21':
+        probe = root / 'tests/GradleSocketProbe.java'
+        shutil.copyfile(probe, build / probe.name)
+        receipt['pureSocketProbe'] = {
+            'sha256': hashlib.sha256(probe.read_bytes()).hexdigest(),
+            'scope': 'Darwin independent fixture, selected JDK 21, before original checked package build',
+            'requiredPair': 'default-to-default-v4',
+            'requiredExternalDenials': 3,
+        }
+        save()
+        socket_bindings = """
+        socketChecked = p.lib.mapAttrs (_: package: package.overrideAttrs (old: {
+          preBuild = (old.preBuild or "") + ''
+            cp ${./GradleSocketProbe.java} "$TMPDIR/GradleSocketProbe.java"
+            socket_probe_status=0
+            ${b.jdk}/bin/java ${p.lib.escapeShellArgs b.lock.javaOptions} \
+              "$TMPDIR/GradleSocketProbe.java" "$TMPDIR/GradleSocketProbe.java" \
+              > "$TMPDIR/sbt-java-socket-probe.log" 2>&1 || socket_probe_status=$?
+            cat "$TMPDIR/sbt-java-socket-probe.log" >&2
+            test "$socket_probe_status" -eq 0
+            test "$(grep -c '^external .* DENIED kind=permission ' "$TMPDIR/sbt-java-socket-probe.log")" -eq 3
+            grep -q '^default-to-default-v4 pair PASS crossProcess=true$' "$TMPDIR/sbt-java-socket-probe.log"
+          '';
+        })) b.packages;
+        """
+        pure_tests = """p.runCommand "sbt-tests" {} ''
+          mkdir $out
+          ${p.lib.concatStrings (p.lib.mapAttrsToList (id: package: "ln -s ${package} $out/${id}\n") socketChecked)}
+        ''"""
     (build / 'flake.nix').write_text('''{
       inputs.purifier.url = "path:SNAPSHOT";
       inputs.nixpkgs.follows = "purifier/nixpkgs";
@@ -226,10 +257,14 @@ def run_sample(args, runtime_root, short_runtime):
         system = "SYSTEM";
         p = import nixpkgs { inherit system; overlays = [ purifier.overlays.default ]; };
         b = p.sbt-purifier.buildSbtProject { src = ./project; doCheck = true; };
-      in { packages.${system}.default = b.tests; };
-    }'''.replace('SNAPSHOT', snapshot).replace('SYSTEM', system))
+        SOCKET_BINDINGS
+      in { packages.${system}.default = PURE_TESTS; };
+    }'''.replace('SNAPSHOT', snapshot).replace('SYSTEM', system)
+       .replace('SOCKET_BINDINGS', socket_bindings).replace('PURE_TESTS', pure_tests))
+    shutil.copyfile(build / 'flake.nix', results / 'sample-build.nix')
     build_ref = 'path:' + str(build)
     run('pure-lock', ['nix', 'flake', 'lock', build_ref])
+    shutil.copyfile(build / 'flake.lock', results / 'sample-build.lock.json')
     receipt['derivation'] = run('pure-derivation', ['nix', 'eval', '--raw', build_ref
         + '#packages.' + system + '.default.drvPath'], machine=True)
     run('pure-build', ['nix', 'build', build_ref, '--no-allow-import-from-derivation',
