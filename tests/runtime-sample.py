@@ -84,8 +84,9 @@ def main():
     system = run('system', ['nix', 'eval', '--impure', '--raw', '--expr', 'builtins.currentSystem'], machine=True)
     receipt['system'] = system
     assert system in ('x86_64-linux', 'aarch64-linux', 'aarch64-darwin'), system
-    run('sandbox-setting', ['nix', 'config', 'show', 'sandbox'])
-    assert (results / 'sandbox-setting.log').read_text().strip() == 'true', 'Nix sandbox must be enabled'
+    receipt['sandbox'] = run('sandbox-setting', ['nix', 'config', 'show', 'sandbox'], machine=True)
+    save()
+    assert receipt['sandbox'] == 'true', 'Nix sandbox must be enabled'
     tools_expr = '''let
       f = builtins.getFlake "path:SNAPSHOT";
       p = f.inputs.nixpkgs.legacyPackages.SYSTEM;
