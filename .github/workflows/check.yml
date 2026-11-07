@@ -143,6 +143,9 @@ jobs:
         run: >-
           python3 tests/runtime-sample.py --results "$RUNNER_TEMP/sbt-runtime-evidence"
           --fixture '${{ matrix.sample.fixture }}' --sbt-version '${{ matrix.sample.sbt }}'
+      - name: Retain JVM and Darwin crash diagnostics
+        if: failure()
+        run: python3 tests/collect-runtime-crashes.py --results "$RUNNER_TEMP/sbt-runtime-evidence"
       - name: Retain source and runtime receipts, including failures
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -152,5 +155,6 @@ jobs:
             ${{ runner.temp }}/sbt-runtime-evidence/*.json
             ${{ runner.temp }}/sbt-runtime-evidence/*.log
             ${{ runner.temp }}/sbt-runtime-evidence/*.nix
+            ${{ runner.temp }}/sbt-runtime-evidence/crash-reports/*
           if-no-files-found: error
           retention-days: 14

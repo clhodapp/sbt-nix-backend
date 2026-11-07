@@ -134,8 +134,11 @@ def main():
             Path(env[key]).mkdir()
         env['JAVA_HOME'] = str(tools / 'jdk')
         (state / 'tmp').mkdir()
+        crash_inputs = results / 'jvm-crash-inputs'
+        crash_inputs.mkdir(exist_ok=True)
         env['SBT_NIX_BACKEND_MAVEN_CENTRAL_MIRROR'] = 'https://repo.maven.apache.org/maven2/'
         env['SBT_OPTS'] = ('-Xmx2g -Xss4m -XX:ActiveProcessorCount=2 '
+            '-XX:ErrorFile=' + str(crash_inputs / 'hs_err_pid%p.log') + ' '
             '-Duser.home=' + env['HOME'] + ' '
             '-Djava.io.tmpdir=' + str(state / 'tmp') + ' '
             '-Dsbt.server.autostart=false -Dsbt.server.forcestart=true '
