@@ -25,6 +25,8 @@ let
 in
 pkgs.runCommand "test-interface-sbt-${lock.sbtVersion}-offline-tasks"
   {
+    # This derivation executes the upstream forked test suite itself.
+    ${if pkgs.stdenv.hostPlatform.isDarwin then "__darwinAllowLocalNetworking" else null} = true;
     nativeBuildInputs = [ build.jdk ];
     passthru = {
       inherit src;
@@ -36,6 +38,9 @@ pkgs.runCommand "test-interface-sbt-${lock.sbtVersion}-offline-tasks"
   }
   ''
     set -euo pipefail
+    ${lib.optionalString pkgs.stdenv.hostPlatform.isDarwin ''
+      ${pkgs.python3}/bin/python3 ${../../tools/local-networking.py}
+    ''}
     export SBT_NIX_MODE=sandbox COURSIER_MODE=offline
     export SBT_NIX_BACKEND_REPOSITORY=${pluginRepository}
     run_tasks() (
