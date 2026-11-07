@@ -302,6 +302,9 @@ let
       # The packages of `tests` are the packages themselves when the
       # packages run their tests anyway.
       name = project.name + lib.optionalString (check && !doCheck) "-tests";
+      # Forked sbt tests exchange results over loopback, even offline.
+      ${if stdenvNoCC.hostPlatform.isDarwin && check then "__darwinAllowLocalNetworking" else null} =
+        true;
       src = filteredSrc;
       postUnpack = lib.optionalString (lock ? buildDirectory) (
         assert
@@ -328,6 +331,9 @@ let
       dontFixup = true;
       buildPhase = ''
         runHook preBuild
+        ${lib.optionalString (stdenvNoCC.hostPlatform.isDarwin && check) ''
+          ${python3}/bin/python3 ${../../tools/local-networking.py}
+        ''}
         # The lockfile the build was given, which may lie outside src, takes
         # the place of any lockfile in it.
         cp --no-preserve=mode ${lockFile} sbt-purifier.lock.json
