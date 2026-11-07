@@ -147,5 +147,6 @@ jobs:
           path: |
             ${{ runner.temp }}/sbt-runtime-evidence/*.json
             ${{ runner.temp }}/sbt-runtime-evidence/*.log
+            ${{ runner.temp }}/sbt-runtime-evidence/*.nix
           if-no-files-found: error
           retention-days: 14
