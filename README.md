@@ -261,6 +261,16 @@ calling flake passes it as `lockFile`, and the commands take
 `--lockfile <path>` or `SBT_PURIFIER_LOCKFILE`. A lockfile outside `src`
 takes the place of any lockfile in it.
 
+On Darwin, checked Nix builds append `-Djava.net.preferIPv4Stack=true` to
+`JAVA_TOOL_OPTIONS`, preserving existing options. Forked test JVMs inherit this
+setting so their result transport uses IPv4 loopback with the sandbox's local
+networking permission. This applies to checked package builds and the independent
+offline task check; ordinary host commands, Linux builds, and unchecked packages
+keep their existing settings. IPv6-only endpoints are unavailable in these checked
+JVMs. The JDK 21 runtime fixture verifies three IPv4 process pairs and external
+IPv4 permission denials; unavailable IPv6 is recorded separately, never as a
+successful network denial. Older JDK builds do not require that modern probe.
+
 ### What a package holds
 
 The lockfile names every artifact of every package, so Nix knows them

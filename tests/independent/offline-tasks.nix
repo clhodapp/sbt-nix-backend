@@ -39,6 +39,7 @@ pkgs.runCommand "test-interface-sbt-${lock.sbtVersion}-offline-tasks"
   ''
     set -euo pipefail
     ${lib.optionalString pkgs.stdenv.hostPlatform.isDarwin ''
+      export JAVA_TOOL_OPTIONS="''${JAVA_TOOL_OPTIONS:+$JAVA_TOOL_OPTIONS }-Djava.net.preferIPv4Stack=true"
       ${pkgs.python3}/bin/python3 ${../../tools/local-networking.py}
     ''}
     export SBT_NIX_MODE=sandbox COURSIER_MODE=offline

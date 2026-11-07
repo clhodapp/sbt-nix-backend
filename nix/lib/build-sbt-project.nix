@@ -330,6 +330,10 @@ let
       # must not rewrite them.
       dontFixup = true;
       buildPhase = ''
+        ${lib.optionalString (stdenvNoCC.hostPlatform.isDarwin && check) ''
+          # Fresh forked JVMs must use IPv4 loopback under the Darwin sandbox.
+          export JAVA_TOOL_OPTIONS="''${JAVA_TOOL_OPTIONS:+$JAVA_TOOL_OPTIONS }-Djava.net.preferIPv4Stack=true"
+        ''}
         runHook preBuild
         ${lib.optionalString (stdenvNoCC.hostPlatform.isDarwin && check) ''
           ${python3}/bin/python3 ${../../tools/local-networking.py}
