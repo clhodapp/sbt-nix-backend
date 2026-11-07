@@ -11,11 +11,27 @@ args = parser.parse_args()
 root = Path(__file__).resolve().parent.parent
 system = subprocess.check_output(['nix', 'eval', '--impure', '--raw', '--expr',
                                   'builtins.currentSystem'], text=True).strip()
-snapshot = json.loads(subprocess.check_output(
-    ['nix', 'flake', 'metadata', '--json', '--no-write-lock-file', 'path:' + str(root)], text=True))['path']
+revision = subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip()
+assert not subprocess.check_output(['git', '-C', str(root), 'diff', '--binary', 'HEAD'], text=True).strip(), \
+    'composition evidence requires committed producer source'
+reference = 'git+file://' + str(root) + '?rev=' + revision
+lock_bytes = (root / 'flake.lock').read_bytes()
+archived = json.loads(subprocess.check_output(
+    ['nix', 'flake', 'archive', '--json', '--no-update-lock-file', reference], text=True))
+snapshot = archived['path']
+def check_archived_inputs(node):
+    path = Path(node['path'])
+    assert path.is_dir() and str(path.resolve()) == str(path), path
+    for value in node.get('inputs', {}).values():
+        check_archived_inputs(value)
+check_archived_inputs(archived)
+assert (root / 'flake.lock').read_bytes() == lock_bytes, 'archive changed the producer lockfile'
+source_nar_hash = subprocess.check_output(['nix', 'hash', 'path', snapshot], text=True).strip()
+print(json.dumps({'producerSource': {'revision': revision, 'reference': reference,
+    'path': snapshot, 'narHash': source_nar_hash}, 'system': system, 'sbtVersion': args.sbt_version}), flush=True)
 with tempfile.TemporaryDirectory(prefix='sbt-native-composition-') as temporary:
     temporary = Path(temporary)
-    package = subprocess.check_output(['nix', 'build', str(root) + '#sbt',
+    package = subprocess.check_output(['nix', 'build', 'path:' + snapshot + '#sbt',
         '--print-out-paths', '--out-link', str(temporary / 'wrapper')], text=True).strip().splitlines()[-1]
     sbt = Path(package) / 'bin/sbt'
     project = temporary / 'native-project'

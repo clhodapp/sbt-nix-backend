@@ -105,6 +105,8 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: cachix/install-nix-action@v31
       - name: Native Nix project inputs and publication
         run: python3 tests/composition-native.py --sbt-version '${{ matrix.sbt }}'
