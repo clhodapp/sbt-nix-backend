@@ -14,10 +14,75 @@ import platform
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 
 SAMPLE_URL = 'https://github.com/sbt/test-interface.git'
 SAMPLE_REV = '22b24334e8ea0274fc9a8fa7df8dd5ecd4f45cd5'
+
+
+
+def emit_socket_probe(path):
+    """Print the complete bounded probe block, retaining the full log separately."""
+    active = False
+    for line in path.read_text().splitlines():
+        if line.endswith('SBT_JDK21_SOCKET_PROBE_BEGIN'):
+            active = True
+        if active:
+            print(line, file=sys.stderr, flush=True)
+        if active and line.endswith('SBT_JDK21_SOCKET_PROBE_END'):
+            break
+
+
+def ipv4_control(build, work, results, system, receipt, run, save):
+    control = work / 'build-ipv4-control'
+    shutil.copytree(build, control)
+    expression = (control / 'flake.nix').read_text()
+    before = 'preBuild = (old.preBuild or "")'
+    after = 'JAVA_TOOL_OPTIONS = (old.JAVA_TOOL_OPTIONS or "") + " -Djava.net.preferIPv4Stack=true"; ' + before
+    assert expression.count(before) == 1
+    expression = expression.replace(before, after)
+    before = '''test "$socket_probe_status" -eq 0
+            test "$(grep -c '^external .* DENIED kind=permission ' "$TMPDIR/sbt-java-socket-probe.log")" -eq 3
+            grep -q '^default-to-default-v4 pair PASS crossProcess=true$' "$TMPDIR/sbt-java-socket-probe.log"'''
+    after = '''test "$socket_probe_status" -eq 0 || test "$socket_probe_status" -eq 2
+            grep -q '^java.net.preferIPv4Stack: true$' "$TMPDIR/sbt-java-socket-probe.log"
+            for pair in default-to-default-v4 default-to-INET-v4 INET-to-INET-v4; do
+              grep -q "^$pair pair PASS crossProcess=true$" "$TMPDIR/sbt-java-socket-probe.log"
+            done
+            test "$(grep -E -c '^external (default|INET) DENIED kind=permission ' "$TMPDIR/sbt-java-socket-probe.log")" -eq 2
+            if [ "$socket_probe_status" -eq 2 ]; then
+              grep -q '^external INET6 UNPROVEN class=java.lang.UnsupportedOperationException ' "$TMPDIR/sbt-java-socket-probe.log"
+            fi
+            ! grep -q 'UNEXPECTED_SUCCESS' "$TMPDIR/sbt-java-socket-probe.log"'''
+    assert expression.count(before) == 1
+    (control / 'flake.nix').write_text(expression.replace(before, after))
+    shutil.copyfile(control / 'flake.nix', results / 'sample-build-ipv4-control.nix')
+    shutil.copyfile(control / 'flake.lock', results / 'sample-build-ipv4-control.lock.json')
+    evidence = receipt['pureIpv4Control'] = {
+        'status': 'running',
+        'scope': 'separate cold checked-package JVMs; baseline remains the gating result',
+        'javaToolOptionsAdded': '-Djava.net.preferIPv4Stack=true',
+        'requiredIPv4Pairs': 3,
+        'requiredExternalDenials': ['default', 'INET'],
+        'unsupportedIPv6IsNotCountedAsDenial': True,
+    }
+    save()
+    reference = 'path:' + str(control)
+    evidence['derivation'] = run('pure-ipv4-control-derivation', ['nix', 'eval', '--raw', reference
+        + '#packages.' + system + '.default.drvPath'], machine=True)
+    try:
+        run('pure-ipv4-control-build', ['nix', 'build', reference, '--no-allow-import-from-derivation',
+            '--no-update-lock-file', '--out-link', work / 'pure-ipv4-control-result', '--print-build-logs'])
+    finally:
+        log = results / 'pure-ipv4-control-build.stderr.log'
+        if log.exists():
+            emit_socket_probe(log)
+    evidence['outputs'] = json.loads(run('pure-ipv4-control-output-identities', ['nix', 'path-info',
+        '--json', str(work / 'pure-ipv4-control-result')], machine=True))
+    run('pure-ipv4-control-derivation-json', ['nix', 'derivation', 'show', evidence['derivation']])
+    evidence['status'] = 'passed'
+    save()
 
 
 def main():
@@ -236,10 +301,12 @@ def run_sample(args, runtime_root, short_runtime):
           preBuild = (old.preBuild or "") + ''
             cp ${./GradleSocketProbe.java} "$TMPDIR/GradleSocketProbe.java"
             socket_probe_status=0
+            echo SBT_JDK21_SOCKET_PROBE_BEGIN >&2
             ${b.jdk}/bin/java ${p.lib.escapeShellArgs b.lock.javaOptions} \
               "$TMPDIR/GradleSocketProbe.java" "$TMPDIR/GradleSocketProbe.java" \
               > "$TMPDIR/sbt-java-socket-probe.log" 2>&1 || socket_probe_status=$?
             cat "$TMPDIR/sbt-java-socket-probe.log" >&2
+            echo SBT_JDK21_SOCKET_PROBE_END >&2
             test "$socket_probe_status" -eq 0
             test "$(grep -c '^external .* DENIED kind=permission ' "$TMPDIR/sbt-java-socket-probe.log")" -eq 3
             grep -q '^default-to-default-v4 pair PASS crossProcess=true$' "$TMPDIR/sbt-java-socket-probe.log"
@@ -267,8 +334,22 @@ def run_sample(args, runtime_root, short_runtime):
     shutil.copyfile(build / 'flake.lock', results / 'sample-build.lock.json')
     receipt['derivation'] = run('pure-derivation', ['nix', 'eval', '--raw', build_ref
         + '#packages.' + system + '.default.drvPath'], machine=True)
-    run('pure-build', ['nix', 'build', build_ref, '--no-allow-import-from-derivation',
-                     '--out-link', work / 'pure-result', '--print-build-logs'])
+    try:
+        run('pure-build', ['nix', 'build', build_ref, '--no-allow-import-from-derivation',
+                         '--out-link', work / 'pure-result', '--print-build-logs'])
+    except AssertionError:
+        baseline = (results / 'pure-build.stderr.log').read_text()
+        if socket_bindings and 'default-to-default-v4 pair FAIL' in baseline and all(
+                'external ' + family + ' DENIED kind=permission ' in baseline
+                for family in ['default', 'INET', 'INET6']):
+            emit_socket_probe(results / 'pure-build.stderr.log')
+            try:
+                ipv4_control(build, work, results, system, receipt, run, save)
+            except Exception as error:
+                receipt.setdefault('pureIpv4Control', {}).update(status='failed', errorType=type(error).__name__)
+                save()
+        # The counterfactual never substitutes for the original failing build.
+        raise
     receipt['outputs'] = json.loads(run('pure-output-identities', ['nix', 'path-info',
         '--json', str(work / 'pure-result')], machine=True))
     run('pure-derivation-json', ['nix', 'derivation', 'show', receipt['derivation']])
