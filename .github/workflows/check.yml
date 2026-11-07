@@ -108,3 +108,44 @@ jobs:
       - uses: cachix/install-nix-action@v31
       - name: Native Nix project inputs and publication
         run: python3 tests/composition-native.py --sbt-version '${{ matrix.sbt }}'
+
+  # Exact SDK points, with a real upstream sample on sbt 1 and the existing
+  # sbt 2 fixture. Native controls, locking, prefetch, empty-cache offline
+  # tests and sandboxed builds all execute on each runner.
+  runtime-sample:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, macos-latest]
+        sample:
+          - {fixture: independent, sbt: '1.11.7'}
+          - {fixture: independent, sbt: '1.13.1'}
+          - {fixture: sbt2, sbt: '2.0.12'}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          extra_nix_config: |
+            sandbox = true
+            max-jobs = 2
+            cores = 2
+      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: clhodapp
+          skipPush: true
+      - name: Independent sample lifecycle
+        run: >-
+          python3 tests/runtime-sample.py --results "$RUNNER_TEMP/sbt-runtime-evidence"
+          --fixture '${{ matrix.sample.fixture }}' --sbt-version '${{ matrix.sample.sbt }}'
+      - name: Retain source and runtime receipts, including failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sbt-runtime-${{ matrix.runner }}-${{ matrix.sample.fixture }}-${{ matrix.sample.sbt }}
+          path: |
+            ${{ runner.temp }}/sbt-runtime-evidence/*.json
+            ${{ runner.temp }}/sbt-runtime-evidence/*.log
+          if-no-files-found: error
+          retention-days: 14

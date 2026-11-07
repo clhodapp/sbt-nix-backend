@@ -18,6 +18,10 @@ let
   # buildSbtProject of a package set the overlay applies to.
   withOverlay = pkgs.extend overlay;
   inherit (withOverlay.sbt-purifier) buildSbtProject;
+  independent = import ./independent {
+    inherit pkgs buildSbtProject;
+    pluginRepository = plugin-repository;
+  };
 
   # For the conformance checks: whether readLock reports exactly one
   # problem, which says `infix` and names the command that fixes it.
@@ -295,6 +299,10 @@ in
 
   # The plugin built by itself from its lock, with its unit tests run.
   inherit plugin;
+
+  independent-sample-sbt1 = independent.tests;
+  independent-sample-offline-tasks = independent.offline;
+  sbt2-tests = sbt2.tests;
 
   nix-library = import ./nix-library.nix { inherit pkgs overlay flakeLib; };
 
