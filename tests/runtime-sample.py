@@ -14,6 +14,7 @@ import platform
 import re
 import shutil
 import subprocess
+import tempfile
 
 SAMPLE_URL = 'https://github.com/sbt/test-interface.git'
 SAMPLE_REV = '22b24334e8ea0274fc9a8fa7df8dd5ecd4f45cd5'
@@ -25,17 +26,35 @@ def main():
     parser.add_argument('--sbt-version', default='1.13.1')
     parser.add_argument('--fixture', choices=['independent', 'sbt2'], default='independent')
     args = parser.parse_args()
-    root = Path(__file__).resolve().parents[1]
     results = args.results.resolve()
     results.mkdir(parents=True, exist_ok=False)
-    # Use the caller's writable temporary directory; disable sbt's server
-    # rather than relying on a platform-specific Unix socket path length.
+    # Only ephemeral Darwin CI uses /tmp. Local runs keep their temporary
+    # state beneath the requested evidence directory.
+    short_runtime = platform.system() == 'Darwin' and os.environ.get('GITHUB_ACTIONS') == 'true'
+    with tempfile.TemporaryDirectory(prefix='sbt-run-', dir='/tmp' if short_runtime else results) as directory:
+        run_sample(args, Path(directory).resolve(), short_runtime)
+
+
+def runtime_directory(root, name, maximum_bytes=None):
+    directory = root / name
+    directory.mkdir(mode=0o700)
+    assert directory.stat().st_mode & 0o077 == 0, 'runtime directory must be private'
+    if maximum_bytes is not None:
+        assert len(os.fsencode(directory)) <= maximum_bytes, 'runtime directory exceeds path budget'
+    return directory
+
+
+def run_sample(args, runtime_root, short_runtime):
+    root = Path(__file__).resolve().parents[1]
+    results = args.results.resolve()
     work = results / 'work'
     work.mkdir()
     receipt = {'sample': {'url': SAMPLE_URL, 'revision': SAMPLE_REV},
                'sbtVersion': args.sbt_version, 'fixture': args.fixture,
                'platform': platform.platform(), 'machine': platform.machine(),
                'harnessSha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+               'runtimeRoot': str(runtime_root),
+               'runtimeDirectoryMaximumBytes': 48 if short_runtime else None,
                'commands': [], 'complete': False}
     receipt_file = results / 'receipt.json'
 
@@ -129,9 +148,11 @@ def main():
                     'SBT_NIX_BACKEND_REPOSITORY', 'SBT_PURIFIER_LOCKFILE'):
             env.pop(key, None)
         for key, suffix in [('HOME', 'home'), ('XDG_CACHE_HOME', 'cache'),
-                            ('COURSIER_CACHE', 'coursier'), ('XDG_RUNTIME_DIR', 'run')]:
+                            ('COURSIER_CACHE', 'coursier')]:
             env[key] = str(state / suffix)
             Path(env[key]).mkdir()
+        # Reserve space for sbt's socket suffix within the macOS path limit.
+        env['XDG_RUNTIME_DIR'] = str(runtime_directory(runtime_root, name, 48 if short_runtime else None))
         env['JAVA_HOME'] = str(tools / 'jdk')
         (state / 'tmp').mkdir()
         crash_inputs = results / 'jvm-crash-inputs'
