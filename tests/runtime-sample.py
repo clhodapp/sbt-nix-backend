@@ -68,11 +68,19 @@ def main():
 
     receipt['sourceRevision'] = run('source-revision', ['git', 'rev-parse', 'HEAD'])
     receipt['sourceDiff'] = run('source-diff', ['git', 'diff', '--binary', 'HEAD'])
-    metadata = json.loads(run('source-snapshot', ['nix', 'flake', 'metadata', '--json',
-                             '--no-write-lock-file', 'path:' + str(root)], machine=True))
-    snapshot = metadata['path']
+    assert not receipt['sourceDiff'], 'runtime evidence requires a committed producer source'
+    receipt['sourceReference'] = 'git+file://' + str(root) + '?rev=' + receipt['sourceRevision']
+    archived = json.loads(run('source-archive', ['nix', 'flake', 'archive', '--json',
+        '--no-update-lock-file', receipt['sourceReference']], machine=True))
+    snapshot = archived['path']
+    assert Path(snapshot).is_dir() and str(Path(snapshot).resolve()) == snapshot, snapshot
+    def check_archived_inputs(node):
+        assert Path(node['path']).is_dir(), node['path']
+        for value in node.get('inputs', {}).values():
+            check_archived_inputs(value)
+    check_archived_inputs(archived)
     receipt['sourceSnapshot'] = snapshot
-    receipt['sourceNarHash'] = metadata['locked']['narHash']
+    receipt['sourceNarHash'] = run('source-nar-hash', ['nix', 'hash', 'path', snapshot], machine=True)
     system = run('system', ['nix', 'eval', '--impure', '--raw', '--expr', 'builtins.currentSystem'], machine=True)
     receipt['system'] = system
     assert system in ('x86_64-linux', 'aarch64-linux', 'aarch64-darwin'), system
